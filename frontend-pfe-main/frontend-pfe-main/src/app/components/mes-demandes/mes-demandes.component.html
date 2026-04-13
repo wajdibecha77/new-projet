@@ -1,0 +1,61 @@
+<div class="mes-demandes-page">
+  <div class="mes-demandes-header">
+    <div>
+      <h1>Suivi de mes demandes</h1>
+      <p>Suivez l'avancement de vos pannes en temps reel.</p>
+    </div>
+  </div>
+
+  <div class="demande-list" *ngIf="!isLoading && demandes.length > 0; else emptyState">
+    <article class="demande-card" *ngFor="let demande of demandes; trackBy: trackById">
+      <div class="demande-card-top">
+        <h5>{{ demande?.name || '-' }}</h5>
+        <span class="status-badge" [ngClass]="getStatusClass(demande)">
+          {{ getStatusLabel(demande) }}
+        </span>
+      </div>
+
+      <div class="demande-meta">
+        <div>
+          <span class="meta-label">Lieu</span>
+          <strong>{{ demande?.lieu || '-' }}</strong>
+        </div>
+        <div>
+          <span class="meta-label">Délai</span>
+          <strong>{{ demande?.delai ? (demande.delai | date: 'dd/MM/yyyy') : '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="demande-progress">
+        <div class="progress-label">
+          <span>Progression</span>
+          <strong>{{ getProgress(demande) }}%</strong>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="getProgress(demande)"></div>
+        </div>
+      </div>
+
+      <div class="demande-actions">
+        <button type="button" class="btn btn-primary" (click)="viewDetails(demande?._id)">
+          Voir details
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!isLoading; else loadingState">
+      <i class="fa fa-clipboard" aria-hidden="true"></i>
+      <h5>Aucune demande disponible</h5>
+      <p>Vos demandes apparaitront ici des leur envoi.</p>
+    </div>
+
+    <ng-template #loadingState>
+      <div class="empty-state">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+        <h5>Chargement des demandes...</h5>
+      </div>
+    </ng-template>
+  </ng-template>
+</div>

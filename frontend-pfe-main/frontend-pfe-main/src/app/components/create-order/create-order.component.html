@@ -1,0 +1,75 @@
+<div class="main-content-header">
+  <h1>Dashboard</h1>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/commandes">Commande</a>
+    </li>
+    <li class="breadcrumb-item active">
+      <span class="active">{{ isEditMode ? "Modification" : "Création" }}</span>
+    </li>
+  </ol>
+</div>
+
+<div class="row">
+  <div class="col-xl-12">
+    <div class="card mb-30">
+      <div class="card-body">
+        <div class="card-header">
+          <h5 class="card-title">
+            {{ isEditMode ? "Modifier une commande" : "Ajouter une commande" }}
+          </h5>
+        </div>
+
+        <!-- ✅ form submit صحيح -->
+        <form (ngSubmit)="saveOrder()">
+          <div class="form-group">
+            <label>Produit</label>
+            <input
+              type="text"
+              name="produit"
+              [(ngModel)]="order.produit"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Quantité</label>
+            <input
+              type="number"
+              name="quantite"
+              [(ngModel)]="order.quantite"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Fournisseur</label>
+            <select
+              name="fournisseurId"
+              [(ngModel)]="order.fournisseurId"
+              class="form-control"
+            >
+              <option value="">Choisir un fournisseur</option>
+              <ng-container *ngFor="let fournisseur of fournisseurs">
+                <option [value]="fournisseur._id">
+                  {{ fournisseur.name }}
+                </option>
+              </ng-container>
+            </select>
+          </div>
+
+          <div class="form-group w-100" *ngIf="successMsg">
+            <span class="alert alert-success">
+              {{ successMsg }}
+            </span>
+          </div>
+
+          <!-- ✅ ما عادش (click)="createOrder()" -->
+          <button type="submit" class="btn btn-primary">
+            {{ isEditMode ? "Mettre à jour" : "Enregistrer" }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

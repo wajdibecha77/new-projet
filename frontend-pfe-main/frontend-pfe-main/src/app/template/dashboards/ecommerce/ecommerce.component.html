@@ -1,0 +1,552 @@
+<!-- Main Content Header -->
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-eCommerce">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">eCommerce</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Stats Card -->
+<div class="row">
+    <div class="col-lg-3 col-sm-6">
+        <div class="stats-card-two mb-30">
+            <div class="media align-items-center">
+                <div class="avatar avatar-blue">
+                    <i data-feather="dollar-sign"></i>
+                </div>
+                <div class="ml-15">
+                    <p class="mb-10 line-height-1">Sales</p>
+                    <h3 class="mb-0 fs-25">$25,890</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+        <div class="stats-card-two mb-30">
+            <div class="media align-items-center">
+                <div class="avatar avatar-cyan">
+                    <i data-feather="briefcase"></i>
+                </div>
+                <div class="ml-15">
+                    <p class="mb-10 line-height-1">Net Profit</p>
+                    <h3 class="mb-0 fs-25">$20,467</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+        <div class="stats-card-two mb-30">
+            <div class="media align-items-center">
+                <div class="avatar avatar-gold">
+                    <i data-feather="shopping-bag"></i>
+                </div>
+                <div class="ml-15">
+                    <p class="mb-10 line-height-1">New Products</p>
+                    <h3 class="mb-0 fs-25">10,000</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+        <div class="stats-card-two mb-30">
+            <div class="media align-items-center">
+                <div class="avatar avatar-purple">
+                    <i data-feather="users"></i>
+                </div>
+                <div class="ml-15">
+                    <p class="mb-10 line-height-1">New Users</p>
+                    <h3 class="mb-0 fs-25">$23,523</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Stats Card -->
+
+<!-- Order Summary -->
+<div class="row">
+    <div class="col-lg-8">
+        <app-order-summary></app-order-summary>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">Order Stats</h5>
+                </div>
+                <p class="mb-0">Overview of orders. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+
+                <div class="order-stats-card mt-4">
+                    <h3 class="mb-1">Success</h3>
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Monthly Goal</span>
+                        </div>
+                        <span class="fw-600">80%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div class="progress-bar bg-primary" style="width: 80%"></div>
+                    </div>
+                </div>
+
+                <div class="order-stats-card mt-4">
+                    <h3 class="mb-1">Pending</h3>
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Monthly Goal</span>
+                        </div>
+                        <span class="fw-600">60%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div class="progress-bar bg-warning" style="width: 60%"></div>
+                    </div>
+                </div>
+
+                <div class="order-stats-card mt-4">
+                    <h3 class="mb-1">Failed</h3>
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Monthly Goal</span>
+                        </div>
+                        <span class="fw-600">30%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div class="progress-bar bg-danger" style="width: 30%"></div>
+                    </div>
+                </div>
+
+                <div class="order-stats-card mt-4">
+                    <h3 class="mb-1">New Order</h3>
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Monthly Goal</span>
+                        </div>
+                        <span class="fw-600">50%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div class="progress-bar bg-purple" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="order-number-stats mt-4">
+                            <span class="number text-primary fw-600">79885</span>
+                            <p>Success</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="order-number-stats mt-4">
+                            <span class="number text-warning fw-600">356</span>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="order-number-stats mt-4">
+                            <span class="number text-danger fw-600">265</span>
+                            <p>Failed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders & Social Marketing -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <a href="#" class="btn btn-primary float-right">View all</a>
+                    <h5 class="card-title">
+                        Recent Orders
+                    </h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover text-vertical-middle mb-0">
+                        <thead class="bort-none borpt-0">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>#6791</strong></td>
+                                <td>
+                                    <img src="assets/img/user/1.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Colin Firth
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product1.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Macbook Pro
+                                </td>
+                                <td>1 Jun 2019</td>
+                                <td>$289.50</td>
+                                <td><span class="badge badge_warning py-1">Pending</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6792</strong></td>
+                                <td>
+                                    <img src="assets/img/user/2.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Michael Sheen
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product2.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    iPhone 11 pro
+                                </td>
+                                <td>2 Jun 2019</td>
+                                <td>$389.50</td>
+                                <td><span class="badge badge_success py-1">Delivered</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6793</strong></td>
+                                <td>
+                                    <img src="assets/img/user/3.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Tom Hardy
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product3.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    HeadPhone
+                                </td>
+                                <td>3 Jun 2019</td>
+                                <td>$250.50</td>
+                                <td><span class="badge badge_danger py-1">Declined</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6794</strong></td>
+                                <td>
+                                    <img src="assets/img/user/4.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Daniel Craig
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product4.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shoes
+                                </td>
+                                <td>4 Jun 2019</td>
+                                <td>$500.50</td>
+                                <td><span class="badge badge_success py-1">Delivered</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6795</strong></td>
+                                <td>
+                                    <img src="assets/img/user/5.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Jude Law
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product5.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shirts
+                                </td>
+                                <td>4 Jun 2019</td>
+                                <td>$279.50</td>
+                                <td><span class="badge badge_success py-1">Declined</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6796</strong></td>
+                                <td>
+                                    <img src="assets/img/user/6.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Idris Elba
+                                </td>
+                                <td>
+                                    <img src="assets/img/product/product6.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Nike shirts
+                                </td>
+                                <td>5 Jun 2019</td>
+                                <td>$259.50</td>
+                                <td><span class="badge badge_danger py-1">Declined</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Price Movements & New Customers -->
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <a href="#" class="btn btn-primary float-right">View all</a>
+                    <h5 class="card-title">
+                        New Customers
+                    </h5>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/1.jpg" alt="User" class="rounded-circle">
+                        <span class="status online right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">
+                            Amber Gibs
+                        </a>
+                    </h5>
+                    <span class="gray-color fs-11">2 Minutes ago</span>
+                    <span class="price">$2,000</span>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/2.jpg" alt="User" class="rounded-circle">
+                        <span class="status online right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">Carl Roland</a>
+                    </h5>
+                    <span class="gray-color fs-11">3 Minutes ago</span>
+                    <span class="price">$3,000</span>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/3.jpg" alt="User" class="rounded-circle">
+                        <span class="status online right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">Paul Wilson</a>
+                    </h5>
+                    <span class="gray-color fs-11">4 Minutes ago</span>
+                    <span class="price">$4,000</span>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/4.jpg" alt="User" class="rounded-circle">
+                        <span class="status online right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">Alice Jenkins</a>
+                    </h5>
+                    <span class="gray-color fs-11">5 Minutes ago</span>
+                    <span class="price">$5,000</span>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/5.jpg" alt="User" class="rounded-circle">
+                        <span class="status away right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">Lauren Cox</a>
+                    </h5>
+                    <span class="gray-color fs-11">5 Minutes ago</span>
+                    <span class="price">$6,000</span>
+                </div>
+
+                <div class="new-customer">
+                    <a class="profile mr-3" href="#">
+                        <img src="assets/img/user/6.jpg" alt="User" class="rounded-circle">
+                        <span class="status ofline right-3 bottom"></span>
+                    </a>
+                    <h5 class="fs-13 m-0">
+                        <a class="global-color" href="#">Jessie Barnett</a>
+                    </h5>
+                    <span class="gray-color fs-11">5 Minutes ago</span>
+                    <span class="price">$10,000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <app-apex-area-chart></app-apex-area-chart>
+    </div>
+</div>
+
+<!-- Products of the Month & Order Stats -->
+<div class="row">
+    <div class="col-lg-12 col-xl-8">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <a href="#" class="btn btn-primary float-right">View all</a>
+                    <h5 class="card-title">Products of the Month</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover text-vertical-middle mb-0">
+                        <thead class="bort-none borpt-0">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Invoice</th>
+                                <th scope="col">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>#6791</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product1.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Macbook Pro
+                                </td>
+                                <td>Colin Firth</td>
+                                <td><span class="badge badge_success py-1">Active</span></td>
+                                <td>40</td>
+                                <td>$289.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6792</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product2.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    iPhone 11 pro
+                                </td>
+                                <td>Michael Sheen</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>45</td>
+                                <td>$389.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6793</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product3.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    HeadPhone
+                                </td>
+                                <td>Tom Hardy</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>50</td>
+                                <td>$250.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6794</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product4.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shoes
+                                </td>
+                                <td>Daniel Craig</td>
+                                <td><span class="badge badge_warning py-1">Pending</span>
+                                </td>
+                                <td>55</td>
+                                <td>$500.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6795</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product5.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shirts
+                                </td>
+                                <td>Jude Law</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>60</td>
+                                <td>$279.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6796</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product6.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Nike shirts
+                                </td><td>Idris Elba</td>
+                                <td><span class="badge badge_danger py-1">Declined</span>
+                                </td>
+                                <td>65</td>
+                                <td>$259.50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12 col-xl-4">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">Social Marketing </h5>
+                </div>
+
+                <div class="marketing-content">
+                    <div class="list">
+                        <i data-feather="facebook" class="icon fb"></i>
+                        <h3><a href="#">Facebook Ads</a></h3>
+                        <p>1.5k Like - 598 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-success"></i>
+                            50%
+                        </div>
+                    </div>
+                    <div class="list">
+                        <i data-feather="instagram" class="icon ins"></i>
+                        <h3><a href="#">Instagram Ads</a></h3>
+                        <p>2.5k Follows - 598 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-success"></i>
+                            45%
+                        </div>
+                    </div>
+                    <div class="list">
+                        <i data-feather="twitter" class="icon twi"></i>
+                        <h3><a href="#">Twitter Ads</a></h3>
+                        <p>1.1k Like - 598 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-danger"></i>
+                            25%
+                        </div>
+                    </div>
+                    <div class="list">
+                        <i data-feather="linkedin" class="icon lin"></i>
+                        <h3><a href="#">Linkedin Ads</a></h3>
+                        <p>1.6k Like - 463 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-success"></i>
+                            55%
+                        </div>
+                    </div>
+                    <div class="list">
+                        <i data-feather="youtube" class="icon ytb"></i>
+                        <h3><a href="#">Youtube Ads</a></h3>
+                        <p>1.5m Subscribe - 598 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-success"></i>
+                            75%
+                        </div>
+                    </div>
+                    <div class="list">
+                        <i data-feather="github" class="icon gh"></i>
+                        <h3><a href="#">Youtube Ads</a></h3>
+                        <p>1.5m Subscribe - 598 Shares</p>
+                        <div class="stats">
+                            <i data-feather="trending-up" class="icon text-success"></i>
+                            75%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

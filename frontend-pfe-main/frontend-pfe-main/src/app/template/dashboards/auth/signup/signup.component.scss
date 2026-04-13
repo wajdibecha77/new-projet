@@ -1,0 +1,65 @@
+@import "../signin/signin.component.scss";
+
+.signup-page .right-side {
+  padding: 50px 42px 36px;
+}
+
+.signup-page .title {
+  font-size: 38px;
+}
+
+.signup-page .subtitle {
+  font-size: 20px;
+  margin-bottom: 22px;
+}
+
+.signup-page .field {
+  margin-bottom: 14px;
+}
+
+.signup-page .field label {
+  font-size: 15px;
+}
+
+.signup-page .field input,
+.signup-page .field select {
+  font-size: 15px;
+  border: 1px solid #d8deed;
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  color: #203a72;
+  background: #fff;
+}
+
+.signup-page .field input:focus,
+.signup-page .field select:focus {
+  border-color: #2a66d9;
+  box-shadow: 0 0 0 3px rgba(42, 102, 217, 0.12);
+  outline: none;
+}
+
+.signup-page .btn-primary {
+  font-size: 17px;
+  padding: 12px;
+  margin-top: 6px;
+}
+
+.signup-page .signup-note {
+  margin-top: 16px;
+  font-size: 15px;
+}
+
+@media (max-width: 900px) {
+  .signup-page .right-side {
+    padding: 28px 22px;
+  }
+
+  .signup-page .title {
+    font-size: 30px;
+  }
+
+  .signup-page .subtitle {
+    font-size: 17px;
+  }
+}

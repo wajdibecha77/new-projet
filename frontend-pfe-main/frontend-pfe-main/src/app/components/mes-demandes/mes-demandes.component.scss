@@ -1,0 +1,187 @@
+.mes-demandes-page {
+  padding: 1.1rem 1.2rem;
+  max-width: 1200px;
+}
+
+.mes-demandes-header {
+  margin-bottom: 1.2rem;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0.4rem 0 0;
+    color: #64748b;
+  }
+}
+
+.demande-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.demande-card {
+  background: #fff;
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px -24px rgba(15, 23, 42, 0.55);
+  padding: 1rem;
+}
+
+.demande-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+
+  h5 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.status-badge {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-envoyee {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-acceptee {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-encours {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.status-terminee {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.demande-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+
+  .meta-label {
+    display: block;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-bottom: 0.15rem;
+  }
+
+  strong {
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+}
+
+.demande-progress {
+  margin-bottom: 1rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  color: #475569;
+  font-size: 0.85rem;
+
+  strong {
+    color: #0f172a;
+  }
+}
+
+.progress-track {
+  height: 8px;
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.demande-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.empty-state {
+  background: #fff;
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px -24px rgba(15, 23, 42, 0.55);
+  padding: 2rem 1rem;
+  text-align: center;
+
+  i {
+    font-size: 1.5rem;
+    color: #64748b;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  h5 {
+    margin: 0 0 0.35rem;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0;
+    color: #64748b;
+  }
+}
+
+@media (max-width: 992px) {
+  .demande-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .mes-demandes-page {
+    padding: 0.9rem;
+  }
+
+  .mes-demandes-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .demande-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .demande-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .demande-actions .btn {
+    width: 100%;
+  }
+}

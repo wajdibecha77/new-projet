@@ -1,0 +1,28 @@
+﻿Created uploads folder
+
+
+    Répertoire: C:\Users\LO
+    Q\Desktop\gestion-inter
+    vention-pfe-main\backen
+    d-pfe-main\backend-pfe-
+    main\uploads
+
+
+Mode          LastWriteTime
+----          -------------
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+-a----      04/04/2026     
+                      00:07
+
+

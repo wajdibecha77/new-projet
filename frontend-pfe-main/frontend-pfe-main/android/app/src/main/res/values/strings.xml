@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">plab-admin-ng</string>
+    <string name="title_activity_main">plab-admin-ng</string>
+    <string name="package_name">com.pfe.intervention</string>
+    <string name="custom_url_scheme">com.pfe.intervention</string>
+</resources>

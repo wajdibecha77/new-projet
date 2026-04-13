@@ -1,0 +1,160 @@
+<!-- TOP NAVIGATION -->
+<div class="top-nav-card shadow-sm mb-4 bg-white rounded-4 p-2 d-none d-md-block">
+  <ul class="nav custom-nav justify-content-start">
+    <li class="nav-item me-4">
+      <a class="nav-link px-4" [class.active]="activeTab === 'info'" (click)="setTab('info')" href="javascript:void(0)">
+        <i class="fa fa-user-o me-2"></i> Informations
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link px-4 text-muted" [class.active]="activeTab === 'security'" (click)="setTab('security')" href="javascript:void(0)">
+        <i class="fa fa-lock me-2"></i> Sécurité
+      </a>
+    </li>
+  </ul>
+</div>
+
+<div class="row" *ngIf="account">
+  
+  <!-- ================= INFORMATIONS TAB ================= -->
+  <ng-container *ngIf="activeTab === 'info'">
+    <!-- LEFT CARD: PHOTO -->
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow-sm custom-card h-100 border-0 rounded-4">
+        <div class="card-body d-flex flex-column align-items-center text-center p-4">
+          
+          <div class="w-100 text-start mb-4">
+            <h5 class="fw-bold mb-2">Photo de profil</h5>
+            <p class="text-muted small">Une photo aide les locataires à vous identifier.</p>
+          </div>
+          
+          <div class="avatar-placeholder my-4">
+            <ng-container *ngIf="getImageUrl(); else placeholderIcon">
+              <img [src]="getImageUrl()" class="img-fluid rounded-circle w-100 h-100 object-fit-cover" alt="Avatar">
+            </ng-container>
+            <ng-template #placeholderIcon>
+              <i class="fa fa-user-o avatar-icon"></i>
+            </ng-template>
+          </div>
+
+          <input type="file" #fileInput (change)="onFileSelect($event)" style="display: none;" accept="image/png, image/jpeg, image/gif">
+          
+          <button type="button" class="btn btn-upload w-100 py-2 fw-semibold" (click)="fileInput.click()">
+            <i class="fa fa-upload me-2"></i> Télécharger
+          </button>
+          <span class="text-muted small mt-2 d-block">JPG, PNG ou GIF. Max 5Mo.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CARD: INFO -->
+    <div class="col-lg-8 mb-4">
+      <div class="card shadow-sm custom-card h-100 border-0 rounded-4">
+        <div class="card-body p-4 d-flex flex-column">
+
+          <h5 class="fw-bold mb-2">Informations Personnelles</h5>
+          <p class="text-muted small mb-4">Mettez à jour vos informations de contact.</p>
+
+          <form (ngSubmit)="update()" class="flex-grow-1 d-flex flex-column">
+            
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-dark">Nom complet</label>
+              <div class="input-group custom-input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa fa-user-o"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" name="name" [(ngModel)]="account.name" placeholder="Nom complet">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-bold small text-dark">Email</label>
+                <div class="input-group custom-input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa fa-envelope-o"></i></span>
+                  <input type="email" class="form-control border-start-0 ps-0" name="email" [(ngModel)]="account.email" placeholder="example@mail.com">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-bold small text-dark">Numéro de téléphone</label>
+                <div class="input-group custom-input-group">
+                  <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa fa-phone"></i></span>
+                  <input type="text" class="form-control border-start-0 ps-0" name="phone" [(ngModel)]="account.phone" placeholder="+216 ...">
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-dark">Adresse</label>
+              <div class="input-group custom-input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa fa-map-marker"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" name="address" [(ngModel)]="account.address" placeholder="Votre adresse">
+              </div>
+            </div>
+            
+            <!-- ALERTS -->
+            <div class="w-100 mb-2">
+              <div *ngIf="successMsg && activeTab === 'info'" class="alert alert-success d-block text-center py-2 m-0">{{ successMsg }}</div>
+              <div *ngIf="errorMsg && activeTab === 'info'" class="alert alert-danger d-block text-center py-2 m-0">{{ errorMsg }}</div>
+            </div>
+
+            <div class="mt-auto pt-4 top-border-custom d-flex justify-content-end">
+              <button type="submit" class="btn btn-save px-4 py-2" [disabled]="isSubmitting">
+                <i class="fa fa-save me-2"></i> Enregistrer les modifications
+              </button>
+            </div>
+            
+          </form>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ================= SÉCURITÉ TAB ================= -->
+  <ng-container *ngIf="activeTab === 'security'">
+    <div class="col-12">
+      <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-5">
+          <h4 class="fw-bold text-dark mb-2">Sécurité du compte</h4>
+          <p class="text-muted mb-5">Gérez votre mot de passe pour sécuriser votre compte.</p>
+
+          <form (ngSubmit)="changePassword()" class="security-form">
+            
+            <div class="mb-5">
+              <label class="form-label fw-bold h5 text-dark mb-3">Mot de passe actuel</label>
+              <input type="password" name="currentPassword" [(ngModel)]="passwordData.currentPassword" class="form-control form-control-lg custom-password-input" placeholder="••••••••">
+            </div>
+
+            <hr class="my-5 opacity-5">
+
+            <div class="mb-2">
+              <label class="form-label fw-bold h5 text-dark mb-3">Nouveau mot de passe</label>
+              <input type="password" name="newPassword" [(ngModel)]="passwordData.newPassword" class="form-control form-control-lg custom-password-input" placeholder="••••••••">
+            </div>
+            <p class="text-muted small mb-5">Au moins 8 caractères.</p>
+
+            <div class="mb-4">
+              <label class="form-label fw-bold h5 text-dark mb-3">Confirmer le nouveau mot de passe</label>
+              <input type="password" name="confirmPassword" [(ngModel)]="passwordData.confirmPassword" class="form-control form-control-lg custom-password-input" placeholder="••••••••">
+            </div>
+
+            <!-- ALERTS -->
+            <div class="w-100 mb-3">
+              <div *ngIf="successMsg && activeTab === 'security'" class="alert alert-success d-block text-center py-2 m-0">{{ successMsg }}</div>
+              <div *ngIf="errorMsg && activeTab === 'security'" class="alert alert-danger d-block text-center py-2 m-0">{{ errorMsg }}</div>
+            </div>
+
+          </form>
+        </div>
+        
+        <!-- FOOTER BAR -->
+        <div class="card-footer bg-light-gray border-0 p-4 d-flex justify-content-end">
+          <button type="submit" (click)="changePassword()" class="btn btn-security-save px-5 py-3 rounded-3 shadow-none fw-bold" [disabled]="isSubmitting">
+            <i class="fa fa-lock me-2"></i> Modifier le mot de passe
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+</div>

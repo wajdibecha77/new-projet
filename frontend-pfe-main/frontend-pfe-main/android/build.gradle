@@ -1,0 +1,28 @@
+// Top-level build file
+
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral() // 🔥 بدل jcenter
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.google.gms:google-services:4.3.5'
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral() // 🔥 مهم
+        maven { url 'https://jitpack.io' } // 🔥 ينفع لبعض plugins
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

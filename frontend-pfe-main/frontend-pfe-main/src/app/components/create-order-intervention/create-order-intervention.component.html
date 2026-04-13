@@ -1,0 +1,77 @@
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-sales">Commande</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">Création</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Vertical Form -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        Ajouter une commande pour l'intervention
+                    </h5>
+                </div>
+
+                <form>
+                    <div class="form-group">
+                        <label> Produit</label>
+                        <input
+                            type="text"
+                            name="produit"
+                            [(ngModel)]="order.produit"
+                            class="form-control"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label> Quantité </label>
+                        <input
+                            type="number"
+                            name="quantite"
+                            [(ngModel)]="order.quantite"
+                            class="form-control"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label> Fournisseur </label>
+                        <select
+                            name="fournisseurId"
+                            [(ngModel)]="order.fournisseurId"
+                            class="form-control"
+                        >
+                            <option value="">Choisir un fournisseur</option>
+                            <ng-container *ngFor="let fournisseur of fournisseurs">
+                                <option [value]="fournisseur._id">
+                                    {{ fournisseur.name }}
+                                </option>
+                            </ng-container>
+                        </select>
+                    </div>
+                    <div class="form-group w-100">
+                        <span *ngIf="successMsg" class="alert alert-success">
+                            {{ successMsg }}
+                        </span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        (click)="createOrder()"
+                    >
+                        Enregistrer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

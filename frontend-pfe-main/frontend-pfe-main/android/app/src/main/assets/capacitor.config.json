@@ -1,0 +1,6 @@
+{
+	"appId": "com.pfe.intervention",
+	"appName": "plab-admin-ng",
+	"webDir": "dist/plab-admin-ng",
+	"bundledWebRuntime": false
+}

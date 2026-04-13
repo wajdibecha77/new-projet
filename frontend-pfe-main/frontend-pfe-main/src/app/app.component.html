@@ -1,0 +1,145 @@
+<!-- AUTH PAGES (login, signup...) -->
+<ng-container *ngIf="isAuthRoute(); else appLayout">
+  <router-outlet></router-outlet>
+</ng-container>
+
+  <!-- ================= MAIN APP ================= -->
+<ng-template #appLayout>
+  <!-- ================= ADMIN / TECH ================= -->
+  <ng-container *ngIf="role !== 'EMPLOYEE'; else employeeLayout">
+
+    <!-- NAVBAR -->
+    <app-navbar></app-navbar>
+
+    <!-- SIDEBAR -->
+    <app-sidebar
+      class="sidebar"
+      [class.active]="sidebar.isOpen">
+    </app-sidebar>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content d-flex flex-column">
+      <router-outlet></router-outlet>
+    </div>
+
+  </ng-container>
+
+  <!-- ================= EMPLOYEE ================= -->
+  <ng-template #employeeLayout>
+
+    <app-navbar></app-navbar>
+
+    <div class="employee-page-shell">
+      <div
+        class="employee-sidebar-overlay"
+        *ngIf="sidebar.isOpen"
+        (click)="closeEmployeeSidebar()"
+      ></div>
+
+      <div class="employee-layout">
+        <aside class="employee-sidebar-menu" [class.active]="sidebar.isOpen">
+          <div class="employee-sidebar-inner">
+            <div class="employee-profile-card card">
+              <div class="employee-profile-card-top"></div>
+
+              <img
+                [src]="sidebarProfileImageUrl || 'assets/img/avatar.png'"
+                class="employee-profile-avatar"
+                height="120"
+                width="120"
+                alt="Avatar employe"
+              />
+
+              <div class="employee-profile-card-body">
+                <p class="employee-profile-field">
+                  <strong>Nom et prenom :</strong><br>
+                  {{ account?.name }}
+                </p>
+
+                <p class="employee-profile-field mb-0">
+                  <strong>Email :</strong><br>
+                  {{ account?.email }}
+                </p>
+              </div>
+            </div>
+
+            <nav class="employee-nav">
+              <a
+                class="employee-nav-link"
+                [class.active]="isEmployeePathActive('/dashboard-visiteur') && employeeMenu === 'dashboard'"
+                routerLink="/dashboard-visiteur"
+                (click)="setEmployeeMenu('dashboard'); closeEmployeeSidebar()"
+              >
+                <i class="fa fa-th-large" aria-hidden="true"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a
+                class="employee-nav-link"
+                [class.active]="isEmployeePathActive('/dashboard-visiteur') && employeeMenu === 'mes'"
+                routerLink="/dashboard-visiteur"
+                (click)="setEmployeeMenu('mes'); closeEmployeeSidebar()"
+              >
+                <i class="fa fa-list-alt" aria-hidden="true"></i>
+                <span>Mes interventions</span>
+              </a>
+
+              <a
+                class="employee-nav-link"
+                [class.active]="isEmployeePathActive('/create-intervention')"
+                routerLink="/create-intervention"
+                (click)="closeEmployeeSidebar()"
+              >
+                <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                <span>Ajouter intervention</span>
+              </a>
+
+            <a
+              class="employee-nav-link"
+              [class.active]="isEmployeePathActive('/mes-demandes')"
+              routerLink="/mes-demandes"
+              (click)="closeEmployeeSidebar()"
+            >
+              <i class="fa fa-tasks" aria-hidden="true"></i>
+              <span>Suivi de mes demandes</span>
+            </a>
+
+              <a
+                class="employee-nav-link"
+                [class.active]="isEmployeePathActive('/profile')"
+                routerLink="/profile"
+                (click)="closeEmployeeSidebar()"
+              >
+                <i class="fa fa-user-o" aria-hidden="true"></i>
+                <span>Profil</span>
+              </a>
+
+              <button type="button" class="employee-nav-link logout" (click)="logout()">
+                <i class="fa fa-sign-out" aria-hidden="true"></i>
+                <span>Deconnexion</span>
+              </button>
+            </nav>
+          </div>
+        </aside>
+
+        <div class="employee-main-column">
+          <div class="employee-content">
+            <div class="employee-dashboard-content d-flex flex-column">
+              <router-outlet></router-outlet>
+            </div>
+          </div>
+
+          <app-footer class="employee-footer"></app-footer>
+        </div>
+      </div>
+    </div>
+
+  </ng-template>
+
+  <!-- FOOTER -->
+  <app-footer *ngIf="role !== 'EMPLOYEE'"></app-footer>
+
+</ng-template>
+
+<!-- NOTIFICATIONS -->
+<notifier-container></notifier-container>

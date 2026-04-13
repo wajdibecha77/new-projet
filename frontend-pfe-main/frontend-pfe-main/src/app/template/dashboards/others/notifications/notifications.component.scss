@@ -1,0 +1,111 @@
+.notif-card {
+  transition: var(--transition);
+  background: #fdfdfe;
+  border: 1px solid #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    background: #fff;
+    border-color: var(--secondary);
+    box-shadow: var(--shadow-md);
+    transform: translateX(5px);
+    
+    .text-primary {
+      transform: translateX(5px);
+    }
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: transparent;
+    transition: var(--transition);
+  }
+  
+  &:has(.badge-warning)::before {
+    background: var(--warning);
+  }
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: softPulse 2s infinite;
+}
+
+@keyframes softPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+strong {
+  display: block;
+  font-size: 1.3rem; /* Larger */
+  color: var(--text-dark);
+  margin-bottom: 0.35rem;
+}
+
+p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-size: 1.1rem; /* Larger */
+}
+
+.small.text-muted {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  background: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 14px;
+  margin-top: 1rem;
+  font-size: 1rem; /* Larger */
+  
+  div {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    
+    &::before {
+      content: '•';
+      margin-right: 8px;
+      color: var(--secondary);
+      font-weight: bold;
+    }
+  }
+}
+
+.text-primary {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: var(--transition);
+  
+  &::after {
+    content: ' →';
+    transition: var(--transition);
+  }
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  border-left: 4px solid var(--primary);
+  padding-left: 1rem;
+}

@@ -1,0 +1,293 @@
+<div class="intervention mb-30">
+    <h4 class="border-bottom">Details d'intervention</h4>
+    <div class="d-flex justify-content-between">
+        <div class="intervention-info d-flex flex-column">
+            <span>
+                <strong>Type d'intervention : </strong>{{ intervention.name }}
+            </span>
+            <span>
+                <strong>Etat : </strong
+                ><span
+                    *ngIf="intervention.etat == 'EN_COURS'"
+                    class="badge badge_warning py-1"
+                    >En cours</span
+                >
+                <span
+                    *ngIf="intervention.etat == 'TERMINEE'"
+                    class="badge badge_success py-1"
+                    >Terminée</span
+                >
+                <span
+                    *ngIf="intervention.etat == 'NON_AFFECTEE'"
+                    class="badge badge_danger py-1"
+                    >Non affectée</span
+                >
+            </span>
+            <span>
+                <strong>Description : </strong
+                >{{ intervention.description }}</span
+            >
+            <div *ngIf="intervention.isAI" class="ai-info mt-2">
+                <span class="ai-badge">🤖 AI</span>
+                <span>
+                    🤖 Cette intervention a ete generee automatiquement par l'intelligence artificielle.
+                </span>
+                <div class="mt-1">
+                    <strong>Type detecte par AI:</strong> {{ intervention.type || intervention.name }}
+                </div>
+                <div *ngIf="intervention.aiDetails" class="mt-1 text-muted">
+                    {{ intervention.aiDetails }}
+                </div>
+            </div>
+            <span> <strong>Degree : </strong>{{ intervention.degree }}</span>
+            <span> <strong>Delai : </strong>{{ intervention.delai }}</span>
+        </div>
+        <button
+            class="btn btn-primary ml-2"
+            *ngIf="intervention.etat != 'TERMINEE'"
+            [routerLink]="['/create-order/', intervention._id]"
+        >
+            Passer une commande
+        </button>
+        <div
+            class="d-flex align-items-end"
+            *ngIf="intervention.etat == 'NON_AFFECTEE'"
+        >
+            <button
+                class="btn btn-danger ml-2 mr-2"
+                *ngIf="
+                    me.role == 'ADMIN' && intervention.etat == 'NON_AFFECTEE'
+                "
+                (click)="supprimerIntervention(intervention._id)"
+            >
+                Supprimer
+            </button>
+            <button
+                class="btn btn-primary"
+                data-toggle="modal"
+                *ngIf="me.role == 'ADMIN'"
+                [attr.data-target]="'#ModalRes' + intervention._id"
+            >
+                Affecter
+            </button>
+
+            <div
+                class="modal fade"
+                [attr.id]="'ModalRes' + intervention._id"
+                tabindex="-1"
+                role="dialog"
+                aria-labelledby="exampleModalLabel"
+                aria-hidden="true"
+            >
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">
+                                Affecter un utilisateur
+                            </h5>
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="responsable">
+                            <ng-container
+                                *ngFor="let user of users; let index = index"
+                            >
+                                <div
+                                    class="res-content"
+                                    [ngClass]="{
+                                        'selected-user':
+                                            affectedUser &&
+                                            user._id == affectedUser._id
+                                    }"
+                                    *ngIf="intervention.name[0] == user.role[0]"
+                                    (click)="setAffectedUser(user)"
+                                >
+                                    <span class="user-icon">
+                                        <i class="fa fa-user"></i>
+                                    </span>
+                                    <span class="user-name">{{
+                                        user.name
+                                    }}</span>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                        <div class="p-3 d-flex flex-row gap-3">
+                            <button
+                                type="button"
+                                data-dismiss="modal"
+                                aria-label="Close"
+                                class="btn btn-danger w-100 mr-3"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-primary w-100"
+                                (click)="affectedToUser(intervention)"
+                            >
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div
+    class="intervention mb-30 d-flex flex-column"
+    *ngIf="intervention.affectedBy"
+>
+    <span>
+        <strong>Affecter à </strong>
+        <span>
+            {{ intervention.affectedBy.name }}
+        </span>
+    </span>
+    <span class="mt-2 text-primary">
+        <strong>Information personnel</strong>
+    </span>
+    <span>
+        <strong>Email : </strong>
+        <span>
+            {{ intervention.affectedBy.email }}
+        </span>
+    </span>
+    <span>
+        <strong>Role : </strong>
+        <span>
+            {{ intervention.affectedBy.role }}
+        </span>
+    </span>
+    <span>
+        <strong>Date début : </strong>
+        <span>
+            {{ intervention.dateDebut }}
+        </span>
+    </span>
+
+    <span class="inter.etat == 'TERMINEE'">
+        <strong>Date fin : </strong>
+        <span>
+            {{ intervention.dateEnd }}
+        </span>
+    </span>
+    <div class="d-flex justify-content-end">
+        <button
+            class="btn btn-danger w-10 mr-3"
+            *ngIf="
+                me._id == intervention.affectedBy._id &&
+                intervention.etat == 'EN_COURS'
+            "
+            (click)="interventionExit(intervention)"
+        >
+            Quitter l'intervention
+        </button>
+        <button
+            class="btn btn-success w-10"
+            *ngIf="
+                me._id == intervention.affectedBy._id &&
+                intervention.etat == 'EN_COURS'
+            "
+            (click)="interventionDone(intervention)"
+        >
+            Terminer
+        </button>
+    </div>
+</div>
+
+<div
+    class="intervention mb-30"
+    *ngIf="intervention.affectedBy && canManageAssignedIntervention()"
+>
+    <h4 class="border-bottom mb-3">Suivi employé</h4>
+
+    <div class="form-group">
+        <label>Détails du travail réalisé</label>
+        <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="workDetails"
+            placeholder="Décrire le travail effectué..."
+        ></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Commentaire</label>
+        <textarea
+            class="form-control"
+            rows="2"
+            [(ngModel)]="comment"
+            placeholder="Ajouter un commentaire..."
+        ></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Mettre à jour l'état</label>
+        <select class="form-control" [(ngModel)]="nextStatus">
+            <option value="">-- Aucun changement --</option>
+            <option value="EN_COURS">En cours</option>
+            <option value="TERMINEE">Terminée</option>
+        </select>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary" (click)="saveWorkUpdate()">
+            Enregistrer le suivi
+        </button>
+    </div>
+</div>
+
+<div class="intervention mb-30" *ngIf="intervention.technicianComments?.length">
+    <h4 class="border-bottom mb-3">Commentaires</h4>
+    <div *ngFor="let c of intervention.technicianComments" class="mb-2">
+        <span>{{ c.text }}</span>
+    </div>
+</div>
+
+<div class="intervention mb-30" *ngIf="intervention.reportedProblems?.length">
+    <h4 class="border-bottom mb-3">Problèmes signalés</h4>
+    <div *ngFor="let p of intervention.reportedProblems" class="mb-2">
+        <span>{{ p.description }}</span>
+    </div>
+</div>
+
+<div class="intervention mb-30" *ngIf="intervention.affectedToUsers">
+    <h4 class="border-bottom mb-4">Historique d'affectation</h4>
+    <div class="table-responsive">
+        <table class="table table-hover text-vertical-middle mb-0">
+            <thead class="bort-none borpt-0">
+                <tr>
+                    <th>Num</th>
+                    <th>Nom et prénom</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th class="text-center">Litige</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr
+                    *ngFor="
+                        let user of intervention.affectedToUsers;
+                        let index = index
+                    "
+                >
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td class="text-center">Raison à faire</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+<div class="card mb-30">
+    <div class="card-body weekly-target-card">
+        <div class="weekly-target-header">
+            <h5 class="card-title">Intervention de ce mois</h5>
+        </div>
+
+        <div class="weekly-target-layout">
+            <div class="weekly-target-chart-wrap">
+                <div id="weekly-target-chart" class="mh-100"></div>
+                <div class="donut-total-caption">
+                    <span class="count">{{ totalMonthCount }}</span>
+                    <span class="label">Total</span>
+                </div>
+            </div>
+
+            <div class="weekly-target-breakdown">
+                <div class="status-item" *ngFor="let status of monthlyStatuses">
+                    <div class="status-top">
+                        <div class="status-label">
+                            <span class="status-dot" [style.background]="status.color"></span>
+                            <i class="fa" [ngClass]="status.icon" [style.color]="status.color" aria-hidden="true"></i>
+                            <span>{{ status.label }}</span>
+                        </div>
+                        <div class="status-value">
+                            <strong [style.color]="status.color">{{ status.count }}</strong>
+                            <span>({{ getStatusPercent(status.count) }}%)</span>
+                        </div>
+                    </div>
+                    <div class="status-progress">
+                        <div class="status-progress-fill" [style.width.%]="getStatusPercent(status.count)" [style.background]="status.color"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="weekly-target-footer m-0">
+            {{ totalByMonth }}/{{ total }} interventions creees ce mois
+        </p>
+    </div>
+</div>

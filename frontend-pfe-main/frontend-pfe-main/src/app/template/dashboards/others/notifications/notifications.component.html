@@ -1,0 +1,114 @@
+<!-- Main Content Header -->
+<div class="main-content-header">
+    <h1>Notifications</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard" role="button">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <span class="active">Notifications</span>
+        </li>
+    </ol>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-30">
+            <div class="card-body">
+
+                <h5 class="card-title mb-3">Toutes les notifications</h5>
+
+                <!-- EMPTY -->
+                <div *ngIf="notifications.length === 0" class="text-muted">
+                    Aucune notification.
+                </div>
+
+                <!-- LIST -->
+                <div
+                    *ngFor="let notification of notifications"
+                    class="border rounded p-3 mb-3 notif-card"
+                    style="cursor: pointer"
+                    (click)="openNotification(notification)"
+                >
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-center gap-2">
+                            <strong>{{ notification.title }}</strong>
+
+                            <!-- 🔴 RECLAMATION badge -->
+                            <span
+                                *ngIf="notification.category === 'RECLAMATION'"
+                                class="badge"
+                                style="background-color: #dc3545; color: white; font-size: 0.7rem;"
+                            >
+                                Réclamation
+                            </span>
+
+                            <!-- 🔵 INTERVENTION badge -->
+                            <span
+                                *ngIf="notification.category !== 'RECLAMATION' && notification.category"
+                                class="badge"
+                                style="background-color: #0d6efd; color: white; font-size: 0.7rem;"
+                            >
+                                {{ notification.category }}
+                            </span>
+                        </div>
+
+                        <span class="badge badge-warning" *ngIf="!notification.isRead">
+                            Nouveau
+                        </span>
+                    </div>
+
+                    <p class="mb-2 mt-2">{{ notification.message }}</p>
+
+                    <!-- 🔴 RECLAMATION details -->
+                    <div class="small text-muted" *ngIf="notification.category === 'RECLAMATION'">
+                        <div *ngIf="notification?.metadata?.lieu">
+                            Lieu: {{ notification.metadata.lieu }}
+                        </div>
+                        <div *ngIf="notification?.metadata?.description">
+                            Description: {{ notification.metadata.description }}
+                        </div>
+                        <div>
+                            Date: {{ notification?.createdAt | date: "dd/MM/yyyy HH:mm" }}
+                        </div>
+                    </div>
+
+                    <!-- 🔵 INTERVENTION details -->
+                    <div class="small text-muted" *ngIf="notification.category !== 'RECLAMATION'">
+                        <div>
+                            Type: {{ notification?.metadata?.interventionType || "-" }}
+                        </div>
+                        <div>
+                            Technicien:
+                            {{
+                                notification?.technicienName ||
+                                notification?.metadata?.employeeName || "-"
+                            }}
+                        </div>
+                        <div>
+                            Concerne:
+                            {{ notification?.metadata?.concernedTarget || "-" }}
+                        </div>
+                        <div>
+                            Date/Heure:
+                            {{
+                                (notification?.metadata?.interventionDateTime ||
+                                notification?.createdAt)
+                                | date: "dd/MM/yyyy HH:mm"
+                            }}
+                        </div>
+                        <div>
+                            Lieu: {{ notification?.metadata?.lieu || "-" }}
+                        </div>
+                    </div>
+
+                    <div class="mt-2 text-primary">
+                        <span *ngIf="notification.category === 'RECLAMATION'">Voir la réclamation →</span>
+                        <span *ngIf="notification.category !== 'RECLAMATION'">Voir les détails →</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

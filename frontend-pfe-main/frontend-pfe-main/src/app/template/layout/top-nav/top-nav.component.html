@@ -1,0 +1,396 @@
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand fixed-top top-menu">
+    <a class="navbar-brand" routerLink="/dashboard-sales">
+        <!-- Large logo -->
+        <img
+            src="assets/img/Logo.png"
+            alt="Logo"
+            class="large-logo"
+            height="45"
+        />
+
+        <!-- Small logo -->
+        <img src="assets/img/Logo.png" alt="Small Logo" class="small-logo" />
+    </a>
+
+    <!-- Burger menu -->
+    <div class="burger-menu toggle-menu">
+        <span class="top-bar"></span>
+        <span class="middle-bar"></span>
+        <span class="bottom-bar"></span>
+    </div>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- Mega Menu -->
+        <ul class="left-nav d-none d-md-block navbar-nav">
+            <li class="nav-item dropdown mega-menu">
+                <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <div class="mega-menu-btn">
+                        Mega Menu
+                        <i data-feather="chevron-down" class="icon"></i>
+                    </div>
+                </a>
+
+                <div class="dropdown-menu">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6">
+                                <h5 class="title">Features</h5>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/alerts"
+                                    routerLinkActive="active"
+                                >
+                                    Alerts
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/badges"
+                                    routerLinkActive="active"
+                                >
+                                    Badges
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/buttons"
+                                    routerLinkActive="active"
+                                >
+                                    Buttons
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <h5 class="title">Features</h5>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/cards"
+                                    routerLinkActive="active"
+                                >
+                                    Cards
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/dropdowns"
+                                    routerLinkActive="active"
+                                >
+                                    Dropdowns
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/forms"
+                                    routerLinkActive="active"
+                                >
+                                    Forms
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <h5 class="title">Features</h5>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/list-groups"
+                                    routerLinkActive="active"
+                                >
+                                    List Groups
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/modals"
+                                    routerLinkActive="active"
+                                >
+                                    Modals
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/progress-bars"
+                                    routerLinkActive="active"
+                                >
+                                    Progress Bars
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <h5 class="title">Features</h5>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/tables"
+                                    routerLinkActive="active"
+                                >
+                                    Tables
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    routerLink="/ui-components/tabs"
+                                    routerLinkActive="active"
+                                >
+                                    Tabs
+                                </a>
+                                <a
+                                    class="dropdown-item"
+                                    target="_blank"
+                                    routerLink="/auth/signup"
+                                    routerLinkActive="active"
+                                >
+                                    Signup
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Search form -->
+        <form class="nav-search-form d-none d-sm-block">
+            <input type="text" class="form-control" placeholder="Search..." />
+            <button type="submit" class="search-success">
+                <i data-feather="search" class="icon"></i>
+            </button>
+        </form>
+
+        <!-- Right nav -->
+        <ul class="navbar-nav right-nav ml-auto">
+            <!-- Email Notification dropdown -->
+            <li class="nav-item dropdown message-box d-none d-sm-block">
+                <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <div class="count-info">
+                        <i data-feather="mail" class="icon"></i>
+                        <span class="ci-number theme-bg">
+                            <span class="ripple theme-bg"></span>
+                            <span class="ripple theme-bg"></span>
+                            <span class="ripple theme-bg"></span>
+                        </span>
+                    </div>
+                </a>
+
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/1.jpg"
+                                    alt="Profile"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status online"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Aaron Rossi</span>
+                                <span class="mail-desc"
+                                    >Just sent a new comment!</span
+                                >
+                            </div>
+                            <span class="time">0 seconds ago</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/2.jpg"
+                                    alt="User Image"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status ofline"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Marco Gomez</span>
+                                <span class="mail-desc"
+                                    >Just sent a new comment!</span
+                                >
+                            </div>
+                            <span class="time">5 minutes ago</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/3.jpg"
+                                    alt="User Image"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status away"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Mitch Petty</span>
+                                <span class="mail-desc"
+                                    >Just sent a new comment!</span
+                                >
+                            </div>
+                            <span class="time">9:00 AM</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        See all emails
+                        <i data-feather="chevron-right" class="icon"></i>
+                    </a>
+                </div>
+            </li>
+
+            <!-- Message Notification dropdown -->
+            <li class="message-box dropdown nav-item">
+                <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <div class="count-info">
+                        <i data-feather="bell" class="icon"></i>
+                        <span class="ci-number">
+                            <span class="ripple"></span>
+                            <span class="ripple"></span>
+                            <span class="ripple"></span>
+                        </span>
+                    </div>
+                </a>
+
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/4.jpg"
+                                    alt="User Image"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status online"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Aaron Rossi</span>
+                                <span class="mail-desc"
+                                    >Just sent a new comment!</span
+                                >
+                            </div>
+                            <span class="time">0 seconds ago</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/5.jpg"
+                                    alt="User Image"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status ofline"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Marco Gomez</span>
+                                <span class="mail-desc"
+                                    >Just sent a new comment!</span
+                                >
+                            </div>
+                            <span class="time">5 minutes ago</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <div class="message-item">
+                            <div class="user-pic">
+                                <img
+                                    src="assets/img/user/6.jpg"
+                                    alt="User Image"
+                                    class="rounded-circle"
+                                />
+                                <span class="profile-status away"></span>
+                            </div>
+                            <div class="chat-content">
+                                <span class="message-title">Mitch Petty</span>
+                                <span class="mail-desc">
+                                    New order received!
+                                    <span class="amount">$250</span>
+                                </span>
+                            </div>
+                            <span class="time">9:00 AM - 02-02-2019</span>
+                        </div>
+                    </a>
+
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        Check all notifications
+                        <i data-feather="chevron-right" class="icon"></i>
+                    </a>
+                </div>
+            </li>
+
+            <!-- Profile dropdown -->
+            <li class="nav-item dropdown profile-nav-item">
+                <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <div class="menu-profile">
+                        <span class="name">Aaron Rossi</span>
+                        <img
+                            src="assets/img/profile.jpg"
+                            alt="Profile Image"
+                            class="rounded-circle"
+                        />
+                    </div>
+                </a>
+
+                <div class="dropdown-menu">
+                    <a
+                        class="dropdown-item"
+                        routerLink="/others/profile"
+                        routerLinkActive="active"
+                    >
+                        <i data-feather="user" class="icon"></i>
+                        Profile
+                    </a>
+                    <a
+                        class="dropdown-item"
+                        routerLink="/inbox"
+                        routerLinkActive="active"
+                    >
+                        <i data-feather="inbox" class="icon"></i>
+                        Mailbox
+                    </a>
+                    <a
+                        class="dropdown-item"
+                        routerLink="/chat"
+                        routerLinkActive="active"
+                    >
+                        <i data-feather="help-circle" class="icon"></i>
+                        Support
+                    </a>
+                    <a
+                        class="dropdown-item"
+                        routerLink="/others/profile-settings"
+                        routerLinkActive="active"
+                    >
+                        <i data-feather="settings" class="icon"></i>
+                        Settings
+                    </a>
+                    <a class="dropdown-item" routerLink="/auth/signin">
+                        <i data-feather="log-out" class="icon"></i>
+                        Logout
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+<!-- End Top Navbar -->

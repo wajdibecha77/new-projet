@@ -1,0 +1,73 @@
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-sales">Fournisseur</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">
+                {{ isEditMode ? "Modification" : "Creation" }}
+            </span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Vertical Form -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        {{ isEditMode ? "Modifier le Fournisseur" : "Ajouter un Fournisseur" }}
+                    </h5>
+                </div>
+                <form>
+                    <div class="form-group">
+                        <label> Nom et prenom </label>
+                        <input
+                            type="text"
+                            name="name"
+                            [(ngModel)]="fournisseur.name"
+                            class="form-control"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label> Email address </label>
+                        <input
+                            type="text"
+                            name="email"
+                            [(ngModel)]="fournisseur.email"
+                            class="form-control"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>Telephone </label>
+                        <input
+                            type="text"
+                            name="tel"
+                            [(ngModel)]="fournisseur.tel"
+                            class="form-control"
+                        />
+                    </div>
+
+                    <div class="form-group w-100">
+                        <span *ngIf="successMsg" class="alert alert-success">
+                            {{ successMsg }}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="saveFournisseur($event)"
+                    >
+                        {{ isEditMode ? "Mettre a jour" : "Enregistrer" }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

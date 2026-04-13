@@ -1,0 +1,547 @@
+<ng-container *ngIf="isEmployeeDashboard()">
+    <section class="employee-dashboard">
+        <div class="employee-dashboard-header">
+            <div>
+                <h1 class="employee-page-title">Mes interventions</h1>
+                <p class="employee-page-subtitle">
+                    Consultez la liste de vos interventions et ajoutez-en en quelques clics.
+                </p>
+            </div>
+
+            <button
+                *ngIf="!showForm"
+                type="button"
+                class="btn btn-primary employee-add-btn"
+                (click)="openForm()"
+            >
+                <i class="fa fa-plus mr-2" aria-hidden="true"></i>
+                Ajouter une intervention
+            </button>
+
+            <button
+                *ngIf="showForm"
+                type="button"
+                class="btn btn-outline-secondary employee-add-btn"
+                (click)="closeForm()"
+            >
+                Retour a la liste
+            </button>
+        </div>
+
+        <div class="employee-stats-grid">
+            <article class="employee-stat-card total">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-files-o" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ totalInterventionsCount }}</h3>
+                    <p>Total interventions</p>
+                </div>
+            </article>
+
+            <article class="employee-stat-card progress">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ enCoursCount }}</h3>
+                    <p>En cours</p>
+                </div>
+            </article>
+
+            <article class="employee-stat-card done">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-check-circle-o" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ termineesCount }}</h3>
+                    <p>Terminees</p>
+                </div>
+            </article>
+
+            <article class="employee-stat-card pending">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-ban" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ nonAffecteeCount }}</h3>
+                    <p>Non affectee</p>
+                </div>
+            </article>
+
+            <article class="employee-stat-card progress">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-android" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ aiInterventionsCount }}</h3>
+                    <p>AI Interventions</p>
+                </div>
+            </article>
+
+            <article class="employee-stat-card total">
+                <div class="employee-stat-icon">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3>{{ manualInterventionsCount }}</h3>
+                    <p>Interventions manuelles</p>
+                </div>
+            </article>
+        </div>
+
+        <ng-container *ngIf="showForm; else employeeInterventionsList">
+            <div class="card employee-form-shell mb-30">
+                <div class="card-body">
+                    <app-create-intervention
+                        [stayOnPage]="true"
+                        (interventionCreated)="onInterventionCreated($event)"
+                        (cancelRequested)="closeForm()"
+                    ></app-create-intervention>
+                </div>
+            </div>
+        </ng-container>
+
+        <ng-template #employeeInterventionsList>
+            <div class="card employee-table-card mb-30">
+                <div class="card-body">
+                    <div class="employee-table-header">
+                        <h5>Liste de mes interventions</h5>
+                    </div>
+
+                    <div class="table-responsive" *ngIf="hasInterventions; else emptyEmployeeState">
+                        <table class="table employee-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type d'intervention</th>
+                                    <th>Lieu</th>
+                                    <th>Delai</th>
+                                    <th>Etat</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let inter of displayedInterventions">
+                                    <td>
+                                        {{ inter?.name || '-' }}
+                                        <span *ngIf="inter?.isAI" class="ai-badge">🤖 AI</span>
+                                    </td>
+                                    <td>{{ inter?.lieu || '-' }}</td>
+                                    <td>{{ formatDate(inter?.delai) }}</td>
+                                    <td>
+                                        <span [class]="getStatusClass(inter?.etat)">
+                                            {{ formatStatus(inter?.etat) }}
+                                        </span>
+                                    </td>
+                                    <td class="employee-action-cell">
+                                        <a
+                                            class="employee-action-btn"
+                                            [routerLink]="['/intervention', inter?._id]"
+                                            title="Voir"
+                                            aria-label="Voir"
+                                        >
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                        </a>
+                                        <button
+                                            type="button"
+                                            class="employee-action-btn"
+                                            title="Edition bientot disponible"
+                                            aria-label="Editer"
+                                            disabled
+                                        >
+                                            <i class="fa fa-pencil" aria-hidden="true"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="employee-action-btn danger"
+                                            title="Suppression bientot disponible"
+                                            aria-label="Supprimer"
+                                            disabled
+                                        >
+                                            <i class="fa fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <ng-template #emptyEmployeeState>
+                        <div class="employee-empty-state text-center py-5">
+                            <i class="fa fa-inbox" aria-hidden="true"></i>
+                            <h6>Aucune intervention pour le moment</h6>
+                            <p>Cliquez sur "Ajouter une intervention" pour creer votre premiere intervention.</p>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+        </ng-template>
+    </section>
+</ng-container>
+
+<ng-container *ngIf="!isEmployeeDashboard()">
+    <div class="main-content-header">
+        <h1>Dashboard</h1>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a routerLink="/dashboard-crm">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">
+                <span class="active">{{ account?.role }}</span>
+            </li>
+        </ol>
+    </div>
+    <!-- End Main Content Header -->
+</ng-container>
+
+<!-- Dashboard Technicien -->
+<ng-container *ngIf="isTechnicianDashboard() && currentStats">
+    <div class="row">
+        <div class="col-lg-6 col-sm-6">
+            <div class="stats-card-one mb-30">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-10 line-height-1">Interventions</p>
+                        <h3 class="mb-0 fs-25">{{ currentStats.total }}</h3>
+                    </div>
+
+                    <span class="badge badge-cyan fs-12">
+                        <i class="icofont-swoosh-up mr-1"></i>
+                        <span class="fw-600 m-l-5">Total</span>
+                    </span>
+                </div>
+
+                <div class="mt-15">
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>{{ currentDashboardLabel }}</span>
+                        </div>
+                        <span class="fw-600">{{ currentStats.totalbyInter }}%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div
+                            class="progress-bar bg-success"
+                            [style]="'width:' + currentStats.totalbyInter + '%'"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-sm-6">
+            <div class="stats-card-one mb-30">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-10 line-height-1">Mes Interventions</p>
+                        <h3 class="mb-0 fs-25">{{ currentStats.totalMe }}</h3>
+                    </div>
+
+                    <span class="badge badge-cyan font-size-12">
+                        <i class="icofont-swoosh-up mr-1"></i>
+                        <span class="fw-600 m-l-5">Affectees</span>
+                    </span>
+                </div>
+
+                <div class="mt-15">
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>{{ currentDashboardLabel }}</span>
+                        </div>
+                        <span class="fw-600">{{ currentStats.totalbyMe }}%</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-1">
+                        <div
+                            class="progress-bar bg-primary"
+                            [style]="'width:' + currentStats.totalbyMe + '%'"
+                        ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 col-sm-6">
+            <div class="stats-card-two mb-30">
+                <div class="media align-items-center justify-content-between">
+                    <div class="ml-0">
+                        <p class="mb-10 line-height-1 fs-16">Interventions en cours</p>
+                        <h3 class="mb-0 fs-25">{{ currentStats.totalEnCours }}</h3>
+                    </div>
+                    <div class="avatar avatar-gold">
+                        <i [class]="currentDashboardIcon" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-sm-6">
+            <div class="stats-card-two mb-30">
+                <div class="media align-items-center justify-content-between">
+                    <div class="ml-0">
+                        <p class="mb-10 line-height-1">Interventions non affectees</p>
+                        <h3 class="mb-0 fs-25">{{ currentStats.totalNotAffected }}</h3>
+                    </div>
+                    <div class="avatar avatar-purple">
+                        <i class="fa fa-spinner" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-sm-12">
+            <div class="stats-card-two mb-30">
+                <div class="media align-items-center justify-content-between">
+                    <div class="ml-0">
+                        <p class="mb-10 line-height-1">Interventions terminees</p>
+                        <h3 class="mb-0 fs-25">{{ completionRate }}%</h3>
+                    </div>
+                    <div class="avatar avatar-green">
+                        <i class="fa fa-check-circle" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 col-sm-6">
+            <div class="stats-card-two mb-30">
+                <div class="media align-items-center justify-content-between">
+                    <div class="ml-0">
+                        <p class="mb-10 line-height-1">AI Interventions</p>
+                        <h3 class="mb-0 fs-25">{{ aiInterventionsCount }}</h3>
+                    </div>
+                    <div class="avatar avatar-purple">
+                        <i class="fa fa-android" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-sm-6">
+            <div class="stats-card-two mb-30">
+                <div class="media align-items-center justify-content-between">
+                    <div class="ml-0">
+                        <p class="mb-10 line-height-1">Interventions manuelles</p>
+                        <h3 class="mb-0 fs-25">{{ manualInterventionsCount }}</h3>
+                    </div>
+                    <div class="avatar avatar-gold">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-30">
+        <div class="card-body">
+            <div class="card-header mb-4 px-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-1">Liste des interventions</h5>
+                    <p class="text-muted mb-0">
+                        Vue synthese de vos interventions {{ currentDashboardLabel.toLowerCase() }}.
+                    </p>
+                </div>
+
+                <a class="btn btn-primary" routerLink="/mes-interventions">Voir tous</a>
+            </div>
+
+            <div class="table-responsive" *ngIf="hasInterventions; else emptyTechnicianState">
+                <table class="table table-hover text-vertical-middle mb-0">
+                    <thead class="bort-none borpt-0">
+                        <tr>
+                            <th>Num</th>
+                            <th>Type d'intervention</th>
+                            <th>Delai</th>
+                            <th>Created by</th>
+                            <th>Lieu</th>
+                            <th>Description</th>
+                            <th>Etat</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr *ngFor="let inter of displayedInterventions; let index = index">
+                            <td>{{ index + 1 }}</td>
+                            <td>
+                                {{ inter?.name || '-' }}
+                                <span *ngIf="inter?.isAI" class="ai-badge">🤖 AI</span>
+                            </td>
+                            <td>{{ formatDate(inter?.delai) }}</td>
+                            <td>{{ inter?.createdBy?.name || '-' }}</td>
+                            <td>{{ inter?.lieu || '-' }}</td>
+                            <td>{{ inter?.description || '-' }}</td>
+                            <td>
+                                <span [class]="getStatusClass(inter?.etat)">
+                                    {{ formatStatus(inter?.etat) }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <ng-template #emptyTechnicianState>
+                <div class="text-center py-5 text-muted">
+                    <i class="fa fa-inbox fs-1 mb-3 d-block"></i>
+                    <h6 class="mb-2">Aucune intervention a afficher</h6>
+                    <p class="mb-0">Vos prochaines interventions apparaitront ici avec leur etat.</p>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+</ng-container>
+
+    <!-- ================= HELP GUIDE (LARGE VERSION) ================= -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4" *ngIf="showGuide && account?.role === 'CLIENT'">
+        <div class="card-body p-5">
+            
+            <div class="guide-header-large d-flex justify-content-between align-items-center mb-5">
+                <div class="step-indicator-large d-flex gap-3">
+                    <div class="step-dot-large" [class.active]="currentSlide >= 1"></div>
+                    <div class="step-dot-large" [class.active]="currentSlide >= 2"></div>
+                    <div class="step-dot-large" [class.active]="currentSlide >= 3"></div>
+                    <div class="step-dot-large" [class.active]="currentSlide >= 4"></div>
+                </div>
+                <h4 class="m-0 fw-bold text-muted">Étape {{ currentSlide }} / 4</h4>
+            </div>
+
+            <!-- SLIDE 1: INTRODUCTION -->
+            <div class="slide-content-large text-center" *ngIf="currentSlide === 1">
+                <div class="display-1 mb-4">🚀</div>
+                <h1 class="display-4 fw-black mb-3">Bienvenue {{ account?.name }} !</h1>
+                <p class="lead text-muted mb-5">Votre plateforme d'opérations est prête. Voici comment exploiter tout son potentiel.</p>
+                
+                <div class="row g-4 mt-2">
+                    <div class="col-md-3">
+                        <div class="feature-box p-4 rounded-4 bg-light border-0 h-100 transition-hover">
+                            <i class="fa fa-envelope-open display-5 text-primary mb-3"></i>
+                            <h5 class="fw-bold">Nouveau Message</h5>
+                            <p class="small text-muted m-0">Déclarez vos incidents en quelques clics.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-box p-4 rounded-4 bg-light border-0 h-100 transition-hover">
+                            <i class="fa fa-eye display-5 text-success mb-3"></i>
+                            <h5 class="fw-bold">Suivi Live</h5>
+                            <p class="small text-muted m-0">Suivez l'avancement en temps réel.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-box p-4 rounded-4 bg-light border-0 h-100 transition-hover">
+                            <i class="fa fa-paperclip display-5 text-info mb-3"></i>
+                            <h5 class="fw-bold">Multimédia</h5>
+                            <p class="small text-muted m-0">Ajoutez des photos pour plus de clarté.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-box p-4 rounded-4 bg-light border-0 h-100 transition-hover">
+                            <i class="fa fa-lock display-5 text-warning mb-3"></i>
+                            <h5 class="fw-bold">Sécurisé</h5>
+                            <p class="small text-muted m-0">Vos données sont protégées par TAV.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: COMMENT SOUMETTRE -->
+            <div class="slide-content-large text-center" *ngIf="currentSlide === 2">
+                <h1 class="display-4 fw-black mb-4">Guide Rapide</h1>
+                <p class="lead text-muted mb-5">3 étapes pour un message efficace.</p>
+                
+                <div class="max-width-800 mx-auto text-start">
+                    <div class="d-flex align-items-center mb-4 p-4 border rounded-4 bg-white shadow-sm">
+                        <div class="step-num-large me-4">1</div>
+                        <div>
+                            <h4 class="fw-bold mb-1">Décrivez le problème</h4>
+                            <p class="text-muted m-0 fs-5">Soyez le plus précis possible techniquement pour aider nos équipes.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-4 p-4 border rounded-4 bg-white shadow-sm">
+                        <div class="step-num-large me-4">2</div>
+                        <div>
+                            <h4 class="fw-bold mb-1">Localisez l'incident</h4>
+                            <p class="text-muted m-0 fs-5">Indiquez la porte, le terminal ou la zone spécifique.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center p-4 border rounded-4 bg-white shadow-sm">
+                        <div class="step-num-large me-4">3</div>
+                        <div>
+                            <h4 class="fw-bold mb-1">Illustrez avec une photo</h4>
+                            <p class="text-muted m-0 fs-5">Une image vaut mieux que mille mots pour le diagnostic.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: CIRCUIT DE TRAITEMENT -->
+            <div class="slide-content-large text-center" *ngIf="currentSlide === 3">
+                <h1 class="display-4 fw-black mb-4">Processus de Traitement</h1>
+                <p class="lead text-muted mb-5">Suivez le cheminement de votre demande.</p>
+                
+                <div class="timeline-large d-flex align-items-center justify-content-between mt-5 py-4">
+                    <div class="t-step-large">
+                        <div class="t-circle-large mb-3">📥</div>
+                        <h5 class="fw-bold">Réception</h5>
+                    </div>
+                    <div class="t-arrow-large"></div>
+                    <div class="t-step-large">
+                        <div class="t-circle-large mb-3">🔍</div>
+                        <h5 class="fw-bold">Analyse</h5>
+                    </div>
+                    <div class="t-arrow-large"></div>
+                    <div class="t-step-large">
+                        <div class="t-circle-large mb-3">🛠️</div>
+                        <h5 class="fw-bold">Assignation</h5>
+                    </div>
+                    <div class="t-arrow-large"></div>
+                    <div class="t-step-large">
+                        <div class="t-circle-large mb-3">✅</div>
+                        <h5 class="fw-bold">Solution</h5>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-5 border-0 rounded-4 p-4 text-start">
+                    <i class="fa fa-info-circle me-3 fs-3"></i>
+                    Vous recevrez des notifications en temps réel par email et sur la plateforme.
+                </div>
+            </div>
+
+            <!-- SLIDE 4: PRÊT À COMMENCER -->
+            <div class="slide-content-large text-center" *ngIf="currentSlide === 4">
+                <div class="display-1 mb-4">✨</div>
+                <h1 class="display-4 fw-black mb-3">C'est à vous !</h1>
+                <p class="lead text-muted mb-5">Tout est clair ? Vous pouvez maintenant soumettre votre première réclamation.</p>
+                
+                <div class="row justify-content-center g-4 mb-5">
+                    <div class="col-md-5">
+                        <div class="p-3 border rounded-4">
+                            <i class="fa fa-envelope text-primary me-2"></i> support@tav.com.tn
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="p-3 border rounded-4">
+                            <i class="fa fa-phone text-primary me-2"></i> +216 71 000 000
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-xl px-5 py-3 rounded-pill shadow-lg fw-bold" (click)="finishGuide()">
+                    <i class="fa fa-chevron-right me-3"></i> Accéder au formulaire (Réclamation)
+                </button>
+            </div>
+
+            <!-- FOOTER NAVIGATION -->
+            <div class="guide-footer-large d-flex justify-content-between align-items-center mt-5 pt-4 border-top" *ngIf="currentSlide < 4">
+                <button class="btn btn-link text-muted fw-bold" (click)="finishGuide()">Passer le guide</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-light px-4 py-2 rounded-3" (click)="prevSlide()" [disabled]="currentSlide === 1">Retour</button>
+                    <button class="btn btn-primary px-5 py-2 rounded-3 shadow-sm" (click)="nextSlide()">Continuer</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+

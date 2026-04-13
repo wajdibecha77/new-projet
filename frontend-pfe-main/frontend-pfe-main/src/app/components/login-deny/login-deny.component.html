@@ -1,0 +1,8 @@
+<div class="approval-page">
+  <h2>Refus de connexion</h2>
+  <p *ngIf="loading">{{ message }}</p>
+  <p class="text-success" *ngIf="!loading && !error">{{ message }}</p>
+  <p class="text-danger" *ngIf="error">{{ error }}</p>
+  <a class="btn btn-primary mt-2" routerLink="/auth/signin">Retour a la connexion</a>
+</div>
+

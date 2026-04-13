@@ -1,0 +1,112 @@
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-sales">Utilisateur</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">{{
+                isEditMode ? "Modification" : "Creation"
+            }}</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Vertical Form -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        {{
+                            isEditMode
+                                ? "Modifier un utilisateur"
+                                : "Ajouter un utilisateur"
+                        }}
+                    </h5>
+                </div>
+
+                <form (ngSubmit)="submitUser()">
+                    <div class="form-group">
+                        <label> Nom et prenom </label>
+                        <input
+                            type="text"
+                            name="name"
+                            [(ngModel)]="user.name"
+                            class="form-control"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label> Role </label>
+                        <select
+                            name="role"
+                            [(ngModel)]="user.role"
+                            class="form-control"
+                        >
+                            <option value="EMPLOYEE">Employee</option>
+                            <option value="PLOMBERIE">Plomberie</option>
+                            <option value="ELECTRICIEN">Electricien</option>
+                            <option value="INFORMATICIEN">Informaticien</option>
+                            <option value="MECANICIEN">Mecanicien</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label> Email address </label>
+                        <input
+                            type="text"
+                            name="email"
+                            [(ngModel)]="user.email"
+                            class="form-control"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Password
+                            {{
+                                isEditMode
+                                    ? "(laisser vide pour conserver l'ancien mot de passe)"
+                                    : ""
+                            }}
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            [(ngModel)]="user.password"
+                            class="form-control"
+                            [required]="!isEditMode"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label> Service </label>
+                        <select
+                            name="service"
+                            [(ngModel)]="user.service"
+                            class="form-control"
+                        >
+                            <ng-container *ngFor="let service of services">
+                                <option [value]="service._id">
+                                    {{ service.name }}
+                                </option>
+                            </ng-container>
+                        </select>
+                        <small id="emailHelp" class="form-text text-muted"
+                            >service est optionnel.</small
+                        >
+                    </div>
+                    <div class="form-group w-100">
+                        <span *ngIf="successMsg" class="alert alert-success">
+                            {{ successMsg }}
+                        </span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        {{ isEditMode ? "Mettre a jour" : "Enregistrer" }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

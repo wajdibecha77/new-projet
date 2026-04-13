@@ -1,0 +1,135 @@
+<!-- Main Content Header -->
+<div class="main-content-header">
+    <h1>Invoice</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-sales">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">Invoice</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Invoice -->
+<div class="invoice-template mb-30">
+    <div class="invoice-header mb-4">
+        <h3>Invoice</h3>
+        <p>#9587457</p>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="text-left">
+                <h3 class="fs-18">Plab Admin</h3>
+                <p class="mb-2">
+                    M/2750,
+                    <br>Quadra Street,
+                    <br>Victoria,
+                    <br>Canada.
+                </p>
+                <p>
+                    <span class="fw-500">Email:</span>
+                    Plabadmin@gmail.com <br>
+                    <span class="fw-500">Phone:</span> 123-555-567
+                </p>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="text-right xs-text-left">
+                <h3 class="fs-18">To Visiteur</h3>
+                <p class="mb-2">E/3456,
+                    <br>Quadra Street,
+                    <br>Victoria,
+                    <br>Canada.
+                    <br>
+                </p>
+                <p>
+                    <span class="fw-500">Invoice Date:</span>
+                    15 Mar 2019 <br>
+                    <span class="fw-500">Due Date:</span> 20 Mar 2019
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table m-0 table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>DESCRIPTION</th>
+                    <th class="text-center">Quantity</th>
+                    <th class="text-center">Unit Price</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Apple iPhone XR (64GB)</td>
+                    <td class="text-center">2</td>
+                    <td class="text-center">$2000</td>
+                    <td class="text-right">$2400</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Apple iPhone XR Black</td>
+                    <td class="text-center">3</td>
+                    <td class="text-center">$1000</td>
+                    <td class="text-right">$3000</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>HeadPhone</td>
+                    <td class="text-center">2</td>
+                    <td class="text-center">$1500</td>
+                    <td class="text-right">$3000</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Shoes</td>
+                    <td class="text-center">3</td>
+                    <td class="text-center">$1200</td>
+                    <td class="text-right">$3600</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Macbook pro</td>
+                    <td class="text-center">1</td>
+                    <td class="text-center">$1,299</td>
+                    <td class="text-right">$1,299</td>
+                </tr>
+                <tr class="active">
+                    <td colspan="3"></td>
+                    <td class="text-center black-text"><b>Subtotal:</b></td>
+                    <td class="text-right black-text"><b>$13,299</b></td>
+                </tr>
+                <tr class="active">
+                    <td colspan="3"></td>
+                    <td class="text-center black-text"><b>Vat Rate:</b></td>
+                    <td class="text-right black-text"><b>20%</b></td>
+                </tr>
+                <tr class="active">
+                    <td colspan="3"></td>
+                    <td class="text-center black-text"><b>Vat Due:</b></td>
+                    <td class="text-right black-text"><b>5%</b></td>
+                </tr>
+                <tr class="active">
+                    <td colspan="3"></td>
+                    <td class="text-center fs-18 black-text"><b>Total:</b></td>
+                    <td class="text-right fs-18 black-text"><b>$10,299</b></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-right mt-3">
+        <button type="button" class="btn btn-secondary mr-2">
+            <i data-feather="printer" class="icon wh-13 mr-1"></i>
+            Print
+        </button>
+        <button type="button" class="btn btn-primary">Send Invoice</button>
+    </div>
+</div>
+<!-- End Invoice -->

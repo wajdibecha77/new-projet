@@ -1,0 +1,64 @@
+<div class="auth-page signin-page signup-page">
+  <div class="auth-card">
+    <div class="left-side">
+      <div class="left-overlay"></div>
+      <div class="left-content">
+        <h2 class="brand-title">Plateforme Operations Aeroportuaires</h2>
+        <span class="brand-line"></span>
+        <p class="brand-desc">Gestion intelligente des interventions et incidents</p>
+      </div>
+    </div>
+
+    <div class="right-side">
+      <h1 class="title">Creer un compte</h1>
+      <p class="subtitle">Inscrivez-vous pour continuer.</p>
+
+      <form (ngSubmit)="onSignup()">
+        <div class="field">
+          <label>Nom et prenom</label>
+          <input type="text" [(ngModel)]="name" name="name" required />
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="email" name="email" required />
+        </div>
+
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" [(ngModel)]="password" name="password" required />
+        </div>
+
+        <div class="field">
+          <label>Sexe</label>
+          <select [(ngModel)]="gender" name="gender">
+            <option value="HOMME">Homme</option>
+            <option value="FEMME">Femme</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Date de naissance</label>
+          <input type="date" [(ngModel)]="birthDate" name="birthDate" />
+        </div>
+
+        <button class="btn-primary" [disabled]="loading">
+          {{ loading ? "Creation..." : "Creer un compte" }}
+        </button>
+
+        <p *ngIf="successMessage" class="success-msg">
+          {{ successMessage }}
+        </p>
+
+        <p *ngIf="errorMessage" class="error-msg">
+          {{ errorMessage }}
+        </p>
+      </form>
+
+      <p class="signup-note">
+        Deja un compte ?
+        <a class="signup-link" routerLink="/auth/signin">Se connecter</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,169 @@
+<!-- ================= LIST ================= -->
+<div *ngIf="!selectedReclamation" class="page">
+
+  <h2 class="page-title">Notifications de réclamation</h2>
+
+  <div class="reclamation-container">
+
+    <div *ngFor="let rec of reclamations" class="notif-card">
+
+      <!-- HEADER -->
+      <div class="notif-header">
+        <h3>Nouvelle réclamation</h3>
+        <span class="badge">Nouveau</span>
+      </div>
+
+      <!-- USER -->
+      <p class="user">
+        🔔 <strong>{{ rec.createdBy?.name }}</strong> a envoyé une réclamation.
+      </p>
+
+      <!-- INFOS -->
+      <div class="info-block">
+
+        <div class="info-row">
+          <span class="label">Description</span>
+          <span class="value">{{ rec.description }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Lieu</span>
+          <span class="value">{{ rec.lieu }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Date</span>
+          <span class="value">
+            {{ rec.createdAt | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ACTION -->
+      <button (click)="selectReclamation(rec)" class="details-btn">
+        Voir détails complets →
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= DETAILS ================= -->
+<div *ngIf="selectedReclamation" class="details-wrapper">
+
+  <div class="details-card">
+
+    <!-- HEADER -->
+    <div class="header">
+      <h2>Détails de la réclamation</h2>
+
+      <button class="back-btn" (click)="backToList()">
+        ⬅ Retour
+      </button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <div class="info-block">
+
+        <div class="info-row">
+          <span class="label">Visiteur</span>
+          <span class="value">{{ selectedReclamation.createdBy?.name }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Description</span>
+          <span class="value">{{ selectedReclamation.description }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Lieu</span>
+          <span class="value">{{ selectedReclamation.lieu }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Date</span>
+          <span class="value">
+            {{ selectedReclamation.createdAt | date:'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ================= IMAGES ================= -->
+      <div class="image-box">
+
+        <span class="label image-label">Images :</span>
+
+        <!-- ✅ MULTIPLE IMAGES -->
+        <div
+          class="images-container"
+          *ngIf="selectedReclamation?.images?.length > 0"
+        >
+          <img
+            *ngFor="let img of selectedReclamation.images"
+            [src]="getImageUrl(img)"
+            (click)="openPreview(img)"
+            (error)="onImageError($event)"
+            class="reclamation-img"
+          />
+        </div>
+
+        <!-- ❌ NO IMAGE -->
+        <div *ngIf="!selectedReclamation?.images?.length" class="no-image">
+          📷 Aucune image disponible
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= 🔥 MESSAGES ================= -->
+    <div *ngIf="successMessage" class="success-msg">
+      {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="error-msg">
+      {{ errorMessage }}
+    </div>
+
+    <!-- ACTIONS (ADMIN ONLY) -->
+    <div class="actions" *ngIf="role === 'ADMIN' && selectedReclamation?.status === 'EN_ATTENTE'">
+
+      <button
+        class="accept"
+        (click)="accept(selectedReclamation._id)"
+        [disabled]="actionLoading"
+      >
+        <span *ngIf="!actionLoading">✅ Accepter</span>
+        <span *ngIf="actionLoading">⏳...</span>
+      </button>
+
+      <button
+        class="refuse"
+        (click)="refuse(selectedReclamation._id)"
+        [disabled]="actionLoading"
+      >
+        ❌ Refuser
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= 🔥 FULLSCREEN PREVIEW ================= -->
+<div
+  class="image-preview-overlay"
+  *ngIf="previewImage"
+  (click)="closePreview()"
+>
+  <img [src]="previewImage" class="preview-img" />
+</div>

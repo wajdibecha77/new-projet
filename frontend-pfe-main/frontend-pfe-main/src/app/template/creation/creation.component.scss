@@ -1,0 +1,33 @@
+.tabulation {
+    margin-top: 15px;
+}
+.container {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.button_cercle {
+    font-weight: bolder;
+    color: #1d2087;
+    padding: 0.75rem 4.5rem;
+    border: solid 2px #1d2087;
+    border-radius: 2rem;
+    margin-top: 10px;
+}
+
+.button_cercle:hover {
+    background-color: #1d2087;
+    color: #fff;
+}
+.radio_container {
+    margin: 30px;
+}
+.card-title {
+    font-size: 30px;
+    color: #1d2087;
+}

@@ -1,0 +1,109 @@
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-sales">Intervention</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">Création</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Vertical Form -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">Création d'intervention</h5>
+                </div>
+
+                <form (ngSubmit)="createIntervention()">
+                    <div class="form-group">
+                        <label>Type d'intervention</label>
+                        <select
+                            name="name"
+                            [(ngModel)]="intervention.name"
+                            type="text"
+                            class="form-control"
+                        >
+                            <option value="Electrique">Electrique</option>
+                            <option value="Mecanique">Mecanique</option>
+                            <option value="Informatique">Informatique</option>
+                            <option value="Plomberie & chaud froid">
+                                Plomberie & chaud froid
+                            </option>
+                        </select>
+                        <small id="emailHelp" class="form-text text-muted"
+                            >Choissisez le type d'intervention.</small
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label> Description </label>
+                        <textarea
+                            name="description"
+                            [(ngModel)]="intervention.description"
+                            type="text"
+                            class="form-control"
+                        ></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label> Delai </label>
+                        <input
+                            name="delai"
+                            [(ngModel)]="intervention.delai"
+                            type="date"
+                            class="form-control"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label> Degree </label>
+                        <select
+                            name="degree"
+                            [(ngModel)]="intervention.degree"
+                            class="form-control"
+                        >
+                            <option value="urgent">urgent</option>
+                            <option value="normal">normal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label> lieu </label>
+                        <input
+                            name="lieu"
+                            [(ngModel)]="intervention.lieu"
+                            type="text"
+                            class="form-control"
+                        />
+                    </div>
+
+                    <div class="form-group w-100">
+                        <span *ngIf="successMsg" class="alert alert-success">
+                            {{ successMsg }}
+                        </span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Enregistrer
+                        </button>
+
+                        <button
+                            *ngIf="stayOnPage"
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            (click)="cancelCreation()"
+                        >
+                            Retour a la liste
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

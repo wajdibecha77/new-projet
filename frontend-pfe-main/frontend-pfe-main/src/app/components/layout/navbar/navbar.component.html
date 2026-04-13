@@ -1,0 +1,128 @@
+<nav class="navbar navbar-expand fixed-top top-menu d-flex align-items-center">
+  <div class="nav-shell" [class.admin-dashboard-shell]="isAdminDashboardHeader()">
+    <ng-container *ngIf="isAdminDashboardHeader(); else defaultHeader">
+      <div class="admin-left">
+        <button
+          type="button"
+          class="menu-btn"
+          (click)="sidebar.toggle()"
+          aria-label="Ouvrir le menu"
+        >
+          &#9776;
+        </button>
+
+        <div class="admin-title-wrap">
+          <h2>Bonjour, Admin 👋</h2>
+          <p>Voici un aperçu général de la gestion des interventions.</p>
+        </div>
+      </div>
+
+      <div class="admin-right">
+        <label class="search-wrap">
+          <input type="text" placeholder="Rechercher..." />
+        </label>
+
+        <a class="header-icon-btn position-relative" routerLink="/notifications" role="button">
+          <i class="fa fa-bell-o text-muted fs-22"></i>
+          <span class="notification-badge" *ngIf="notificationsCount > 0">
+            {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+          </span>
+        </a>
+
+        <div class="avatar-dropdown" (click)="keepMenuOpen($event)">
+          <button type="button" class="avatar-wrap avatar-btn" (click)="toggleAvatarMenu($event)">
+            {{ (account?.name || 'AD').slice(0, 2) | uppercase }}
+          </button>
+
+          <div class="avatar-menu" *ngIf="avatarMenuOpen">
+            <a class="avatar-menu-item" routerLink="/user-profile" (click)="avatarMenuOpen = false">
+              <i class="fa fa-user-o" aria-hidden="true"></i>
+              <span>Profile</span>
+            </a>
+            <button type="button" class="avatar-menu-item danger" (click)="logout()">
+              <i class="fa fa-sign-out" aria-hidden="true"></i>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #defaultHeader>
+      <div class="nav-left d-flex align-items-center">
+        <button
+          type="button"
+          class="menu-btn d-lg-none me-2"
+          (click)="sidebar.toggle()"
+          aria-label="Ouvrir le menu"
+        >
+          &#9776;
+        </button>
+
+        <a class="navbar-brand d-flex align-items-center m-0" routerLink="/dashboard">
+          <img
+            src="assets/img/Logo.png"
+            alt="Logo"
+            class="large-logo"
+            height="40"
+          />
+        </a>
+      </div>
+
+      <div class="navbar-collapse justify-content-end nav-right">
+        <ul class="navbar-nav right-nav align-items-center">
+          <li class="nav-item notification-item" *ngIf="account?.role == 'ADMIN'">
+            <a class="nav-link p-0 position-relative" routerLink="/notifications" role="button">
+              <i class="fa fa-bell-o text-muted fs-22"></i>
+              <span class="notification-badge" *ngIf="notificationsCount > 0">
+                {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+              </span>
+            </a>
+          </li>
+
+          <li class="nav-item dropdown profile-nav-item">
+            <a
+              class="nav-link dropdown-toggle d-flex align-items-center"
+              href="#"
+              role="button"
+              data-toggle="dropdown"
+            >
+              <div class="menu-profile d-flex align-items-center">
+                <span class="name me-2" *ngIf="account">
+                  {{ account.name }}
+                </span>
+
+                <img
+                  src="assets/img/profile.jpg"
+                  alt="Profile Image"
+                  class="rounded-circle"
+                  width="35"
+                  height="35"
+                />
+              </div>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-right">
+              <a
+                class="dropdown-item d-flex align-items-center"
+                routerLink="/user-profile"
+                routerLinkActive="active"
+              >
+                <i data-feather="user" class="icon me-2"></i>
+                Profile
+              </a>
+
+              <a
+                class="dropdown-item d-flex align-items-center"
+                (click)="logout()"
+              >
+                <i data-feather="log-out" class="icon me-2"></i>
+                Logout
+              </a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </ng-template>
+  </div>
+</nav>

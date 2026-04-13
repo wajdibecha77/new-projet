@@ -1,0 +1,175 @@
+<!-- Vertical Form -->
+<div class="row tabulation container">
+    <div class="col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header d-flex justify-content-center">
+                    <h5 class="card-title">Téléchargez votre acte</h5>
+                </div>
+
+                <form ngNativeValidate>
+                    <div class="tabulation d-flex justify-content-center">
+                        <div class="radio_container tabulation">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="exampleRadios"
+                                id="exampleRadios1"
+                                value="option1"
+                                checked
+                            />
+                            <label
+                                class="form-check-label"
+                                for="exampleRadios1"
+                            >
+                                Professionel
+                            </label>
+                        </div>
+                        <div class="radio_container tabulation">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="exampleRadios"
+                                id="exampleRadios2"
+                                value="option2"
+                            />
+                            <label
+                                class="form-check-label"
+                                for="exampleRadios1"
+                            >
+                                Particuler
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group tabulation">
+                        <label>Civilté</label>
+                        <select
+                            class="form-control"
+                            id="exampleFormControlSelect1"
+                        >
+                            <option>Monsieur</option>
+                            <option>Madame</option>
+                            <option>Mademoiselle</option>
+                            <option>Maître</option>
+                            <option>Professeur</option>
+                            <option>Docteur</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group tabulation">
+                        <label>Nom</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="exampleInputEmail1"
+                            placeholder="Entrer vote nom"
+                            required
+                        />
+                        <label class="tabulation">Prénom</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="exampleInputEmail1"
+                            placeholder="Entrer vote prénom"
+                            required
+                        />
+                        <div class="form-group tabulation">
+                            <label>Fonction</label>
+                            <select
+                                class="form-control"
+                                id="exampleFormControlSelect1"
+                            >
+                                <option value="1" data-id="1">
+                                    Expert-comptable
+                                </option>
+                                <option value="2" data-id="2">
+                                    Commissaire aux comptes
+                                </option>
+                                <optgroup label="Entreprise">
+                                    <option value="3" data-id="4">
+                                        Direction des ressources humaines
+                                    </option>
+                                    <option value="5" data-id="20">
+                                        Responsable paie
+                                    </option>
+                                    <option value="6" data-id="5">
+                                        Direction juridique
+                                    </option>
+                                    <option value="7" data-id="6">
+                                        Direction financière/comptable
+                                    </option>
+                                    <option value="8" data-id="7">
+                                        Direction fiscale
+                                    </option>
+                                    <option value="9" data-id="8">
+                                        Responsable administratif et financier
+                                    </option>
+                                    <option value="10" data-id="9">
+                                        Dirigeant
+                                    </option>
+                                </optgroup>
+                                <option value="11" data-id="10">Notaire</option>
+                                <optgroup label="Avocat">
+                                    <option value="12" data-id="12">
+                                        Avocat fiscaliste
+                                    </option>
+                                    <option value="13" data-id="13">
+                                        Avocat social
+                                    </option>
+                                    <option value="14" data-id="14">
+                                        Avocat affaires
+                                    </option>
+                                    <option value="15" data-id="15">
+                                        Avocat généraliste
+                                    </option>
+                                </optgroup>
+                                <option value="16" data-id="16">
+                                    Conseil en gestion du patrimoine
+                                </option>
+                                <option value="17" data-id="17">
+                                    Professionnel de l’immobilier
+                                </option>
+                                <option value="18" data-id="18">
+                                    Etudiant/Enseignant
+                                </option>
+                                <option value="19" data-id="19">
+                                    Autres professions
+                                </option>
+                            </select>
+                        </div>
+                        <label class="tabulation">Raison sociale</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="exampleInputEmail1"
+                            placeholder="Raison sociale "
+                            required
+                        />
+                        <label class="tabulation">Telephone</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="exampleInputEmail1"
+                            placeholder="Entrer vote numero de telephone"
+                            required
+                        />
+                        <label class="tabulation">Email</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="exampleInputEmail1"
+                            placeholder="Entrer vote email"
+                            required
+                        />
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="button_cercle tabulation">
+                            Je télecharge
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Vertical Form -->

@@ -1,0 +1,97 @@
+<div class="auth-page signin-page">
+  <div class="auth-card">
+    <div class="left-side">
+      <div class="left-overlay"></div>
+      <div class="left-content">
+        <h2 class="brand-title">Plateforme Operations Aeroportuaires</h2>
+        <span class="brand-line"></span>
+        <p class="brand-desc">Gestion intelligente des interventions et incidents</p>
+      </div>
+    </div>
+
+    <div class="right-side">
+      <h1 class="title">Connexion</h1>
+      <p class="subtitle">Accedez a votre espace securise</p>
+
+      <form (ngSubmit)="onSignin()">
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+              <path d="m4 8 8 6 8-6" stroke="currentColor" stroke-width="1.8"></path>
+            </svg>
+            <input
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              required
+              placeholder="exemple@email.com"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Mot de passe</label>
+          <div class="input-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+              <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8"></path>
+            </svg>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              required
+              placeholder="***********"
+            />
+            <button type="button" class="eye-btn" (click)="togglePasswordVisibility()">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8"></path>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <label class="remember">
+            <input type="checkbox" />
+            <span>Se souvenir de moi</span>
+          </label>
+          <a class="forgot-link" routerLink="/auth/forgot-password">
+            Mot de passe oublie ?
+          </a>
+        </div>
+
+        <button class="btn-primary" [disabled]="loading">
+          {{ loading ? "Connexion..." : "Se connecter" }}
+        </button>
+
+        <p *ngIf="successMessage" class="success-msg">
+          {{ successMessage }}
+        </p>
+
+        <p *ngIf="errorMessage" class="error-msg">
+          {{ errorMessage }}
+        </p>
+      </form>
+
+      <div class="security-divider">
+        <span class="line"></span>
+        <span class="shield">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 3 4.5 6v5.8c0 4.7 3.1 8.9 7.5 10.2 4.4-1.3 7.5-5.5 7.5-10.2V6L12 3Z" stroke="currentColor" stroke-width="1.8"></path>
+          </svg>
+        </span>
+        <span class="line"></span>
+      </div>
+      <p class="security-note">Acces securise reserve au personnel</p>
+
+      <p class="signup-note">
+        Vous n'avez pas de compte ?
+        <a class="signup-link" routerLink="/auth/signup">Creer un compte</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,128 @@
+<section class="reclamation-page">
+  <div class="page-header">
+    <div>
+      <h1>Faire une reclamation</h1>
+      <p class="breadcrumb">Accueil / Reclamation / Nouvelle reclamation</p>
+    </div>
+    <div class="info-chip">
+      <i class="fa fa-shield"></i>
+      <span>Votre signalement sera traite rapidement</span>
+    </div>
+  </div>
+
+  <div class="alert success" *ngIf="successMessage">
+    <i class="fa fa-check-circle"></i>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div class="alert error" *ngIf="errorMessage">
+    <i class="fa fa-exclamation-circle"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <form (ngSubmit)="submit()" class="reclamation-card">
+    <div class="section-grid">
+      <section class="section-block upload-block">
+        <h3><i class="fa fa-image"></i> Illustrations (Optionnel)</h3>
+        <div class="upload-box" [class.has-files]="imagesPreview.length > 0" (click)="fileInput.click()">
+          <input type="file" #fileInput hidden multiple accept="image/*" (change)="onFileSelected($event)" />
+
+          <div class="upload-content">
+            <i class="fa fa-cloud-upload"></i>
+            <p class="upload-title">{{ imagesPreview.length === 0 ? 'Ajouter des photos' : imagesPreview.length + ' photo(s) selectionnee(s)' }}</p>
+            <p class="upload-subtitle">Glissez vos fichiers ici ou cliquez pour parcourir</p>
+            <p class="upload-hint">JPG, PNG (Max 5MB)</p>
+          </div>
+        </div>
+
+        <div class="preview-grid" *ngIf="imagesPreview.length > 0">
+          <div class="preview-item" *ngFor="let img of imagesPreview; let i = index">
+            <img [src]="img" alt="preview" />
+            <button type="button" class="remove-btn" (click)="removeImage(i)">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <h3><i class="fa fa-align-left"></i> Description du probleme *</h3>
+        <textarea
+          [(ngModel)]="description"
+          name="description"
+          required
+          rows="8"
+          placeholder="Soyez le plus detaille possible (cause, impact, symptomes...)"
+        ></textarea>
+      </section>
+    </div>
+
+    <div class="section-grid two-columns">
+      <section class="section-block">
+        <h3><i class="fa fa-map-marker"></i> Emplacement exact / Lieu *</h3>
+        <input
+          type="text"
+          [(ngModel)]="lieu"
+          name="lieu"
+          placeholder="Exemple: Porte B2, Terminal 1, Stationnement..."
+        />
+      </section>
+
+      <section class="section-block">
+        <h3><i class="fa fa-bolt"></i> Type de probleme *</h3>
+        <div class="choice-row">
+          <button type="button" class="choice-btn" [class.active]="problemType === 'ELECTRIQUE'" (click)="setProblemType('ELECTRIQUE')">
+            <i class="fa fa-bolt"></i> Electrique
+          </button>
+          <button type="button" class="choice-btn" [class.active]="problemType === 'INFORMATIQUE'" (click)="setProblemType('INFORMATIQUE')">
+            <i class="fa fa-desktop"></i> Informatique
+          </button>
+          <button type="button" class="choice-btn" [class.active]="problemType === 'MECANIQUE'" (click)="setProblemType('MECANIQUE')">
+            <i class="fa fa-wrench"></i> Mecanique
+          </button>
+          <button type="button" class="choice-btn" [class.active]="problemType === 'AUTRE'" (click)="setProblemType('AUTRE')">
+            <i class="fa fa-ellipsis-h"></i> Autre
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="section-grid two-columns">
+      <section class="section-block">
+        <h3><i class="fa fa-exclamation-triangle"></i> Niveau d'urgence *</h3>
+        <div class="choice-row">
+          <button type="button" class="choice-btn urgency normal" [class.active]="urgence === 'NORMAL'" (click)="setUrgence('NORMAL')">
+            <span class="dot"></span> Normal
+          </button>
+          <button type="button" class="choice-btn urgency urgent" [class.active]="urgence === 'URGENT'" (click)="setUrgence('URGENT')">
+            <span class="dot"></span> Urgent
+          </button>
+          <button type="button" class="choice-btn urgency critique" [class.active]="urgence === 'CRITIQUE'" (click)="setUrgence('CRITIQUE')">
+            <span class="dot"></span> Critique
+          </button>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <h3><i class="fa fa-phone"></i> Contact (Optionnel)</h3>
+        <input
+          type="text"
+          [(ngModel)]="contact"
+          name="contact"
+          placeholder="Telephone ou Email pour vous contacter"
+        />
+      </section>
+    </div>
+
+    <button type="submit" class="submit-btn" [disabled]="loading || !description">
+      <ng-container *ngIf="!loading">
+        <i class="fa fa-paper-plane"></i>
+        Envoyer la reclamation
+      </ng-container>
+      <ng-container *ngIf="loading">
+        <span class="spinner-border spinner-border-sm"></span>
+        Transmission en cours...
+      </ng-container>
+    </button>
+  </form>
+</section>

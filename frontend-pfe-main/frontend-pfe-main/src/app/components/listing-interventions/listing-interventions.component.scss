@@ -1,0 +1,246 @@
+/* ================= GLOBAL ================= */
+.container-profile {
+  margin-top: 50px;
+}
+
+.single-user-card {
+  width: 250px;
+}
+
+.alignt {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+/* ================= RESPONSABLE (USERS LIST) ================= */
+.responsable {
+  border-radius: 10px;
+  border: 1px solid #eee;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 🔥 CARD USER */
+.res-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f5f6fa;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.res-content:hover {
+  background: #e9ecf5;
+}
+
+/* 🔥 SELECTED */
+.selected-user {
+  background: #4a3aff !important;
+  color: white;
+}
+
+/* ================= USER ================= */
+.user-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #4a3aff;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+/* ================= MODAL ================= */
+.modal-header {
+  border-bottom: none !important;
+  color: #1d2087 !important;
+}
+
+/* ================= NAV ================= */
+.nav-tabs {
+  height: 56px;
+  background-color: #f7f7f7;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.tabs-style-two .nav-link.active,
+.tabs-style-two .nav-item.show .nav-link {
+  outline: none;
+  font-weight: 700;
+  color: #1d2087;
+  background-color: #f7f7f7;
+  border: none;
+  border-bottom: 3px solid #1d2087;
+}
+
+.nav-item {
+  padding: 0 0.5rem;
+  height: 100%;
+}
+
+.nav-item .nav-link {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================= TABLE ================= */
+tr {
+  cursor: pointer;
+}
+
+/* ================= LAYOUT ================= */
+.main-content-header {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.container-user {
+  margin-top: 50px;
+  margin-right: 50px;
+  height: 100%;
+}
+
+.text-paragh {
+  margin-top: 25px;
+  font-size: 16px;
+}
+
+.profile {
+  position: relative;
+}
+
+.align-button {
+  position: absolute;
+  bottom: 15px;
+}
+
+.t-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.align-content {
+  position: absolute;
+  top: 35%;
+  right: 10px;
+  left: 50%;
+}
+
+/* ================= FORM ================= */
+.container-form {
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 80px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 7%);
+  border-radius: 6px;
+  background-color: white;
+  padding: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ... form-control border removed to use global style ... */
+
+.form-group {
+  width: 100%;
+  margin: 0;
+}
+
+/* ================= USERS FILTER ================= */
+.container-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-search {
+  color: #1e2188;
+  background-color: #e7eefc;
+  font-weight: 500;
+  border: 2px solid #1e2188;
+  border-radius: 4px;
+  height: 40px;
+  padding: 0 1.5rem;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
+.ai-badge {
+  background: #6c63ff;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.left {
+  display: flex;
+  flex-direction: row;
+}
+
+/* ================= MOBILE FIX 🔥 ================= */
+@media (max-width: 768px) {
+
+  /* 🔥 USER CARD */
+  .res-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  /* 🔥 FORM */
+  .container-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* 🔥 HEADER */
+  .main-content-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* 🔥 TABLE -> scroll */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+}

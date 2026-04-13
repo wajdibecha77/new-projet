@@ -1,0 +1,100 @@
+<div class="row">
+  <div class="col-lg-12 col-xl-12">
+    <div class="card mb-30">
+      <div class="card-body">
+        <div class="card-header mb-4">
+          <div class="d-flex justify-content-between">
+            <h5 class="card-title">Listing Commandes</h5>
+            <button class="btn btn-primary" routerLink="/create-order">
+              Ajouter une commande
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover text-vertical-middle mb-0">
+            <thead class="bort-none borpt-0">
+              <tr>
+                <th>Num</th>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Fournisseur</th>
+                <th>Pour intervention</th>
+                <th>Date</th>
+                <th>Etat</th>
+                <th class="text-center" *ngIf="role == 'ADMIN'">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let order of orders; let index = index">
+                <td>{{ index + 1 }}</td>
+                <td>{{ order.produit }}</td>
+                <td>{{ order.quantite }}</td>
+                <td>{{ order.fournisseurId }}</td>
+
+                <td *ngIf="order.interventionId">{{ order.interventionId }}</td>
+                <td *ngIf="!order.interventionId">Aucune intervention</td>
+
+                <td>{{ order.createdAt }}</td>
+
+                <td>
+                  <span *ngIf="order.status == 'EN_COURS'" class="badge badge_warning py-1">En cours</span>
+                  <span *ngIf="order.status == 'ACCEPTER'" class="badge badge_success py-1">Accepté</span>
+                  <span *ngIf="order.status == 'REFUSER'" class="badge badge_danger py-1">Refusé</span>
+                </td>
+
+                <td class="text-center w-100" *ngIf="role == 'ADMIN'">
+                  <a
+                    *ngIf="order.status == 'EN_COURS'"
+                    class="text-success mr-2"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Accepter"
+                    (click)="updateOrderStat('ACCEPTER', order._id)"
+                  >
+                    <i class="fa fa-check wh-15 mt-minus-3 mr-2" aria-hidden="true"></i>
+                    Accepter
+                  </a>
+
+                  <a
+                    *ngIf="order.status == 'EN_COURS'"
+                    class="text-danger mr-2"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Refuser"
+                    (click)="updateOrderStat('REFUSER', order._id)"
+                  >
+                    <i class="fa fa-close wh-15 mt-minus-3 mr-2" aria-hidden="true"></i>
+                    Refuser
+                  </a>
+
+                  <!-- ✅ EDIT -->
+                  <a
+                    class="text-success mr-2"
+                    title="Modifier"
+                    (click)="goToEditOrder(order)"
+>
+                    <i class="fa fa-pencil wh-15 mt-minus-3 mr-2" aria-hidden="true"></i>
+                </a>
+
+                  <!-- ✅ DELETE -->
+                  <a
+                    class="text-primary mr-2"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Supprimer"
+                    (click)="deleteOrder(order._id)"
+                  >
+                    <i class="fa fa-trash wh-15 mt-minus-3 mr-2" aria-hidden="true"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

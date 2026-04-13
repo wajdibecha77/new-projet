@@ -1,0 +1,41 @@
+<div class="overlay" *ngIf="sidebar.isOpen" (click)="closeSidebar()"></div>
+
+<aside class="sidebar-shell" [class.active]="sidebar.isOpen">
+  <nav class="sidebar-nav">
+    <div class="sidebar-brand">
+      <img src="assets/img/Logo.png" alt="TAV Airports" />
+    </div>
+
+    <div class="sidebar-scroll">
+      <div class="sidebar-list">
+        <ng-container *ngFor="let item of sidebarItems">
+          <a
+            *ngIf="item.title"
+            class="nav-link"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            (click)="closeSidebar()"
+          >
+            <span class="icon-wrapper position-relative">
+              <i [attr.data-feather]="item.icon" class="icon"></i>
+
+              <span
+                *ngIf="item.path === '/notifications' && notificationsCount > 0"
+                class="notification-badge"
+              >
+                {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+              </span>
+            </span>
+
+            <span class="title ms-3">{{ item.title }}</span>
+          </a>
+        </ng-container>
+      </div>
+    </div>
+
+    <a class="nav-link logout-btn" (click)="logout()">
+      <i data-feather="log-out" class="icon"></i>
+      <span class="title ms-3">Logout</span>
+    </a>
+  </nav>
+</aside>

@@ -1,0 +1,313 @@
+<!-- Main Content Header -->
+<div class="main-content-header">
+    <h1>Dashboard</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a routerLink="/dashboard-analytics">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <span class="active">Analytics</span>
+        </li>
+    </ol>
+</div>
+<!-- End Main Content Header -->
+
+<!-- Visitors Overview -->
+<div class="row">
+    <div class="col-lg-8">
+        <app-visitors-overview></app-visitors-overview>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="stats-card-two analytics-card">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-blue">
+                            <i data-feather="eye"></i>
+                        </div>
+                        <div class="ml-15">
+                            <p class="mb-7 line-height-1">Visits</p>
+                            <h4 class="mb-0 fs-20">530,890</h4>
+                        </div>
+                        <span class="badge badge-cyan fs-12 position-right">
+                            <i class="icofont-swoosh-up"></i>
+                            <span class="fw-600 m-l-5">8.70%</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-card-two analytics-card">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-cyan">
+                            <i data-feather="users"></i>
+                        </div>
+                        <div class="ml-15">
+                            <p class="mb-7 line-height-1">User</p>
+                            <h4 class="mb-0 fs-20">25,890</h4>
+                        </div>
+                        <span class="badge badge-cyan fs-12 position-right">
+                            <i class="icofont-swoosh-up"></i>
+                            <span class="fw-600 m-l-5">7.60%</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-card-two analytics-card">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-purple">
+                            <i data-feather="activity"></i>
+                        </div>
+                        <div class="ml-15">
+                            <p class="mb-7 line-height-1">Sessions</p>
+                            <h4 class="mb-0 fs-20">50,890</h4>
+                        </div>
+                        <span class="badge badge-cyan fs-12 position-right">
+                            <i class="icofont-swoosh-up"></i>
+                            <span class="fw-600 m-l-5">6.75%</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-card-two analytics-card">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-blue">
+                            <i data-feather="bar-chart-2"></i>
+                        </div>
+                        <div class="ml-15">
+                            <p class="mb-7 line-height-1">Search Traffic</p>
+                            <h4 class="mb-0 fs-20">42.7%</h4>
+                        </div>
+                        <span class="badge badge-red fs-12 position-right">
+                            <i class="icofont-swoosh-down"></i>
+                            <span class="fw-600 m-l-5">4.70%</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stats-card-two analytics-card">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-gold">
+                            <i data-feather="box"></i>
+                        </div>
+                        <div class="ml-15">
+                            <p class="mb-7 line-height-1">Bounce Rate</p>
+                            <h4 class="mb-0 fs-20">52.7%</h4>
+                        </div>
+                        <span class="badge badge-red fs-12 position-right">
+                            <i class="icofont-swoosh-down"></i>
+                            <span class="fw-600 m-l-5">5.70%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products of the Month -->
+<div class="row">
+    <div class="col-lg-12 col-xl-4">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">Activity</h5>
+                </div>
+
+                <div class="analytics-activity-card">
+                    <div class="avatar avatar-blue">
+                        <i data-feather="activity"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Total Sales</span>
+                        </div>
+                        <span class="fw-600">$50,365</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar bg-primary" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <div class="analytics-activity-card">
+                    <div class="avatar avatar-cyan">
+                        <i data-feather="dollar-sign"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Net Profit</span>
+                        </div>
+                        <span class="fw-600">$40,365</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar bg-success" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <div class="analytics-activity-card">
+                    <div class="avatar avatar-gold">
+                        <i data-feather="users"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>Total Visitors</span>
+                        </div>
+                        <span class="fw-600">$50,365</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar bg-warning" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <div class="analytics-activity-card">
+                    <div class="avatar avatar-purple">
+                        <i data-feather="eye"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>New Visitors</span>
+                        </div>
+                        <span class="fw-600">$15,365</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar bg-purple" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <div class="analytics-activity-card">
+                    <div class="avatar avatar-red">
+                        <i data-feather="shopping-bag"></i>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span>New Orders</span>
+                        </div>
+                        <span class="fw-600">$5,365</span>
+                    </div>
+
+                    <div class="progress progress-sm mt-2">
+                        <div class="progress-bar bg-danger" style="width: 70%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-lg-12 col-xl-8">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header">
+                    <h5 class="card-title">Products of the Month</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover text-vertical-middle mb-0">
+                        <thead class="bort-none borpt-0">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Invoice</th>
+                                <th scope="col">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>#6791</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product1.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Macbook Pro
+                                </td>
+                                <td>Colin Firth</td>
+                                <td><span class="badge badge_success py-1">Active</span></td>
+                                <td>40</td>
+                                <td>$289.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6792</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product2.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    iPhone 11 pro
+                                </td>
+                                <td>Michael Sheen</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>45</td>
+                                <td>$389.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6793</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product3.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    HeadPhone
+                                </td>
+                                <td>Tom Hardy</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>50</td>
+                                <td>$250.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6794</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product4.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shoes
+                                </td>
+                                <td>Daniel Craig</td>
+                                <td><span class="badge badge_warning py-1">Pending</span>
+                                </td>
+                                <td>55</td>
+                                <td>$500.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6795</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product5.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Adidas shirts
+                                </td>
+                                <td>Jude Law</td>
+                                <td><span class="badge badge_success py-1">Active</span>
+                                </td>
+                                <td>60</td>
+                                <td>$279.50</td>
+                            </tr>
+                            <tr>
+                                <td><strong>#6796</strong></td>
+                                <td>
+                                    <img src="assets/img/product/product6.jpg" alt="Image" class="wh-30 mr-1 rounded">
+                                    Nike shirts
+                                </td><td>Idris Elba</td>
+                                <td><span class="badge badge_danger py-1">Declined</span>
+                                </td>
+                                <td>65</td>
+                                <td>$259.50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue By Country & Leads Stats -->
+<div class="row">
+    <div class="col-lg-6">
+        <app-revenue-by-countries></app-revenue-by-countries>
+    </div>
+
+    <div class="col-lg-6">
+        <app-leads-stats></app-leads-stats>
+    </div>
+</div>
