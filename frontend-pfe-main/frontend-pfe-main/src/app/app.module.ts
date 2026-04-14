@@ -128,6 +128,10 @@ import { LoginWaitingComponent } from './components/login-waiting/login-waiting.
 import { ReclamationComponent } from './components/reclamation/reclamation.component';
 import { ReclamationsAdminComponent } from './components/reclamations-admin/reclamations-admin.component';
 import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.component";
+import { QRCodeModule } from "angularx-qrcode";
+import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
+import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
+import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
 @NgModule({
     declarations: [
         AppComponent,
@@ -253,12 +257,16 @@ import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.com
         ReclamationComponent,
         ReclamationsAdminComponent,
         MesDemandesComponent,
+        QrCodeComponent,
+        ReclamationPublicComponent,
+        SuiviReclamationComponent,
     ],
     imports: [
         BrowserModule,
         AppRoutingModule,
         FormsModule,
         HttpClientModule,
+        QRCodeModule,
         NotifierModule.withConfig({
             position: {
                 horizontal: {

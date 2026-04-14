@@ -9,6 +9,7 @@ import { Observable } from "rxjs";
 export class ReclamationService {
 
   private API = environment.apiUrl;
+  private PUBLIC_API = environment.apiUrl;
 
   constructor(private http: HttpClient) {
     console.log("🔥 RECLAMATION API =", this.API);
@@ -23,14 +24,18 @@ export class ReclamationService {
   }
 
   /* ================= CREATE ================= */
-  addReclamation(data: any): Observable<any> {
-    return this.http.post(
-      `${this.API}/reclamations/add`,
-      data,
-      {
-        headers: this.getAuthHeaders()
-      }
-    );
+  addReclamation(data: any, isPublic = false): Observable<any> {
+    if (isPublic) {
+      return this.http.post(`${this.PUBLIC_API}/reclamations/public`, data);
+    }
+
+    return this.http.post(`${this.API}/reclamations/add`, data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  trackReclamation(code: string): Observable<any> {
+    return this.http.get(`${this.PUBLIC_API}/reclamations/track/${encodeURIComponent(code)}`);
   }
 
   /* ================= GET ALL ================= */

@@ -29,6 +29,9 @@ import { AuthGuard } from "./guards/auth.guard";
 import { RoleGuard } from "./guards/role.guard";
 import { ReclamationComponent } from "./components/reclamation/reclamation.component";
 import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.component";
+import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
+import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
+import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
 
 
 const routes: Routes = [
@@ -116,6 +119,9 @@ const routes: Routes = [
   { path: "profile", component: UserProfileComponent, canActivate: [AuthGuard] },
   { path: "notifications", component: NotificationsComponent, canActivate: [AuthGuard] },
   { path: "mes-demandes", component: MesDemandesComponent, canActivate: [AuthGuard, RoleGuard], data: { nonAdminOnly: true } },
+  { path: "qr-code", component: QrCodeComponent, canActivate: [AuthGuard] },
+  { path: "reclamation-public", component: ReclamationPublicComponent },
+  { path: "suivi-reclamation", component: SuiviReclamationComponent },
 
   {
     path: "auth",

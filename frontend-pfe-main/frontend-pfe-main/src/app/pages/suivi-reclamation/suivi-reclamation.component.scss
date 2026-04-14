@@ -1,0 +1,99 @@
+.tracking-page {
+  min-height: 100vh;
+  padding: 24px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #f4f8ff 0%, #f9fbff 100%);
+}
+
+.tracking-card {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border: 1px solid #e6edf8;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 16px 30px rgba(26, 44, 80, 0.08);
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #12223a;
+}
+
+.subtitle {
+  margin: 10px 0 20px;
+  color: #4d5f78;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 10px;
+}
+
+input {
+  width: 100%;
+  border: 1px solid #ced8e7;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2f7af8;
+  box-shadow: 0 0 0 3px rgba(47, 122, 248, 0.14);
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  background: #2f7af8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 12px;
+  color: #c62828;
+}
+
+.result-card {
+  margin-top: 16px;
+  border: 1px solid #dbe6f7;
+  border-radius: 12px;
+  background: #f9fbff;
+  padding: 16px;
+}
+
+.result-card p {
+  margin: 8px 0;
+  color: #1e3353;
+}
+
+@media (max-width: 640px) {
+  .tracking-card {
+    padding: 18px 14px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .search-row {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    padding: 12px;
+  }
+}

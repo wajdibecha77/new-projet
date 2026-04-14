@@ -44,6 +44,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         { path: "/create-user", title: "Create User", icon: "user" },
         { path: "/profile", title: "User Profile", icon: "settings" },
         { path: "/notifications", title: "Notifications", icon: "bell" },
+        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
       ];
     } else if (this.isTechnicianRole(this.role)) {
       // 👷 TECHNICIEN
@@ -52,6 +53,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         { path: "/mes-interventions", title: "Mes interventions", icon: "tool" },
         { path: "/notifications", title: "Messages", icon: "mail" },
         { path: "/profile", title: "User Profile", icon: "settings" },
+        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
       ];
     } else {
       // 👤 CLIENT/VISITEUR
@@ -60,6 +62,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         { path: "/reclamation", title: "Réclamation", icon: "alert-circle" },
         { path: "/notifications", title: "Messages", icon: "mail" },
         { path: "/profile", title: "User Profile", icon: "settings" },
+        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
       ];
     }
 

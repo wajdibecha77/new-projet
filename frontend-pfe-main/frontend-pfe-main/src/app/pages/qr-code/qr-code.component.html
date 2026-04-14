@@ -1,0 +1,6 @@
+<div class="qr-page">
+  <h2>Scanner pour signaler un problème</h2>
+
+  <qrcode [qrdata]="qrData" [width]="250" [errorCorrectionLevel]="'M'"></qrcode>
+  <p>Accès : {{ qrData }}</p>
+</div>

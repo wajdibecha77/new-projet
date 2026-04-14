@@ -1,17 +1,17 @@
 export const environment = {
   production: false,
-  apiUrl: getApiUrl()
+  apiUrl: getApiUrl(),
 };
 
 function getApiUrl(): string {
+  const userAgent =
+    typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
 
-  const userAgent = navigator.userAgent || '';
-
-  // 🤖 Android Emulator
+  // Android emulator local bridge
   if (/Android/i.test(userAgent)) {
-    return 'http://10.0.2.2:5000';
+    return "http://10.0.2.2:5000";
   }
 
-  // 💻 Web (browser)
-  return 'http://localhost:5000';
+  // Web default (set your deployed backend URL)
+  return "https://your-api.com";
 }

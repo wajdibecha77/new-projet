@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { ReclamationService } from "src/app/services/reclamation.service";
+import { environment } from "src/environments/environment";
 
 @Component({
   selector: "app-reclamations-admin",
@@ -19,10 +20,10 @@ export class ReclamationsAdminComponent implements OnInit {
   successMessage = "";
   errorMessage = "";
 
-  // 🔥 API URL (يفضل تخليها من environment، أما نخليها كيما تحب)
-  apiUrl = "http://localhost:5000";
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ API URL (Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¶Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â  environmentÃƒËœÃ…â€™ ÃƒËœÃ‚Â£Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â®Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â­ÃƒËœÃ‚Â¨)
+  apiUrl = environment.apiUrl;
 
-  // 🔥 IMAGE PREVIEW
+  // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ IMAGE PREVIEW
   previewImage: string | null = null;
 
   constructor(
@@ -45,7 +46,7 @@ export class ReclamationsAdminComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error("Erreur chargement réclamations:", err);
+        console.error("Erreur chargement rÃƒÆ’Ã‚Â©clamations:", err);
         this.errorMessage = "Erreur lors du chargement";
         this.loading = false;
       }
@@ -104,12 +105,12 @@ export class ReclamationsAdminComponent implements OnInit {
 
     this.reclamationService.acceptReclamation(id).subscribe({
       next: () => {
-        this.successMessage = "✅ Réclamation acceptée et intervention créée";
+        this.successMessage = "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ RÃƒÆ’Ã‚Â©clamation acceptÃƒÆ’Ã‚Â©e et intervention crÃƒÆ’Ã‚Â©ÃƒÆ’Ã‚Â©e";
 
-        // 🔥 Retrait immédiat de la liste locale
+        // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ Retrait immÃƒÆ’Ã‚Â©diat de la liste locale
         this.reclamations = this.reclamations.filter(r => r._id !== id);
 
-        // 🔥 Redirection vers /interventions après 1.5s
+        // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ Redirection vers /interventions aprÃƒÆ’Ã‚Â¨s 1.5s
         setTimeout(() => {
           this.router.navigate(["/interventions"]);
           this.successMessage = "";
@@ -117,7 +118,7 @@ export class ReclamationsAdminComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.errorMessage = "❌ Erreur lors de l'acceptation";
+        this.errorMessage = "ÃƒÂ¢Ã‚ÂÃ…â€™ Erreur lors de l'acceptation";
       },
       complete: () => {
         this.actionLoading = false;
@@ -135,12 +136,12 @@ export class ReclamationsAdminComponent implements OnInit {
 
     this.reclamationService.refuseReclamation(id).subscribe({
       next: () => {
-        this.errorMessage = "❌ Réclamation refusée";
+        this.errorMessage = "ÃƒÂ¢Ã‚ÂÃ…â€™ RÃƒÆ’Ã‚Â©clamation refusÃƒÆ’Ã‚Â©e";
 
-        // 🔥 Retrait immédiat de la liste locale
+        // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ Retrait immÃƒÆ’Ã‚Â©diat de la liste locale
         this.reclamations = this.reclamations.filter(r => r._id !== id);
 
-        // 🔥 retour Automatique après 1.5s
+        // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ retour Automatique aprÃƒÆ’Ã‚Â¨s 1.5s
         setTimeout(() => {
           this.backToList();
           this.errorMessage = "";
@@ -148,7 +149,7 @@ export class ReclamationsAdminComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.errorMessage = "❌ Erreur lors du refus";
+        this.errorMessage = "ÃƒÂ¢Ã‚ÂÃ…â€™ Erreur lors du refus";
       },
       complete: () => {
         this.actionLoading = false;

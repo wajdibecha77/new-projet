@@ -1,0 +1,27 @@
+<section class="tracking-page">
+  <div class="tracking-card">
+    <h1>Suivi de réclamation</h1>
+    <p class="subtitle">Entrez votre code pour consulter l'état de votre demande.</p>
+
+    <div class="search-row">
+      <input
+        type="text"
+        [(ngModel)]="code"
+        placeholder="Ex: REC-2026-0015"
+        (keyup.enter)="search()"
+      />
+      <button type="button" (click)="search()" [disabled]="loading">
+        {{ loading ? "Recherche..." : "Rechercher" }}
+      </button>
+    </div>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="result-card" *ngIf="result">
+      <p><strong>Code :</strong> {{ result.code }}</p>
+      <p><strong>Type intervention :</strong> {{ result.typeIntervention }}</p>
+      <p><strong>Description :</strong> {{ result.description }}</p>
+      <p><strong>Etat :</strong> {{ getStatusLabel(result.etat) }}</p>
+    </div>
+  </div>
+</section>

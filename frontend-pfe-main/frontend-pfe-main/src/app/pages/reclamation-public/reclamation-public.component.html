@@ -1,0 +1,154 @@
+<section class="reclamation-public-page">
+  <div class="success-toast" *ngIf="showToast">
+    <strong>Reclamation envoyee avec succes</strong>
+    <span>Code de suivi : {{ lastCode }}</span>
+  </div>
+
+  <div class="form-card">
+    <h1>Signaler un probleme</h1>
+    <p class="subtitle">Merci de remplir ce formulaire. Notre equipe vous contactera rapidement.</p>
+
+    <form #publicForm="ngForm" (ngSubmit)="onSubmit(publicForm)" novalidate>
+      <div class="grid">
+        <div class="field">
+          <label for="nom">Nom *</label>
+          <input
+            id="nom"
+            name="nom"
+            type="text"
+            required
+            [(ngModel)]="formData.nom"
+            #nom="ngModel"
+          />
+          <small class="error" *ngIf="nom.invalid && nom.touched">Le nom est obligatoire.</small>
+        </div>
+
+        <div class="field">
+          <label for="prenom">Prenom *</label>
+          <input
+            id="prenom"
+            name="prenom"
+            type="text"
+            required
+            [(ngModel)]="formData.prenom"
+            #prenom="ngModel"
+          />
+          <small class="error" *ngIf="prenom.invalid && prenom.touched">Le prenom est obligatoire.</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email *</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          email
+          [(ngModel)]="formData.email"
+          #email="ngModel"
+        />
+        <small class="error" *ngIf="email.invalid && email.touched">
+          Renseignez un email valide.
+        </small>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="nationalite">Nationalite *</label>
+          <select
+            id="nationalite"
+            name="nationalite"
+            required
+            [(ngModel)]="formData.nationalite"
+            #nationalite="ngModel"
+          >
+            <option value="" disabled selected>Selectionnez votre nationalite</option>
+            <option *ngFor="let pays of nationalites" [value]="pays">{{ pays }}</option>
+          </select>
+          <small class="error" *ngIf="nationalite.invalid && nationalite.touched">
+            La nationalite est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="langue">Langue *</label>
+          <select id="langue" name="langue" required [(ngModel)]="formData.langue" #langue="ngModel">
+            <option value="" disabled selected>Selectionnez votre langue</option>
+            <option *ngFor="let item of langues" [value]="item">{{ item }}</option>
+          </select>
+          <small class="error" *ngIf="langue.invalid && langue.touched">La langue est obligatoire.</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="typeIntervention">Type d'intervention *</label>
+        <select
+          id="typeIntervention"
+          name="typeIntervention"
+          required
+          [(ngModel)]="formData.typeIntervention"
+          #typeIntervention="ngModel"
+        >
+          <option value="" disabled selected>Selectionnez un type</option>
+          <option value="Electrique">⚡ Electrique</option>
+          <option value="Plomberie">🚰 Plomberie</option>
+          <option value="Informatique">💻 Informatique</option>
+          <option value="Mecanique">🔧 Mecanique</option>
+          <option value="Autre">❓ Autre</option>
+        </select>
+        <small class="error" *ngIf="typeIntervention.invalid && typeIntervention.touched">
+          Le type d'intervention est obligatoire.
+        </small>
+      </div>
+
+      <div class="field" *ngIf="formData.typeIntervention === 'Autre'">
+        <label for="typeInterventionAutre">Precisez le type *</label>
+        <input
+          id="typeInterventionAutre"
+          name="typeInterventionAutre"
+          type="text"
+          required
+          [(ngModel)]="formData.typeInterventionAutre"
+          #typeInterventionAutre="ngModel"
+        />
+        <small class="error" *ngIf="typeInterventionAutre.invalid && typeInterventionAutre.touched">
+          Merci de preciser le type d'intervention.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="description">Description *</label>
+        <textarea
+          id="description"
+          name="description"
+          rows="5"
+          required
+          [(ngModel)]="formData.description"
+          #description="ngModel"
+        ></textarea>
+        <small class="error" *ngIf="description.invalid && description.touched">
+          La description est obligatoire.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="images">Images (optionnel)</label>
+        <input id="images" type="file" multiple (change)="onImagesSelected($event)" />
+      </div>
+
+      <button class="submit-btn" type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? "Envoi..." : "Envoyer" }}
+      </button>
+    </form>
+
+    <p class="success" *ngIf="submitSuccess">
+      Votre code de suivi est : {{ trackingCode || "indisponible" }}
+    </p>
+    <button class="track-btn" type="button" *ngIf="lastCode" (click)="goToTracking()">
+      &#128269; Suivre ma reclamation
+    </button>
+    <p class="error submit-error" *ngIf="submitError">{{ submitError }}</p>
+  </div>
+</section>
+
