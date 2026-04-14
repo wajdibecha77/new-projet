@@ -1,6 +1,41 @@
 const mongoose = require("mongoose");
 
 const ReclamationSchema = new mongoose.Schema({
+  code: {
+    type: String,
+    unique: true,
+  },
+
+  nom: {
+    type: String,
+    default: "",
+  },
+
+  prenom: {
+    type: String,
+    default: "",
+  },
+
+  email: {
+    type: String,
+    default: "",
+  },
+
+  nationalite: {
+    type: String,
+    default: "",
+  },
+
+  langue: {
+    type: String,
+    default: "",
+  },
+
+  typeIntervention: {
+    type: String,
+    default: "",
+  },
+
   description: {
     type: String,
     required: true,
@@ -36,7 +71,7 @@ const ReclamationSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["EN_ATTENTE", "ACCEPTEE", "REFUSEE"],
+    enum: ["EN_ATTENTE", "ACCEPTEE", "EN_COURS", "TERMINEE", "REFUSEE"],
     default: "EN_ATTENTE",
   },
 

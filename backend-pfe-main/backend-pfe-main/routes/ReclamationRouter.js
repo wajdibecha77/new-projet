@@ -18,6 +18,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+router.get("/track/:code", ReclamationController.trackReclamationByCode);
+router.post("/public", upload.array("images", 5), ReclamationController.addPublicReclamation);
 router.post("/add", isauth, upload.array("images", 5), ReclamationController.addReclamation);
 router.get("/all", isauth, ReclamationController.getAll);
 router.put("/accept/:id", isauth, isAdmin, ReclamationController.acceptReclamation);

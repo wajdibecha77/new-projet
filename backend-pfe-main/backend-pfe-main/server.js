@@ -1,13 +1,11 @@
-require("dotenv").config({ override: true });
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const app = express();
-
-// ================= DB =================
-const connectDatabase = require("./config/database");
 
 // ================= CONFIG =================
 app.set("trust proxy", 1);
@@ -91,13 +89,23 @@ app.get("/test-gemini", async (req, res) => {
 // ================= SERVER =================
 const PORT = process.env.PORT || 5000;
 
-connectDatabase()
+console.log("MONGO_URI:", process.env.MONGO_URI);
+
+if (!process.env.MONGO_URI) {
+  console.error("[DB] MONGO_URI is missing. Server not started.");
+  process.exit(1);
+}
+
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => {
+    console.log("[DB] MongoDB connected ✅");
+
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`[SERVER] Running on port ${PORT} 🚀`);
     });
   })
   .catch((error) => {
-    console.error("[DB] Connection failed. Server not started:", error.message);
+    console.error("[DB] MongoDB connection failed ❌", error);
     process.exit(1);
   });
