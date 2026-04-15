@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { environment } from "src/environments/environment";
 
@@ -10,31 +10,12 @@ export class InterventionService {
   /* ✅ API URL (centralisé) */
   public base_Url = environment.apiUrl;
 
-  public isConnected: boolean = false;
-
   constructor(private http: HttpClient) {}
-
-  /* ================= HEADERS ================= */
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      this.isConnected = true;
-    }
-
-    return new HttpHeaders({
-      "x-auth-token": token ? token : "",
-    });
-  }
 
   /* ================= API ================= */
 
   public createIntervention(intervention: any) {
-    return this.http.post(
-      `${this.base_Url}/interventions/add-intervention`,
-      intervention,
-      { headers: this.getHeaders() }
-    );
+    return this.http.post(`${this.base_Url}/interventions/add-intervention`, intervention);
   }
 
   public getAllInterventions(includeUnassigned: boolean = false) {
@@ -46,15 +27,12 @@ export class InterventionService {
 
     return this.http.get(
       `${this.base_Url}/interventions/all`,
-      { headers: this.getHeaders(), params }
+      { params }
     );
   }
 
   public getMyInterventions() {
-    return this.http.get(
-      `${this.base_Url}/interventions/my`,
-      { headers: this.getHeaders() }
-    );
+    return this.http.get(`${this.base_Url}/interventions/my`);
   }
 
   public getMesDemandes() {
@@ -62,32 +40,18 @@ export class InterventionService {
   }
 
   public getInterventionById(id: string) {
-    return this.http.get(
-      `${this.base_Url}/interventions/id/${id}`,
-      { headers: this.getHeaders() }
-    );
+    return this.http.get(`${this.base_Url}/interventions/id/${id}`);
   }
 
   public updateInterventionStatus(id: string, data: any) {
-    return this.http.put(
-      `${this.base_Url}/interventions/update/${id}`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    return this.http.put(`${this.base_Url}/interventions/update/${id}`, data);
   }
 
   public deleteIntervention(id: string) {
-    return this.http.delete(
-      `${this.base_Url}/interventions/delete/${id}`,
-      { headers: this.getHeaders() }
-    );
+    return this.http.delete(`${this.base_Url}/interventions/delete/${id}`);
   }
 
   public updateInterventionOrder(id: string, data: any) {
-    return this.http.put(
-      `${this.base_Url}/orders/intervention/${id}`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    return this.http.put(`${this.base_Url}/orders/intervention/${id}`, data);
   }
 }

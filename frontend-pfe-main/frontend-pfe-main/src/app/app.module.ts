@@ -105,7 +105,7 @@ import { DashboardComponent } from "./components/dashboard/dashboard.component";
 import { SettingsComponent } from "./components/settings/settings.component";
 import { OrdersComponent } from "./components/orders/orders.component";
 import { FormsModule } from "@angular/forms";
-import { HttpClientModule } from "@angular/common/http";
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NavbarComponent } from "./components/layout/navbar/navbar.component";
 import { SidebarComponent } from "./components/layout/sidebar/sidebar.component";
 import { InterventionDetailsComponent } from "./components/intervention-details/intervention-details.component";
@@ -132,6 +132,7 @@ import { QRCodeModule } from "angularx-qrcode";
 import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
+import { AuthInterceptor } from "./auth.interceptor";
 @NgModule({
     declarations: [
         AppComponent,
@@ -304,7 +305,11 @@ import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-recla
             },
         }),
     ],
-    providers: [InterventionPipe, UserPipe],
+    providers: [
+        InterventionPipe,
+        UserPipe,
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    ],
     bootstrap: [AppComponent],
 })
 export class AppModule {}

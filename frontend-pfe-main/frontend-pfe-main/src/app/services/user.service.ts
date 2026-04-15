@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { environment } from "src/environments/environment";
@@ -8,10 +8,10 @@ import { environment } from "src/environments/environment";
 })
 export class UserService {
 
-  // 🔥 API (web + mobile)
+  // Ã°Å¸â€Â¥ API (web + mobile)
   public base_Url = environment.apiUrl;
-
   public isConnected: boolean = false;
+
   private readonly profileImageStorageKey = "profile_image";
   private readonly profileImageSubject = new BehaviorSubject<string | null>(
     localStorage.getItem(this.profileImageStorageKey)
@@ -45,19 +45,6 @@ export class UserService {
     }
 
     return `${environment.apiUrl.replace("/api", "")}/uploads/${image}`;
-  }
-
-  // ================= HEADERS =================
-  private authHeaders() {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      this.isConnected = true;
-    }
-
-    return new HttpHeaders({
-      "x-auth-token": token ? token : "",
-    });
   }
 
   // ================= AUTH =================
@@ -115,93 +102,62 @@ export class UserService {
   // ================= USER =================
 
   public getConnectedUser() {
-    return this.http.get(`${this.base_Url}/users/me`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users/me`);
   }
 
   public getAllUsers() {
-    return this.http.get(`${this.base_Url}/users`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users`);
   }
 
   public getUserById(id: string) {
-    return this.http.get(`${this.base_Url}/users/get/${id}`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users/get/${id}`);
   }
 
   public createUser(account: any) {
-    return this.http.post(`${this.base_Url}/users/createuser`, account, {
-      headers: this.authHeaders(),
-    });
+    return this.http.post(`${this.base_Url}/users/createuser`, account);
   }
 
   public updateUser(id: string, account: any) {
-    return this.http.put(`${this.base_Url}/users/update/${id}`, account, {
-      headers: this.authHeaders(),
-    });
+    return this.http.put(`${this.base_Url}/users/update/${id}`, account);
   }
 
   public deleteUser(id: string) {
-    return this.http.delete(`${this.base_Url}/users/delete/${id}`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.delete(`${this.base_Url}/users/delete/${id}`);
   }
 
   // ================= PROFILE (NEW) =================
   
   public getProfile() {
-    return this.http.get(`${this.base_Url}/users/profile`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users/profile`);
   }
 
   public updateProfile(formData: FormData) {
-    return this.http.put(`${this.base_Url}/users/profile`, formData, {
-      headers: this.authHeaders(),
-    });
+    return this.http.put(`${this.base_Url}/users/profile`, formData);
   }
 
   public changePassword(passwordData: any) {
-    return this.http.put(`${this.base_Url}/users/profile/password`, passwordData, {
-      headers: this.authHeaders(),
-    });
+    return this.http.put(`${this.base_Url}/users/profile/password`, passwordData);
   }
 
   // ================= FOURNISSEURS =================
 
   public createFournisseur(account: any) {
-    return this.http.post(`${this.base_Url}/users/createFournisseur`, account, {
-      headers: this.authHeaders(),
-    });
+    return this.http.post(`${this.base_Url}/users/createFournisseur`, account);
   }
 
   public getAllFournisseurs() {
-    return this.http.get(`${this.base_Url}/users/getAllFournisseurs`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users/getAllFournisseurs`);
   }
 
   public getFournisseurById(id: string) {
-    return this.http.get(`${this.base_Url}/users/getFournisseur/${id}`, {
-      headers: this.authHeaders(),
-    });
+    return this.http.get(`${this.base_Url}/users/getFournisseur/${id}`);
   }
 
   public updateFournisseur(id: string, fournisseur: any) {
-    return this.http.put(
-      `${this.base_Url}/users/updateFournisseur/${id}`,
-      fournisseur,
-      { headers: this.authHeaders() }
-    );
+    return this.http.put(`${this.base_Url}/users/updateFournisseur/${id}`, fournisseur);
   }
 
   public deleteFournisseur(id: string) {
-    return this.http.delete(
-      `${this.base_Url}/users/deleteFournisseur/${id}`,
-      { headers: this.authHeaders() }
-    );
+    return this.http.delete(`${this.base_Url}/users/deleteFournisseur/${id}`);
   }
 }

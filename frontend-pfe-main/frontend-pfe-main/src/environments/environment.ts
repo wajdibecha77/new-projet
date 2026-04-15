@@ -12,6 +12,6 @@ function getApiUrl(): string {
     return "http://10.0.2.2:5000";
   }
 
-  // Web default (set your deployed backend URL)
-  return "https://your-api.com";
+  // Web default
+  return "https://new-projet-production.up.railway.app";
 }

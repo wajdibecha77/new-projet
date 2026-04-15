@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -51,6 +52,12 @@ export class AuthService {
     localStorage.removeItem(this.getTrustedDeviceFlagKey(email));
   }
 
+  private storeTokenIfPresent(res: any): void {
+    if (res?.token) {
+      localStorage.setItem("token", res.token);
+    }
+  }
+
   // ================= AUTH =================
 
   loginSecure(
@@ -59,23 +66,27 @@ export class AuthService {
     coords?: { lat: number; lng: number; accuracy?: number }
   ): Observable<any> {
 
-    return this.http.post(`${this.API}/login-secure`, {
-      email: this.normalizeEmail(email),
-      password,
-      coords,
-      deviceInfo: {
-        deviceId: this.getOrCreateDeviceId(),
-        userAgent: this.getCurrentUserAgent(),
-        trustedDevice: this.isTrustedDeviceLocally(email),
-      },
-    });
+    return this.http
+      .post(`${this.API}/login-secure`, {
+        email: this.normalizeEmail(email),
+        password,
+        coords,
+        deviceInfo: {
+          deviceId: this.getOrCreateDeviceId(),
+          userAgent: this.getCurrentUserAgent(),
+          trustedDevice: this.isTrustedDeviceLocally(email),
+        },
+      })
+      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
   }
 
   verifyLoginOtp(challengeId: string, otp: string): Observable<any> {
-    return this.http.post(`${this.API}/challenge/verify`, {
-      challengeId,
-      otp,
-    });
+    return this.http
+      .post(`${this.API}/challenge/verify`, {
+        challengeId,
+        otp,
+      })
+      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
   }
 
   // ================= RESET =================
