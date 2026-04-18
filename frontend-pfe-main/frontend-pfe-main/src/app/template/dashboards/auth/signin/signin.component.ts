@@ -2,6 +2,8 @@ import { Component } from "@angular/core";
 import { Router } from "@angular/router";
 import { AuthService } from "src/app/services/auth.service";
 
+const ENABLE_OTP_LOGIN = false;
+
 @Component({
   selector: "app-signin",
   templateUrl: "./signin.component.html",
@@ -33,6 +35,18 @@ export class SigninComponent {
 
   private isTechnicianRole(role: string): boolean {
     return this.technicianRoles.includes(String(role || "").toUpperCase());
+  }
+
+  private sanitizeLoginMessage(message?: string): string {
+    const text = String(message || "");
+    const looksLikeOtpMessage =
+      /otp|verification|verif|vérif|challenge|code|e-mail/i.test(text);
+
+    if (!ENABLE_OTP_LOGIN && looksLikeOtpMessage) {
+      return "Connexion refusee.";
+    }
+
+    return text || "Connexion refusee.";
   }
 
   private goToHome(role: string): void {
@@ -68,7 +82,7 @@ export class SigninComponent {
         console.log("LOGIN RESPONSE:", res);
 
         const requiresOtp = !!(res?.requiresOtp || res?.challengeRequired);
-        if (requiresOtp) {
+        if (requiresOtp && ENABLE_OTP_LOGIN) {
           this.authService.clearTrustedDevice(this.email);
           this.router.navigate(["/auth/verify-otp"], {
             queryParams: {
@@ -80,7 +94,7 @@ export class SigninComponent {
         }
 
         if (!res?.token) {
-          this.errorMessage = res?.message || "Connexion refusee.";
+          this.errorMessage = this.sanitizeLoginMessage(res?.message);
           return;
         }
 
@@ -95,9 +109,11 @@ export class SigninComponent {
       error: (err) => {
         this.loading = false;
         this.successMessage = "";
-        this.errorMessage =
-          err?.error?.message || "Erreur lors de la connexion.";
+        this.errorMessage = this.sanitizeLoginMessage(
+          err?.error?.message || "Erreur lors de la connexion."
+        );
       },
     });
   }
 }
+

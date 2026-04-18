@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: "https://new-projet-production.up.railway.app",
+  apiUrl: "http://localhost:5000",
 };

@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
+const ENABLE_OTP_LOGIN = false;
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -29,7 +31,23 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  private sanitizeLoginMessage(message?: string): string {
+    const text = String(message || '');
+    const looksLikeOtpMessage =
+      /otp|verification|verif|vérif|challenge|code|e-mail/i.test(text);
+
+    if (!ENABLE_OTP_LOGIN && looksLikeOtpMessage) {
+      return 'Connexion refusee.';
+    }
+
+    return text || 'Connexion refusee.';
+  }
+
   ngOnInit(): void {
+    if (!ENABLE_OTP_LOGIN) {
+      return;
+    }
+
     this.route.queryParamMap.subscribe((params) => {
       const waiting = params.get('waiting');
       const cid = params.get('challengeId');
@@ -38,7 +56,7 @@ export class LoginComponent implements OnInit {
         this.waitingVerification = true;
         this.challengeId = cid;
         this.messageFR =
-          "En attente de vérification… Un e-mail de confirmation a été envoyé. Cliquez sur “C’est moi”, puis saisissez le code reçu.";
+          "En attente de verification. Un e-mail de confirmation a ete envoye.";
       }
     });
   }
@@ -72,13 +90,13 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.loading = false;
 
-        if (res?.challengeRequired) {
+        if (res?.challengeRequired && ENABLE_OTP_LOGIN) {
           this.auth.clearTrustedDevice(this.email);
           this.waitingVerification = true;
           this.challengeId = res.challengeId;
           this.messageFR =
             res.message ||
-            "Vérification de connexion requise. Un e-mail vous a été envoyé.";
+            "Verification de connexion requise. Un e-mail vous a ete envoye.";
           return;
         }
 
@@ -92,11 +110,15 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        this.errorFR = "Réponse inattendue du serveur.";
+        this.errorFR = this.sanitizeLoginMessage(
+          res?.message || 'Reponse inattendue du serveur.'
+        );
       },
       error: (err) => {
         this.loading = false;
-        this.errorFR = err?.error?.message || "Erreur lors de la connexion.";
+        this.errorFR = this.sanitizeLoginMessage(
+          err?.error?.message || 'Erreur lors de la connexion.'
+        );
       },
     });
   }
@@ -122,12 +144,12 @@ export class LoginComponent implements OnInit {
           localStorage.setItem("role", role);
           this.goToHome(res?.user);
         } else {
-          this.errorFR = "Code incorrect ou expiré.";
+          this.errorFR = "Code incorrect ou expire.";
         }
       },
       error: (err) => {
         this.loading = false;
-        this.errorFR = err?.error?.message || "Erreur de vérification.";
+        this.errorFR = err?.error?.message || "Erreur de verification.";
       },
     });
   }

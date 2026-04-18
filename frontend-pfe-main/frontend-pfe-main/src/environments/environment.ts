@@ -12,6 +12,6 @@ function getApiUrl(): string {
     return "http://10.0.2.2:5000";
   }
 
-  // Web default
-  return "https://new-projet-production.up.railway.app";
+  // Web local backend
+  return "http://localhost:5000";
 }

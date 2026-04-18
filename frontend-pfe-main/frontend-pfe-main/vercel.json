@@ -1,10 +1,10 @@
 {
   "buildCommand": "npm install -g @angular/cli && npm install && NODE_OPTIONS=--openssl-legacy-provider ng build --configuration production",
   "outputDirectory": "dist/frontend-pfe-main",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
