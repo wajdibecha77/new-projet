@@ -3,7 +3,10 @@
   "outputDirectory": "dist/frontend-pfe-main",
   "routes": [
     {
-      "src": "/(.*)",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
       "dest": "/index.html"
     }
   ]
