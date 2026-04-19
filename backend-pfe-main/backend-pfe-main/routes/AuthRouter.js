@@ -13,6 +13,8 @@ route.post("/verify-password-reset-otp", AuthController.verifyPasswordResetOtp);
 route.post("/reset-password-with-otp", AuthController.resetPasswordWithOtp);
 
 route.post("/login-secure", AuthController.loginSecure);
+route.post("/confirm-login", AuthController.confirmLogin);
+route.post("/challenge/verify", AuthController.verifyLoginOtp);
 
 module.exports = route;
 

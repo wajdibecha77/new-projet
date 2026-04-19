@@ -31,6 +31,10 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         required: false
     },
+    trustedDevices: {
+        type: [String],
+        default: []
+    },
     service :{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Service",

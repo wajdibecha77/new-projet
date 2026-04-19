@@ -139,6 +139,21 @@ const signJwt = (user) => {
   );
 };
 
+const signLoginConfirmToken = ({ userId, email, deviceId }) => {
+  if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET manquant dans .env");
+
+  return jwt.sign(
+    {
+      type: "LOGIN_CONFIRM",
+      userId: String(userId),
+      email: normalizeEmail(email),
+      deviceId: String(deviceId || "").trim(),
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "10m" }
+  );
+};
+
 // âœ… Node14 reverse geocode via https (OpenStreetMap Nominatim)
 const reverseGeocodeOSM = (lat, lng) =>
   new Promise((resolve) => {
@@ -318,6 +333,76 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
   });
 };
 
+const sendLoginConfirmationEmail = async ({ toEmail, confirmUrl, details }) => {
+  const { transporter, smtpFrom } = smtpTransporter();
+  const normalized = normalizeEmail(toEmail);
+
+  const html = `
+  <!doctype html>
+  <html>
+    <body style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8fb;padding:24px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.08);">
+              <tr>
+                <td style="padding:22px 24px;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff;">
+                  <div style="font-size:18px;font-weight:700;">Verification de connexion</div>
+                  <div style="opacity:.95;margin-top:6px;">Nouvelle connexion detectee</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:22px 24px;">
+                  <div style="font-size:14px;line-height:1.6;">
+                    Bonjour,<br/>
+                    Une connexion depuis un appareil non reconnu a ete detectee.
+                  </div>
+                  <div style="margin-top:16px;padding:14px;background:#f3f4f6;border-radius:12px;font-size:13px;line-height:1.6;">
+                    <div><b>Heure:</b> ${details.time}</div>
+                    <div><b>Appareil:</b> ${details.deviceLabel || "Inconnu"}</div>
+                    <div><b>Systeme:</b> ${details.os || "Inconnu"}</div>
+                    <div><b>Navigateur:</b> ${details.browser || "Inconnu"}</div>
+                    <div><b>IP:</b> ${details.ip || "Inconnue"}</div>
+                    <div><b>Lieu:</b> ${details.location || "Inconnu"}</div>
+                  </div>
+                  <div style="margin-top:18px;">
+                    <a href="${confirmUrl}"
+                      style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;
+                              padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;">
+                      C'est moi - Confirmer la connexion
+                    </a>
+                  </div>
+                  <div style="margin-top:18px;font-size:12px;color:#6b7280;line-height:1.6;">
+                    Si ce n'etait pas vous, ignorez cet email.
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>`;
+
+  await transporter.sendMail({
+    from: smtpFrom,
+    to: normalized,
+    subject: "Confirmez votre connexion",
+    html,
+    text:
+      `Nouvelle connexion detectee.\n` +
+      `Heure: ${details.time}\n` +
+      `Appareil: ${details.deviceLabel || "Inconnu"}\n` +
+      `OS: ${details.os || "Inconnu"}\n` +
+      `Navigateur: ${details.browser || "Inconnu"}\n` +
+      `IP: ${details.ip || "Inconnue"}\n` +
+      `Lieu: ${details.location || "Inconnu"}\n\n` +
+      `Confirmer: ${confirmUrl}\n`,
+  });
+
+  console.log("[AUTH] Email de confirmation envoye ->", normalized);
+};
+
 // -------------------- controllers --------------------
 module.exports = {
 
@@ -486,9 +571,13 @@ module.exports = {
   loginSecure: async (req, res) => {
     const email = normalizeEmail(req.body?.email);
     const password = String(req.body?.password || "");
+    const deviceId = String(req.body?.deviceInfo?.deviceId || req.body?.deviceId || "").trim();
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Email et mot de passe requis." });
+    }
+    if (!deviceId) {
+      return res.status(400).json({ success: false, message: "deviceId requis." });
     }
 
     try {
@@ -498,35 +587,149 @@ module.exports = {
       const ok = await bcrypt.compare(password, user.password);
       if (!ok) return res.status(401).json({ success: false, message: "Identifiants invalides." });
 
-      // TEMPORAIRE: bypass OTP pour connexion directe.
-      // Garder ce flag a true tant que la verification OTP est desactivee.
-      const OTP_BYPASS_ENABLED = true;
+      const trustedDevices = Array.isArray(user.trustedDevices) ? user.trustedDevices : [];
+      const isTrustedDevice = trustedDevices.includes(deviceId);
+      console.log("[AUTH] loginSecure", {
+        email,
+        userId: String(user._id),
+        deviceId,
+        isTrustedDevice,
+      });
 
-      // Logique OTP (desactivee temporairement):
-      // - creation de challenge (LoginChallenge)
-      // - envoi email OTP / lien d'approbation
-      // - reponse { challengeRequired: true } / redirection OTP
-      //
-      // if (!OTP_BYPASS_ENABLED) {
-      //   ... logique OTP existante a reactiver ici ...
-      // }
-
-      const token = signJwt(user);
-
-      if (!OTP_BYPASS_ENABLED) {
-        return res.status(500).json({
-          success: false,
-          message: "Flux OTP actif mais non configure dans cette version.",
+      if (isTrustedDevice) {
+        const token = signJwt(user);
+        return res.status(200).json({
+          success: true,
+          token,
+          user,
         });
       }
 
+      const confirmToken = signLoginConfirmToken({
+        userId: user._id,
+        email: user.email,
+        deviceId,
+      });
+
+      const appUrl = String(process.env.APP_PUBLIC_URL || "http://localhost:4200").replace(/\/+$/, "");
+      const confirmUrl = `${appUrl}/#/auth/confirm-login?token=${encodeURIComponent(confirmToken)}`;
+
+      const clientIp = getVisiteurIp(req);
+      const device = getDeviceInfo(req);
+      await sendLoginConfirmationEmail({
+        toEmail: user.email,
+        confirmUrl,
+        details: {
+          time: formatDateFR(new Date()),
+          deviceLabel: [device.deviceVendor, device.deviceModel, device.deviceType]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || "Appareil inconnu",
+          os: device.os,
+          browser: device.browser,
+          ip: clientIp,
+          location: getApproxLocationLabel(clientIp),
+        },
+      });
+
       return res.status(200).json({
         success: true,
-        token,
-        user,
+        requiresEmailConfirmation: true,
+        message: "Verification email requise. Consultez votre boite mail.",
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message || "Erreur login." });
+    }
+  },
+
+  confirmLogin: async (req, res) => {
+    const tokenFromBody = String(req.body?.token || "").trim();
+    const tokenFromQuery = String(req.query?.token || "").trim();
+    const confirmToken = tokenFromBody || tokenFromQuery;
+
+    if (!confirmToken) {
+      return res.status(400).json({ success: false, message: "Token de confirmation requis." });
+    }
+
+    try {
+      const payload = jwt.verify(confirmToken, process.env.JWT_SECRET || "");
+      if (payload?.type !== "LOGIN_CONFIRM") {
+        return res.status(400).json({ success: false, message: "Token invalide." });
+      }
+
+      const userId = String(payload.userId || "");
+      const deviceId = String(payload.deviceId || "").trim();
+      if (!userId || !deviceId) {
+        return res.status(400).json({ success: false, message: "Token incomplet." });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+      }
+
+      const trustedDevices = new Set(Array.isArray(user.trustedDevices) ? user.trustedDevices : []);
+      trustedDevices.add(deviceId);
+      user.trustedDevices = Array.from(trustedDevices);
+      await user.save();
+
+      console.log("[AUTH] confirmLogin success", {
+        userId: String(user._id),
+        deviceId,
+      });
+
+      const token = signJwt(user);
+      return res.status(200).json({ success: true, token, user });
+    } catch (error) {
+      // Fallback OTP si token expiré.
+      if (error?.name === "TokenExpiredError") {
+        try {
+          const decoded = jwt.decode(confirmToken) || {};
+          const email = normalizeEmail(decoded.email);
+          if (!email) {
+            return res.status(401).json({
+              success: false,
+              requiresOtp: true,
+              message: "Lien expire. OTP requis.",
+            });
+          }
+
+          const user = await User.findOne({
+            email: { $regex: new RegExp("^" + escapeRegex(email) + "$", "i") },
+          });
+          if (!user) {
+            return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+          }
+
+          const otp = generateCode();
+          user.loginOtp = await bcrypt.hash(otp, 10);
+          user.loginOtpExpires = new Date(Date.now() + LOGIN_OTP_EXPIRE_MINUTES * 60 * 1000);
+          await user.save();
+          await sendLoginOtpEmail(user.email, otp);
+
+          console.log("[AUTH] confirmLogin token expire -> OTP fallback", {
+            userId: String(user._id),
+            email,
+          });
+
+          return res.status(401).json({
+            success: false,
+            requiresOtp: true,
+            email,
+            message: "Lien expire. Un OTP a ete envoye par email.",
+          });
+        } catch (otpError) {
+          return res.status(500).json({
+            success: false,
+            message: otpError.message || "Impossible d'activer le fallback OTP.",
+          });
+        }
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: error?.message || "Token invalide.",
+      });
     }
   },
 
