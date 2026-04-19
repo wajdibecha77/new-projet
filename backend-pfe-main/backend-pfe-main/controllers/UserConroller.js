@@ -17,19 +17,16 @@ const generateOtpCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendOtpEmail = async (toEmail, otpCode) => {
-  const smtpHost = String(process.env.SMTP_HOST || "").trim();
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpHost = "smtp.gmail.com";
+  const smtpPort = 587;
   const smtpUser = String(process.env.SMTP_USER || "").trim();
-  const smtpPass = String(process.env.SMTP_PASS || "").replace(/\s+/g, "");
+  const smtpPass = String(process.env.SMTP_PASS || "");
   const smtpFrom = process.env.SMTP_FROM || smtpUser;
-  const smtpSecure =
-    String(process.env.SMTP_SECURE || "").toLowerCase() === "true"
-      ? true
-      : smtpPort === 465;
+  const smtpSecure = false;
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
+  if (!smtpUser || !smtpPass) {
     throw new Error(
-      "Configuration SMTP manquante (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)."
+      "Configuration SMTP manquante (SMTP_USER, SMTP_PASS)."
     );
   }
 
@@ -37,6 +34,9 @@ const sendOtpEmail = async (toEmail, otpCode) => {
     host: smtpHost,
     port: smtpPort,
     secure: smtpSecure,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
     auth: {
       user: smtpUser,
       pass: smtpPass,
@@ -44,9 +44,16 @@ const sendOtpEmail = async (toEmail, otpCode) => {
   });
 
   try {
+    const normalizedTarget = normalizeEmail(toEmail);
+    console.log("OTP envoye a :", normalizedTarget);
+    console.log(`[SMTP] tentative connexion ${smtpHost}:${smtpPort} avec ${smtpUser}`);
+
+    await transporter.verify();
+    console.log("[SMTP] verification reussie ✅");
+
     await transporter.sendMail({
       from: smtpFrom,
-      to: toEmail,
+      to: normalizedTarget,
       subject: "Code de verification - Reinitialisation mot de passe",
       text:
         "Bonjour,\n\n" +
@@ -57,7 +64,16 @@ const sendOtpEmail = async (toEmail, otpCode) => {
         OTP_EXPIRE_MINUTES +
         " minutes.\n",
     });
+    console.log("OTP envoye avec succes vers :", normalizedTarget);
   } catch (error) {
+    const errorDetails = {
+      message: error?.message || "Erreur SMTP inconnue",
+      code: error?.code || "",
+      responseCode: error?.responseCode || "",
+      response: error?.response || "",
+      command: error?.command || "",
+    };
+    console.error("Erreur SMTP :", errorDetails);
     if (
       error?.responseCode === 535 ||
       String(error?.message || "").includes("BadCredentials")
@@ -65,6 +81,9 @@ const sendOtpEmail = async (toEmail, otpCode) => {
       throw new Error(
         "Identifiants SMTP invalides. Pour Gmail, utilisez SMTP_USER et un mot de passe d'application (App Password)."
       );
+    }
+    if (error?.responseCode === 534 || error?.responseCode === 530) {
+      throw new Error("Gmail bloque la connexion SMTP. Verifiez la securite du compte Google et l'App Password.");
     }
     throw error;
   }
@@ -473,6 +492,7 @@ module.exports = {
       });
 
       if (!user) {
+        console.error("OTP reset: email introuvable en base ->", normalizedEmail);
         return res.status(404).json({
           message: "Aucun utilisateur n'est associe a cet email.",
         });

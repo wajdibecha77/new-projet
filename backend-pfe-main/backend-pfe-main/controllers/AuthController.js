@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+﻿const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
@@ -11,20 +11,21 @@ const PasswordResetToken = require("../models/PasswordResetToken");
 const Notification = require("../models/Notification");
 const LoginChallenge = require("../models/LoginChallenge");
 
-const CODE_EXPIRE_MINUTES = 15;
+const CODE_EXPIRE_MINUTES = 10;
 const LOGIN_OTP_EXPIRE_MINUTES = 10;
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const TECHNICIAN_ROLES = ["TECHNICIEN", "INFORMATICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBERIE", "PLOMBIER"];
+const isPrivilegedOtpRole = (role) =>
+  ["ADMIN", ...TECHNICIAN_ROLES].includes(String(role || "").toUpperCase());
 
 const sha256 = (s) => crypto.createHash("sha256").update(String(s)).digest("hex");
 const randomToken = () => crypto.randomBytes(32).toString("hex");
 
 const formatDateFR = (d) => new Date(d).toLocaleString("fr-FR", { timeZone: "Africa/Tunis" });
 
-const allowLoginOnSmtpFailure =
-  String(process.env.ALLOW_LOGIN_ON_SMTP_FAILURE || "true").toLowerCase() === "true";
 const runtimeVerifiedDevices = new Map();
 
 // -------------------- helpers --------------------
@@ -75,40 +76,57 @@ const markVerifiedInCurrentRuntime = (userId, deviceHash) => {
 };
 
 const smtpTransporter = () => {
-  const smtpHost = String(process.env.SMTP_HOST || "").trim();
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpHost = "smtp.gmail.com";
+  const smtpPort = 587;
   const smtpUser = String(process.env.SMTP_USER || "").trim();
-  const smtpPass = String(process.env.SMTP_PASS || "").replace(/\s+/g, "");
+  const smtpPass = String(process.env.SMTP_PASS || "");
   const smtpFrom = process.env.SMTP_FROM || smtpUser;
-  const smtpSecure =
-    String(process.env.SMTP_SECURE || "").toLowerCase() === "true"
-      ? true
-      : smtpPort === 465;
+  const smtpSecure = false;
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    throw new Error("Configuration SMTP manquante (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS).");
+  if (!smtpUser || !smtpPass) {
+    throw new Error("Configuration SMTP manquante (SMTP_USER, SMTP_PASS).");
   }
 
   const transporter = nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
     secure: smtpSecure,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
     auth: { user: smtpUser, pass: smtpPass },
   });
 
-  return { transporter, smtpFrom };
+  return { transporter, smtpFrom, smtpUser, smtpHost, smtpPort };
 };
 
 const throwSmtpCredentialError = (error) => {
+  const code = String(error?.code || "").toUpperCase();
+  const message = String(error?.message || "");
+
   if (
     error?.responseCode === 535 ||
-    String(error?.message || "").includes("BadCredentials")
+    message.includes("BadCredentials")
   ) {
     throw new Error(
       "Identifiants SMTP invalides. Pour Gmail, activez la validation en 2 etapes et utilisez un App Password dans SMTP_PASS."
     );
   }
-  throw error;
+  if (code === "ETIMEDOUT") {
+    throw new Error("SMTP timeout: le serveur de messagerie ne repond pas a temps.");
+  }
+  if (code === "ECONNECTION" || code === "ESOCKET") {
+    throw new Error("SMTP connexion echouee: impossible de contacter le serveur SMTP.");
+  }
+  if (code === "EENVELOPE") {
+    throw new Error("Erreur SMTP envelope: adresse email destinataire invalide.");
+  }
+  if (error?.responseCode === 534 || error?.responseCode === 530) {
+    throw new Error("Gmail bloque la connexion SMTP. Verifiez la securite du compte Google et l'App Password.");
+  }
+
+  console.error("SMTP ERROR:", error);
+  throw new Error(message || "Erreur SMTP inconnue.");
 };
 
 const signJwt = (user) => {
@@ -121,7 +139,7 @@ const signJwt = (user) => {
   );
 };
 
-// ✅ Node14 reverse geocode via https (OpenStreetMap Nominatim)
+// âœ… Node14 reverse geocode via https (OpenStreetMap Nominatim)
 const reverseGeocodeOSM = (lat, lng) =>
   new Promise((resolve) => {
     if (lat == null || lng == null) return resolve("");
@@ -133,7 +151,7 @@ const reverseGeocodeOSM = (lat, lng) =>
       url,
       {
         headers: {
-          // لازم User-Agent في Nominatim
+          // Ù„Ø§Ø²Ù… User-Agent ÙÙŠ Nominatim
           "User-Agent": "PFE-App/1.0 (contact: moatezguez1@gmail.com)",
           "Accept-Language": "fr",
         },
@@ -167,47 +185,49 @@ const reverseGeocodeOSM = (lat, lng) =>
 
 // -------------------- emails --------------------
 const sendResetCodeEmail = async (toEmail, code) => {
-  const { transporter, smtpFrom } = smtpTransporter();
-  try {
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: toEmail,
-      subject: "Code de réinitialisation du mot de passe",
-      text:
-        "Bonjour,\n\n" +
-        "Votre code de réinitialisation est : " +
-        code +
-        "\n\n" +
-        "Ce code expire dans " +
-        CODE_EXPIRE_MINUTES +
-        " minutes.\n",
-    });
-  } catch (error) {
-    throwSmtpCredentialError(error);
-  }
+  return sendOtpEmail(toEmail, code, "forgot-password");
 };
 
 const sendLoginOtpEmail = async (toEmail, code) => {
-  const { transporter, smtpFrom } = smtpTransporter();
+  return sendOtpEmail(toEmail, code, "login");
+};
+
+const sendOtpEmail = async (toEmail, code, context = "otp") => {
+  const { transporter, smtpFrom, smtpUser, smtpHost, smtpPort } = smtpTransporter();
   try {
+    const normalized = normalizeEmail(toEmail);
+    console.log("OTP envoye a :", normalized);
+    console.log(`[SMTP] tentative connexion ${smtpHost}:${smtpPort} avec ${smtpUser}`);
+
+    await transporter.verify();
+    console.log("[SMTP] verification reussie ✅");
+
     await transporter.sendMail({
       from: smtpFrom,
-      to: toEmail,
-      subject: "Code de sécurité (connexion)",
+      to: normalized,
+      subject: "Code de verification - TAV Airports",
       text:
         "Bonjour,\n\n" +
-        "Votre code de sécurité est : " +
+        "Votre code de verification est : " +
         code +
         "\n\n" +
-        "Ce code expire dans " +
-        LOGIN_OTP_EXPIRE_MINUTES +
-        " minutes.\n",
+        "Ce code est valable pendant 10 minutes.\n\n" +
+        "Si vous n'etes pas a l'origine de cette demande, veuillez ignorer cet email.\n\n" +
+        "Cordialement,\nTAV Airports",
     });
+    console.log(`OTP envoye avec succes (${context}) ->`, normalized);
   } catch (error) {
+    const errorDetails = {
+      message: error?.message || "Erreur SMTP inconnue",
+      code: error?.code || "",
+      responseCode: error?.responseCode || "",
+      response: error?.response || "",
+      command: error?.command || "",
+    };
+    console.error("Erreur SMTP :", errorDetails);
     throwSmtpCredentialError(error);
   }
 };
-
 const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details }) => {
   const { transporter, smtpFrom } = smtpTransporter();
 
@@ -221,8 +241,8 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
             <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.08);">
               <tr>
                 <td style="padding:22px 24px;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff;">
-                  <div style="font-size:18px;font-weight:700;">Vérification de connexion</div>
-                  <div style="opacity:.95;margin-top:6px;">Nouvelle tentative de connexion détectée</div>
+                  <div style="font-size:18px;font-weight:700;">VÃ©rification de connexion</div>
+                  <div style="opacity:.95;margin-top:6px;">Nouvelle tentative de connexion dÃ©tectÃ©e</div>
                 </td>
               </tr>
 
@@ -230,20 +250,20 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
                 <td style="padding:22px 24px;">
                   <div style="font-size:14px;line-height:1.6;">
                     Bonjour,<br/>
-                    Nous avons détecté une tentative de connexion à votre compte. Confirmez si c’est bien vous.
+                    Nous avons dÃ©tectÃ© une tentative de connexion Ã  votre compte. Confirmez si câ€™est bien vous.
                   </div>
 
                   <div style="margin-top:16px;padding:14px;background:#f3f4f6;border-radius:12px;font-size:13px;line-height:1.6;">
                     <div><b>Heure :</b> ${details.time}</div>
                     <div><b>Appareil :</b> ${details.deviceLabel}</div>
-                    <div><b>Système :</b> ${details.os || "Inconnu"}</div>
+                    <div><b>SystÃ¨me :</b> ${details.os || "Inconnu"}</div>
                     <div><b>Navigateur :</b> ${details.browser || "Inconnu"}</div>
                     <div><b>IP :</b> ${details.ip || "Inconnue"}</div>
 
                     <div>
                       <b>Lieu :</b> ${details.location || "Inconnu"}
                       ${details.mapsUrl
-      ? ` — <a href="${details.mapsUrl}" style="color:#2563eb;text-decoration:none;font-weight:700;">Voir sur Google Maps</a>`
+      ? ` â€” <a href="${details.mapsUrl}" style="color:#2563eb;text-decoration:none;font-weight:700;">Voir sur Google Maps</a>`
       : ""
     }
                     </div>
@@ -253,22 +273,22 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
                     <a href="${approveUrl}"
                       style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;
                               padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;">
-                      ✅ C’est moi
+                      âœ… Câ€™est moi
                     </a>
 
                     <a href="${denyUrl}"
                       style="display:inline-block;background:#ef4444;color:#fff;text-decoration:none;
                               padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;margin-left:10px;">
-                      ❌ Ce n’est pas moi
+                      âŒ Ce nâ€™est pas moi
                     </a>
                   </div>
 
                   <div style="margin-top:18px;font-size:12px;color:#6b7280;line-height:1.6;">
-                    Si ce n’est pas vous, refusez la connexion et changez votre mot de passe immédiatement.
+                    Si ce nâ€™est pas vous, refusez la connexion et changez votre mot de passe immÃ©diatement.
                   </div>
 
                   <div style="margin-top:18px;font-size:11px;color:#9ca3af;">
-                    © ${new Date().getFullYear()} — Sécurité & confidentialité
+                    Â© ${new Date().getFullYear()} â€” SÃ©curitÃ© & confidentialitÃ©
                   </div>
                 </td>
               </tr>
@@ -282,7 +302,7 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
   await transporter.sendMail({
     from: smtpFrom,
     to: toEmail,
-    subject: "Nouvelle tentative de connexion — Confirmation requise",
+    subject: "Nouvelle tentative de connexion â€” Confirmation requise",
     html,
     text:
       `Nouvelle tentative de connexion.\n` +
@@ -293,8 +313,8 @@ const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details })
       `IP: ${details.ip}\n` +
       `Lieu: ${details.location}\n` +
       (details.mapsUrl ? `Google Maps: ${details.mapsUrl}\n` : "") +
-      `\nC’est moi: ${approveUrl}\n` +
-      `Ce n’est pas moi: ${denyUrl}\n`,
+      `\nCâ€™est moi: ${approveUrl}\n` +
+      `Ce nâ€™est pas moi: ${denyUrl}\n`,
   });
 };
 
@@ -314,7 +334,7 @@ module.exports = {
 
       const normalizedEmail = email.trim().toLowerCase();
 
-      // 🔥 check if user exists
+      // ðŸ”¥ check if user exists
       const existing = await User.findOne({
         email: new RegExp("^" + normalizedEmail + "$", "i"),
       });
@@ -322,14 +342,14 @@ module.exports = {
       if (existing) {
         return res.status(400).json({
           success: false,
-          message: "Email déjà utilisé",
+          message: "Email dÃ©jÃ  utilisÃ©",
         });
       }
 
-      // 🔥 hash password
+      // ðŸ”¥ hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // 🔥 create user
+      // ðŸ”¥ create user
       const user = new User({
         name,
         email: normalizedEmail,
@@ -341,18 +361,17 @@ module.exports = {
 
       return res.status(200).json({
         success: true,
-        message: "Compte créé avec succès",
+        message: "Compte crÃ©Ã© avec succÃ¨s",
       });
 
     } catch (error) {
-      console.error("SIGNUP ERROR 👉", error);
+      console.error("SIGNUP ERROR ðŸ‘‰", error);
       return res.status(500).json({
         success: false,
         message: "Erreur serveur",
       });
     }
   },
-
 
   // ===================== FORGOT PASSWORD =====================
   forgotPassword: async (req, res) => {
@@ -365,7 +384,9 @@ module.exports = {
         email: { $regex: new RegExp("^" + escapeRegex(normalizedEmail) + "$", "i") },
       });
 
-      if (!user) return res.status(404).json({ success: false, message: "Utilisateur introuvable pour cet email." });
+      if (!user) {
+        return res.status(404).json({ success: false, message: "Utilisateur introuvable pour cet email." });
+      }
 
       const code = generateCode();
       const expiresAt = new Date(Date.now() + CODE_EXPIRE_MINUTES * 60 * 1000);
@@ -377,14 +398,14 @@ module.exports = {
 
       await Notification.create({
         userId: user._id,
-        title: "Réinitialisation mot de passe",
-        message: "Demande reçue pour : " + normalizedEmail,
+        title: "Reinitialisation mot de passe",
+        message: "Demande recue pour : " + normalizedEmail,
         type: "warning",
         isRead: false,
         createdAt: Date.now(),
       });
 
-      return res.status(200).json({ success: true });
+      return res.status(200).json({ success: true, message: "OTP envoye a votre email." });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message || "Erreur lors de la demande." });
     }
@@ -406,11 +427,11 @@ module.exports = {
         expiresAt: { $gt: new Date() },
       }).sort({ createdAt: -1 });
 
-      if (!tokenDoc) return res.status(400).json({ success: false, message: "Code invalide, déjà utilisé, ou expiré." });
+      if (!tokenDoc) return res.status(400).json({ success: false, message: "Code invalide, dÃ©jÃ  utilisÃ©, ou expirÃ©." });
 
       return res.status(200).json({ success: true });
     } catch (error) {
-      return res.status(500).json({ success: false, message: error.message || "Erreur vérification." });
+      return res.status(500).json({ success: false, message: error.message || "Erreur vÃ©rification." });
     }
   },
 
@@ -431,7 +452,7 @@ module.exports = {
         expiresAt: { $gt: new Date() },
       }).sort({ createdAt: -1 });
 
-      if (!tokenDoc) return res.status(400).json({ success: false, message: "Code invalide, déjà utilisé, ou expiré." });
+      if (!tokenDoc) return res.status(400).json({ success: false, message: "Code invalide, dÃ©jÃ  utilisÃ©, ou expirÃ©." });
 
       const user = await User.findOne({
         email: { $regex: new RegExp("^" + escapeRegex(normalizedEmail) + "$", "i") },
@@ -445,8 +466,20 @@ module.exports = {
 
       return res.status(200).json({ success: true });
     } catch (error) {
-      return res.status(500).json({ success: false, message: error.message || "Erreur réinitialisation." });
+      return res.status(500).json({ success: false, message: error.message || "Erreur rÃ©initialisation." });
     }
+  },
+
+  requestPasswordReset: async (req, res) => {
+    return module.exports.forgotPassword(req, res);
+  },
+
+  verifyPasswordResetOtp: async (req, res) => {
+    return module.exports.verifyResetCode(req, res);
+  },
+
+  resetPasswordWithOtp: async (req, res) => {
+    return module.exports.resetPassword(req, res);
   },
 
   // ===================== LOGIN SECURE =====================
@@ -465,119 +498,92 @@ module.exports = {
       const ok = await bcrypt.compare(password, user.password);
       if (!ok) return res.status(401).json({ success: false, message: "Identifiants invalides." });
 
-      // CLIENT bypass: connexion directe sans OTP/challenge email.
-      // IMPORTANT: les autres roles conservent exactement le flux OTP actuel.
-      if (String(user.role || "").toUpperCase() === "CLIENT") {
-        const token = signJwt(user);
-        return res.status(200).json({
-          success: true,
-          challengeRequired: false,
-          token,
-          user,
+      // TEMPORAIRE: bypass OTP pour connexion directe.
+      // Garder ce flag a true tant que la verification OTP est desactivee.
+      const OTP_BYPASS_ENABLED = true;
+
+      // Logique OTP (desactivee temporairement):
+      // - creation de challenge (LoginChallenge)
+      // - envoi email OTP / lien d'approbation
+      // - reponse { challengeRequired: true } / redirection OTP
+      //
+      // if (!OTP_BYPASS_ENABLED) {
+      //   ... logique OTP existante a reactiver ici ...
+      // }
+
+      const token = signJwt(user);
+
+      if (!OTP_BYPASS_ENABLED) {
+        return res.status(500).json({
+          success: false,
+          message: "Flux OTP actif mais non configure dans cette version.",
         });
-      }
-
-      const ip = getVisiteurIp(req);
-      const dev = getDeviceInfo(req);
-      const deviceHash = deviceHashFromReq(req);
-      const deviceId = String(req.body?.deviceInfo?.deviceId || "").trim();
-
-      const coords = req.body?.coords;
-
-      // fallback geoip
-      let locationLabel = getApproxLocationLabel(ip);
-      let mapsUrl = "";
-
-      // ✅ If GPS provided -> City/Country via OSM reverse
-      if (coords?.lat && coords?.lng) {
-        mapsUrl = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
-
-        const place = await reverseGeocodeOSM(coords.lat, coords.lng);
-        locationLabel =
-          place ||
-          `${Number(coords.lat).toFixed(5)}, ${Number(coords.lng).toFixed(5)}${coords.accuracy ? ` (±${Math.round(coords.accuracy)}m)` : ""
-          }`;
-      }
-
-      const verifiedInRuntime = isVerifiedInCurrentRuntime(user._id, deviceHash);
-      if (verifiedInRuntime) {
-        const token = signJwt(user);
-        return res.status(200).json({
-          success: true,
-          challengeRequired: false,
-          verifiedInRuntime: true,
-          token,
-          user,
-        });
-      }
-
-      const approveToken = randomToken();
-      const denyToken = randomToken();
-
-      const challenge = await LoginChallenge.create({
-        userId: user._id,
-        email,
-        deviceId,
-        deviceHash,
-        userAgent: dev.ua,
-        ip,
-        location: locationLabel,
-
-        deviceType: dev.deviceType,
-        deviceVendor: dev.deviceVendor,
-        deviceModel: dev.deviceModel,
-        os: dev.os,
-        browser: dev.browser,
-
-        approveTokenHash: sha256(approveToken),
-        denyTokenHash: sha256(denyToken),
-        attempts: 0,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        status: "PENDING",
-      });
-
-      const apiBase = process.env.API_PUBLIC_URL || "http://localhost:5000";
-      const approveUrl = `${apiBase}/auth/challenge/approve?cid=${challenge._id}&token=${approveToken}`;
-      const denyUrl = `${apiBase}/auth/challenge/deny?cid=${challenge._id}&token=${denyToken}`;
-
-      const deviceLabel =
-        `${dev.deviceType} ${dev.deviceVendor} ${dev.deviceModel}`.trim() || dev.deviceType || "Inconnu";
-
-      try {
-        await sendNewLoginAlertEmail({
-          toEmail: email,
-          approveUrl,
-          denyUrl,
-          details: {
-            time: formatDateFR(new Date()),
-            ip,
-            location: locationLabel || "Inconnu",
-            mapsUrl,
-            deviceLabel,
-            os: dev.os || "Inconnu",
-            browser: dev.browser || "Inconnu",
-          },
-        });
-      } catch (mailError) {
-        console.error("SMTP login alert failed:", mailError?.message || mailError);
-        if (!allowLoginOnSmtpFailure) {
-          throw mailError;
-        }
-        // ALLOW_LOGIN_ON_SMTP_FAILURE=true → on continue sans email
       }
 
       return res.status(200).json({
         success: true,
-        challengeRequired: true,
-        verifiedInRuntime: false,
-        challengeId: String(challenge._id),
-        message: "Vérification de connexion requise. Un e-mail vous a été envoyé.",
+        token,
+        user,
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message || "Erreur login." });
     }
   },
 
+  verifyLoginOtpFirstConnection: async (req, res) => {
+    const email = normalizeEmail(req.body?.email);
+    const otp = String(req.body?.otp || "").trim();
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email et OTP sont requis." });
+    }
+
+    try {
+      const user = await User.findOne({
+        email: { $regex: new RegExp("^" + escapeRegex(email) + "$", "i") },
+      });
+
+      if (!user) {
+        return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+      }
+
+      if (!user.loginOtp || !user.loginOtpExpires) {
+        return res.status(400).json({ success: false, message: "Aucun OTP actif. Veuillez vous reconnecter." });
+      }
+
+      if (new Date(user.loginOtpExpires).getTime() <= Date.now()) {
+        user.loginOtp = undefined;
+        user.loginOtpExpires = undefined;
+        await user.save();
+        return res.status(400).json({ success: false, message: "OTP expire. Veuillez vous reconnecter." });
+      }
+
+      let otpOk = false;
+      if (String(user.loginOtp || "").startsWith("$2")) {
+        otpOk = await bcrypt.compare(otp, user.loginOtp);
+      } else {
+        otpOk = String(user.loginOtp || "") === otp;
+      }
+
+      if (!otpOk) {
+        return res.status(400).json({ success: false, message: "OTP invalide." });
+      }
+
+      user.loginOtp = undefined;
+      user.loginOtpExpires = undefined;
+      await user.save();
+
+      const token = signJwt(user);
+      return res.status(200).json({
+        success: true,
+        requireOtp: false,
+        token,
+        user,
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error.message || "Erreur verification OTP." });
+    }
+  },
   approveChallenge: async (req, res) => {
     const cid = String(req.query?.cid || "");
     const token = String(req.query?.token || "");
@@ -591,7 +597,7 @@ module.exports = {
         status: "PENDING",
       });
 
-      if (!challenge) return res.status(400).send("Lien expiré ou invalide.");
+      if (!challenge) return res.status(400).send("Lien expirÃ© ou invalide.");
 
       const otp = generateCode();
 
@@ -644,9 +650,58 @@ module.exports = {
   verifyLoginOtp: async (req, res) => {
     const challengeId = String(req.body?.challengeId || "");
     const otp = String(req.body?.otp || "").trim();
+    const email = normalizeEmail(req.body?.email);
 
-    if (!challengeId || !otp) {
-      return res.status(400).json({ success: false, message: "ChallengeId et code requis." });
+    if (!otp) {
+      return res.status(400).json({ success: false, message: "Code OTP requis." });
+    }
+
+    // Compat frontend: quand challengeId est vide, verifier via email + loginOtp stocke sur User.
+    if (!challengeId && email) {
+      try {
+        const user = await User.findOne({
+          email: { $regex: new RegExp("^" + escapeRegex(email) + "$", "i") },
+        });
+
+        if (!user) {
+          return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+        }
+
+        if (!user.loginOtp || !user.loginOtpExpires) {
+          return res.status(400).json({ success: false, message: "Aucun OTP actif. Reconnectez-vous." });
+        }
+
+        if (new Date(user.loginOtpExpires).getTime() <= Date.now()) {
+          user.loginOtp = undefined;
+          user.loginOtpExpires = undefined;
+          await user.save();
+          return res.status(400).json({ success: false, message: "OTP expire. Reconnectez-vous." });
+        }
+
+        let otpOk = false;
+        if (String(user.loginOtp || "").startsWith("$2")) {
+          otpOk = await bcrypt.compare(otp, user.loginOtp);
+        } else {
+          otpOk = String(user.loginOtp || "") === otp;
+        }
+
+        if (!otpOk) {
+          return res.status(400).json({ success: false, message: "Code invalide." });
+        }
+
+        user.loginOtp = undefined;
+        user.loginOtpExpires = undefined;
+        await user.save();
+
+        const token = signJwt(user);
+        return res.status(200).json({ success: true, token, user });
+      } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || "Erreur serveur." });
+      }
+    }
+
+    if (!challengeId) {
+      return res.status(400).json({ success: false, message: "ChallengeId requis." });
     }
 
     try {
@@ -657,7 +712,7 @@ module.exports = {
       });
 
       if (!challenge || !challenge.otpHash) {
-        return res.status(400).json({ success: false, message: "Code invalide ou expiré." });
+        return res.status(400).json({ success: false, message: "Code invalide ou expirÃ©." });
       }
 
       if ((challenge.attempts || 0) >= 5) {
@@ -685,4 +740,6 @@ module.exports = {
     }
   },
 };
+
+
 

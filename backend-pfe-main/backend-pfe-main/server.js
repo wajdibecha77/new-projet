@@ -1,9 +1,10 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
 
 const app = express();
 
@@ -44,7 +45,48 @@ app.get("/getfile/:image", (req, res) => {
   res.sendFile(path.join(__dirname, "uploads", req.params.image));
 });
 
-// ================= GEMINI TEST (WORKING) =================
+// ================= 🔥 TEST EMAIL ROUTE =================
+app.get("/test-email", async (req, res) => {
+  try {
+    console.log("USER:", process.env.SMTP_USER);
+    console.log("PASS:", process.env.SMTP_PASS);
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 465, // 🔥 نستعمل 465 (أكثر استقرار مع Gmail)
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.verify();
+    console.log("SMTP OK ✅");
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: process.env.SMTP_USER,
+      subject: "TEST OTP ✔️",
+      text: "Email fonctionne parfaitement 🚀",
+    });
+
+    res.json({
+      success: true,
+      message: "Email sent ✅",
+    });
+
+  } catch (err) {
+    console.error("SMTP ERROR ❌:", err);
+
+    res.json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+// ================= GEMINI TEST =================
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 app.get("/test-gemini", async (req, res) => {
@@ -55,12 +97,10 @@ app.get("/test-gemini", async (req, res) => {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-    // ✅ model صحيح
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash"
     });
 
-    // ✅ format جديد صحيح
     const result = await model.generateContent({
       contents: [
         {

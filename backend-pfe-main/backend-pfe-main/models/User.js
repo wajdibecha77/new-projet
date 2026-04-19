@@ -19,6 +19,18 @@ const UserSchema = new mongoose.Schema({
         type : String,
         required : true
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    loginOtp: {
+        type: String,
+        required: false
+    },
+    loginOtpExpires: {
+        type: Date,
+        required: false
+    },
     service :{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Service",
