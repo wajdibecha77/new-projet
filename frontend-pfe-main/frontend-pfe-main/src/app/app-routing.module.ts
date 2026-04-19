@@ -32,6 +32,7 @@ import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.com
 import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
+import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
 
 
 const routes: Routes = [
@@ -129,6 +130,7 @@ const routes: Routes = [
       { path: "signup", component: SignupComponent },
       { path: "signin", component: SigninComponent },
       { path: "verify-otp", component: LoginVerifyComponent },
+      { path: "confirm-login", component: ConfirmLoginComponent },
       { path: "forgot-password", component: ForgotPasswordComponent },
       { path: "forgot-password/verify", component: ForgotPasswordVerifyComponent },
       { path: "forgot-password/reset", component: ForgotPasswordResetComponent },

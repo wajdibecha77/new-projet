@@ -133,6 +133,7 @@ import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
 import { AuthInterceptor } from "./auth.interceptor";
+import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
 @NgModule({
     declarations: [
         AppComponent,
@@ -261,6 +262,7 @@ import { AuthInterceptor } from "./auth.interceptor";
         QrCodeComponent,
         ReclamationPublicComponent,
         SuiviReclamationComponent,
+        ConfirmLoginComponent,
     ],
     imports: [
         BrowserModule,

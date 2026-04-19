@@ -1,0 +1,14 @@
+<div class="confirm-login-page">
+  <div class="confirm-card">
+    <h2>Verification de connexion</h2>
+
+    <p *ngIf="loading" class="info">{{ infoMessage }}</p>
+    <p *ngIf="!loading && infoMessage" class="info">{{ infoMessage }}</p>
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+    <button *ngIf="canUseOtpFallback" class="btn-otp" (click)="goToOtpFallback()">
+      Continuer avec OTP
+    </button>
+  </div>
+</div>
+

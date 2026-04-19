@@ -36,6 +36,10 @@ export class AuthService {
     return id;
   }
 
+  getDeviceId(): string {
+    return this.getOrCreateDeviceId();
+  }
+
   private getTrustedDeviceFlagKey(email: string): string {
     return `trusted:${this.normalizeEmail(email)}:${this.getOrCreateDeviceId()}`;
   }
@@ -71,12 +75,19 @@ export class AuthService {
         email: this.normalizeEmail(email),
         password,
         coords,
+        deviceId: this.getOrCreateDeviceId(),
         deviceInfo: {
           deviceId: this.getOrCreateDeviceId(),
           userAgent: this.getCurrentUserAgent(),
           trustedDevice: this.isTrustedDeviceLocally(email),
         },
       })
+      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
+  }
+
+  confirmLogin(token: string): Observable<any> {
+    return this.http
+      .post(`${this.api}/confirm-login`, { token })
       .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
   }
 

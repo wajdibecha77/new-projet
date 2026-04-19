@@ -81,6 +81,12 @@ export class SigninComponent {
         this.loading = false;
         console.log("LOGIN RESPONSE:", res);
 
+        if (res?.requiresEmailConfirmation) {
+          this.successMessage = "Verifiez votre email pour continuer.";
+          this.errorMessage = "";
+          return;
+        }
+
         const requiresOtp = !!(res?.requiresOtp || res?.challengeRequired);
         if (requiresOtp && ENABLE_OTP_LOGIN) {
           this.authService.clearTrustedDevice(this.email);
