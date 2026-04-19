@@ -7,11 +7,11 @@ import { environment } from 'src/environments/environment';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private API = `${environment.apiUrl}/auth`;
+  api = environment.apiUrl + "/auth";
   private readonly deviceIdStorageKey = 'trusted_device_id';
 
   constructor(private http: HttpClient) {
-    console.log('🔥 AUTH API =', this.API);
+    console.log('🔥 AUTH API =', this.api);
   }
 
   // ================= HELPERS =================
@@ -67,7 +67,7 @@ export class AuthService {
   ): Observable<any> {
 
     return this.http
-      .post(`${this.API}/login-secure`, {
+      .post(`${this.api}/login-secure`, {
         email: this.normalizeEmail(email),
         password,
         coords,
@@ -82,7 +82,7 @@ export class AuthService {
 
   verifyLoginOtp(challengeId: string, otp: string): Observable<any> {
     return this.http
-      .post(`${this.API}/challenge/verify`, {
+      .post(`${this.api}/challenge/verify`, {
         challengeId,
         otp,
       })
@@ -92,20 +92,20 @@ export class AuthService {
   // ================= RESET =================
 
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.API}/forgot-password`, {
+    return this.http.post(`${this.api}/forgot-password`, {
       email: this.normalizeEmail(email),
     });
   }
 
   verifyResetCode(email: string, code: string): Observable<any> {
-    return this.http.post(`${this.API}/verify-reset-code`, {
+    return this.http.post(`${this.api}/verify-reset-code`, {
       email: this.normalizeEmail(email),
       code,
     });
   }
 
   resetPassword(email: string, code: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.API}/reset-password`, {
+    return this.http.post(`${this.api}/reset-password`, {
       email: this.normalizeEmail(email),
       code,
       newPassword,
@@ -116,6 +116,7 @@ export class AuthService {
 
   signup(data: any): Observable<any> {
     data.email = this.normalizeEmail(data.email);
-    return this.http.post(`${this.API}/signup`, data);
+    return this.http.post(`${this.api}/signup`, data);
   }
 }
+
