@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiUrl: getApiUrl(),
+  publicUrl: getPublicUrl(),
 };
 
 function getApiUrl(): string {
@@ -14,4 +15,12 @@ function getApiUrl(): string {
 
   // Web local backend
   return "http://localhost:5000";
+}
+
+function getPublicUrl(): string {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  return "http://localhost:4200";
 }

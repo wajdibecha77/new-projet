@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import { environment } from "src/environments/environment";
 
 @Component({
   selector: "app-qr-code",
@@ -9,9 +10,14 @@ export class QrCodeComponent implements OnInit {
   public qrCodeUrl: string = "";
 
   ngOnInit(): void {
-    this.qrCodeUrl =
-      (typeof window !== "undefined" ? window.location.origin : "") +
-      "/reclamation-public";
+    const origin =
+      environment.production && environment.publicUrl
+        ? environment.publicUrl
+        : typeof window !== "undefined"
+          ? window.location.origin
+          : "";
+
+    this.qrCodeUrl = `${origin}/reclamation-public`;
     console.log("QR URL generated:", this.qrCodeUrl);
   }
 }
