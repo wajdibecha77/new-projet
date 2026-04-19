@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm install && NODE_OPTIONS=--openssl-legacy-provider ng build --configuration production",
+  "installCommand": "npm install --legacy-peer-deps --force --no-audit --no-fund",
+  "buildCommand": "NODE_OPTIONS=--openssl-legacy-provider npx ng build --configuration production",
   "outputDirectory": "dist/frontend-pfe-main",
   "rewrites": [
     {
