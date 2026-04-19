@@ -199,23 +199,23 @@
         document.getElementsByTagName('body')[0].className = 'sidemenu-bg-deep-purple';
     }
 
-    window.onload = function () {
-        // Left Sidemenu BG Color Switcher
-        document.getElementById('BGPrimary').onclick = switchPrimary;
-        document.getElementById('BGSuccess').onclick = switchSuccess;
-        document.getElementById('BGSecondary').onclick = switchSecondary;
-        document.getElementById('BGPurple').onclick = switchPurple;
-        document.getElementById('BGDanger').onclick = switchDanger;
-        document.getElementById('BGWarning').onclick = switchWarning;
-        document.getElementById('BGPurpleIndigo').onclick = switchPurpleIndigo;
-        document.getElementById('BGPink').onclick = switchPink;
-        document.getElementById('BGIndigo').onclick = switchIndigo;
-        document.getElementById('BGnNightBlue').onclick = switchNightBlue;
-        document.getElementById('BGGray').onclick = switchGray;
-        document.getElementById('BGGrayBlue').onclick = switchGrayBlue;
-        document.getElementById('BGGreen').onclick = switchGreen;
-        document.getElementById('BGDeepPurple').onclick = switchDeepPurple;
-    };
+    // Left Sidemenu BG Color Switcher
+    // Use delegated handlers to avoid null access when elements are not present
+    // on some Angular routes.
+    $(document).on('click', '#BGPrimary', switchPrimary);
+    $(document).on('click', '#BGSuccess', switchSuccess);
+    $(document).on('click', '#BGSecondary', switchSecondary);
+    $(document).on('click', '#BGPurple', switchPurple);
+    $(document).on('click', '#BGDanger', switchDanger);
+    $(document).on('click', '#BGWarning', switchWarning);
+    $(document).on('click', '#BGPurpleIndigo', switchPurpleIndigo);
+    $(document).on('click', '#BGPink', switchPink);
+    $(document).on('click', '#BGIndigo', switchIndigo);
+    $(document).on('click', '#BGnNightBlue', switchNightBlue);
+    $(document).on('click', '#BGGray', switchGray);
+    $(document).on('click', '#BGGrayBlue', switchGrayBlue);
+    $(document).on('click', '#BGGreen', switchGreen);
+    $(document).on('click', '#BGDeepPurple', switchDeepPurple);
 
     // Folded Menu
     $(".folded-menu").on('click', function(){
@@ -235,7 +235,6 @@
     // Preloader JS
     $('.preloader').fadeOut()
 }(jQuery))
-
 
 
 
