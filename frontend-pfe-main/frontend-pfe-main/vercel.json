@@ -1,8 +1,11 @@
 {
+  "version": 2,
   "buildCommand": "npm install && NODE_OPTIONS=--openssl-legacy-provider ng build --configuration production",
   "outputDirectory": "dist/frontend-pfe-main",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
