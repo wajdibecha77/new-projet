@@ -569,18 +569,24 @@ module.exports = {
 
   // ===================== LOGIN SECURE =====================
   loginSecure: async (req, res) => {
-    const email = normalizeEmail(req.body?.email);
-    const password = String(req.body?.password || "");
-    const deviceId = String(req.body?.deviceInfo?.deviceId || req.body?.deviceId || "").trim();
-
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email et mot de passe requis." });
-    }
-    if (!deviceId) {
-      return res.status(400).json({ success: false, message: "deviceId requis." });
-    }
-
     try {
+      const email = normalizeEmail(req.body?.email);
+      const password = String(req.body?.password || "");
+      const deviceId = String(
+        req.body?.deviceId || req.body?.deviceInfo?.deviceId || "unknown-device"
+      ).trim() || "unknown-device";
+
+      console.log("[AUTH] login attempt:", email);
+      console.log("[AUTH] deviceId:", deviceId);
+
+      if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET manquant");
+      }
+
+      if (!email || !password) {
+        return res.status(400).json({ success: false, message: "Email et mot de passe requis." });
+      }
+
       const user = await User.findOne({ email: new RegExp("^" + escapeRegex(email) + "$", "i") });
       if (!user) return res.status(401).json({ success: false, message: "Identifiants invalides." });
 
@@ -616,29 +622,41 @@ module.exports = {
 
       const clientIp = getVisiteurIp(req);
       const device = getDeviceInfo(req);
-      await sendLoginConfirmationEmail({
-        toEmail: user.email,
-        confirmUrl,
-        details: {
-          time: formatDateFR(new Date()),
-          deviceLabel: [device.deviceVendor, device.deviceModel, device.deviceType]
-            .filter(Boolean)
-            .join(" ")
-            .trim() || "Appareil inconnu",
-          os: device.os,
-          browser: device.browser,
-          ip: clientIp,
-          location: getApproxLocationLabel(clientIp),
-        },
-      });
+      try {
+        await sendLoginConfirmationEmail({
+          toEmail: user.email,
+          confirmUrl,
+          details: {
+            time: formatDateFR(new Date()),
+            deviceLabel: [device.deviceVendor, device.deviceModel, device.deviceType]
+              .filter(Boolean)
+              .join(" ")
+              .trim() || "Appareil inconnu",
+            os: device.os,
+            browser: device.browser,
+            ip: clientIp,
+            location: getApproxLocationLabel(clientIp),
+          },
+        });
+      } catch (e) {
+        console.error("SMTP ERROR:", e);
+        return res.status(200).json({
+          success: false,
+          message: "Email non envoye mais serveur OK",
+        });
+      }
 
       return res.status(200).json({
         success: true,
         requiresEmailConfirmation: true,
         message: "Verification email requise. Consultez votre boite mail.",
       });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: error.message || "Erreur login." });
+    } catch (err) {
+      console.error("[LOGIN ERROR]", err);
+      return res.status(500).json({
+        success: false,
+        message: "Erreur serveur login",
+      });
     }
   },
 
