@@ -2,9 +2,9 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const Fournisseur = require("../models/fournisseur");
 const mongoose = require("mongoose");
+const { sendOtpEmail: sendOtpEmailViaApi } = require("../services/email.service");
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 const escapeRegex = (value) =>
@@ -17,76 +17,14 @@ const generateOtpCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendOtpEmail = async (toEmail, otpCode) => {
-  const smtpHost = "smtp.gmail.com";
-  const smtpPort = 587;
-  const smtpUser = String(process.env.SMTP_USER || "").trim();
-  const smtpPass = String(process.env.SMTP_PASS || "");
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
-  const smtpSecure = false;
-
-  if (!smtpUser || !smtpPass) {
-    throw new Error(
-      "Configuration SMTP manquante (SMTP_USER, SMTP_PASS)."
-    );
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
+  const normalizedTarget = normalizeEmail(toEmail);
+  console.log("[EMAIL] password reset OTP request ->", normalizedTarget);
+  return sendOtpEmailViaApi({
+    to: normalizedTarget,
+    code: otpCode,
+    purpose: "forgot-password",
+    expiresMinutes: OTP_EXPIRE_MINUTES,
   });
-
-  try {
-    const normalizedTarget = normalizeEmail(toEmail);
-    console.log("OTP envoye a :", normalizedTarget);
-    console.log(`[SMTP] tentative connexion ${smtpHost}:${smtpPort} avec ${smtpUser}`);
-
-    await transporter.verify();
-    console.log("[SMTP] verification reussie ✅");
-
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: normalizedTarget,
-      subject: "Code de verification - Reinitialisation mot de passe",
-      text:
-        "Bonjour,\n\n" +
-        "Votre code OTP est: " +
-        otpCode +
-        "\n\n" +
-        "Ce code expire dans " +
-        OTP_EXPIRE_MINUTES +
-        " minutes.\n",
-    });
-    console.log("OTP envoye avec succes vers :", normalizedTarget);
-  } catch (error) {
-    const errorDetails = {
-      message: error?.message || "Erreur SMTP inconnue",
-      code: error?.code || "",
-      responseCode: error?.responseCode || "",
-      response: error?.response || "",
-      command: error?.command || "",
-    };
-    console.error("Erreur SMTP :", errorDetails);
-    if (
-      error?.responseCode === 535 ||
-      String(error?.message || "").includes("BadCredentials")
-    ) {
-      throw new Error(
-        "Identifiants SMTP invalides. Pour Gmail, utilisez SMTP_USER et un mot de passe d'application (App Password)."
-      );
-    }
-    if (error?.responseCode === 534 || error?.responseCode === 530) {
-      throw new Error("Gmail bloque la connexion SMTP. Verifiez la securite du compte Google et l'App Password.");
-    }
-    throw error;
-  }
 };
 
 module.exports = {

@@ -2,8 +2,8 @@
 const Notification = require("../models/Notification");
 const Intervention = require("../models/intervention");
 const User = require("../models/User");
-const nodemailer = require("nodemailer");
 const { detectType, detectUrgence } = require("../services/geminiService");
+const { sendEmail: sendEmailViaApi } = require("../services/email.service");
 
 const TYPE_MAP = {
   ELECTRIQUE: "ELECTRIQUE",
@@ -20,36 +20,10 @@ const ROLE_MAP = {
   PLOMBERIE: "PLOMBIER",
 };
 
-const smtpTransporter = () => {
-  const smtpHost = String(process.env.SMTP_HOST || "").trim();
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  const smtpUser = String(process.env.SMTP_USER || "").trim();
-  const smtpPass = String(process.env.SMTP_PASS || "").replace(/\s+/g, "");
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
-  const smtpSecure =
-    String(process.env.SMTP_SECURE || "").toLowerCase() === "true"
-      ? true
-      : smtpPort === 465;
-
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    throw new Error("Configuration SMTP manquante (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS).");
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
-    auth: { user: smtpUser, pass: smtpPass },
-  });
-
-  return { transporter, smtpFrom };
-};
-
 const sendEmail = async (rec) => {
   const email = String(rec?.email || "").trim();
   if (!email) return;
 
-  const { transporter, smtpFrom } = smtpTransporter();
   const appUrl = String(process.env.APP_PUBLIC_URL || "").trim();
   const isLocalUrl =
     /localhost/i.test(appUrl) ||
@@ -103,12 +77,8 @@ const sendEmail = async (rec) => {
 </div>
 `;
 
-  await transporter.sendMail({
-    from: smtpFrom,
-    to: email,
-    subject: "Votre reclamation est prise en charge",
-    html,
-  });
+  await sendEmailViaApi(email, "Votre reclamation est prise en charge", html);
+  console.log("[EMAIL API] sent via Gmail API", { to: email, subject: "Votre reclamation est prise en charge" });
 };
 
 const mapReclamationType = (rawType) => {

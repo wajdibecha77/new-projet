@@ -1,4 +1,3 @@
-const nodemailer = require("nodemailer");
 const { google } = require("googleapis");
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
@@ -17,49 +16,48 @@ const getOAuth2Client = () => {
   return oauth2Client;
 };
 
-const createTransporter = async () => {
+const getGmailClient = () => {
   const smtpUser = String(process.env.SMTP_USER || "").trim();
   if (!smtpUser) {
     throw new Error("SMTP_USER manquant.");
   }
 
   const oauth2Client = getOAuth2Client();
-  const tokenResponse = await oauth2Client.getAccessToken();
-  const accessToken = typeof tokenResponse === "string" ? tokenResponse : tokenResponse?.token;
-
-  if (!accessToken) {
-    throw new Error("Impossible d'obtenir un access token Gmail OAuth2.");
-  }
-
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: smtpUser,
-      clientId: process.env.GMAIL_CLIENT_ID,
-      clientSecret: process.env.GMAIL_CLIENT_SECRET,
-      refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-      accessToken,
-    },
-  });
+  return google.gmail({ version: "v1", auth: oauth2Client });
 };
 
-const sendEmail = async (to, subject, html, text = "") => {
+const toBase64Url = (value) =>
+  Buffer.from(value)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+async function sendEmailGmailAPI(to, subject, html) {
   const from = String(process.env.SMTP_FROM || process.env.SMTP_USER || "").trim();
   const toEmail = normalizeEmail(to);
+  const gmail = getGmailClient();
 
   try {
-    const transporter = await createTransporter();
-    await transporter.sendMail({
-      from,
-      to: toEmail,
-      subject,
+    const message = [
+      `From: ${from}`,
+      `To: ${toEmail}`,
+      `Subject: ${subject}`,
+      "MIME-Version: 1.0",
+      'Content-Type: text/html; charset="UTF-8"',
+      "",
       html,
-      text,
+    ].join("\n");
+
+    const raw = toBase64Url(message);
+
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: { raw },
     });
-    console.log("[EMAIL] Sent:", { to: toEmail, subject });
+    console.log("[EMAIL API] sent via Gmail API", { to: toEmail, subject });
   } catch (error) {
-    console.error("[EMAIL] Send failure:", {
+    console.error("[EMAIL API] send failure:", {
       to: toEmail,
       subject,
       message: error?.message || "",
@@ -68,7 +66,7 @@ const sendEmail = async (to, subject, html, text = "") => {
     });
     throw error;
   }
-};
+}
 
 const buildOtpHtml = ({ code, expiresMinutes = 5 }) => `
 <!doctype html>
@@ -142,19 +140,17 @@ const sendOtpEmail = async ({ to, code, purpose = "otp", expiresMinutes = 5 }) =
   const subject =
     purpose === "forgot-password" ? "Code de verification - Reinitialisation" : "Code de verification";
   const html = buildOtpHtml({ code, expiresMinutes });
-  const text = `Votre code de verification: ${code}. Expire dans ${expiresMinutes} minutes.`;
-  return sendEmail(to, subject, html, text);
+  return sendEmailGmailAPI(to, subject, html);
 };
 
 const sendLoginConfirmationEmail = async ({ to, confirmUrl, denyUrl, details }) => {
   const html = buildConfirmHtml({ confirmUrl, denyUrl, details });
-  const text = `Confirmez votre connexion: ${confirmUrl}\nRefuser: ${denyUrl || "-"}`;
-  return sendEmail(to, "Confirmez votre connexion", html, text);
+  return sendEmailGmailAPI(to, "Confirmez votre connexion", html);
 };
 
 module.exports = {
-  sendEmail,
+  sendEmail: sendEmailGmailAPI,
+  sendEmailGmailAPI,
   sendOtpEmail,
   sendLoginConfirmationEmail,
 };
-

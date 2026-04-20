@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
-const nodemailer = require("nodemailer");
+const { sendEmail } = require("./services/email.service");
 
 const app = express();
 
@@ -49,27 +49,11 @@ app.get("/getfile/:image", (req, res) => {
 app.get("/test-email", async (req, res) => {
   try {
     console.log("USER:", process.env.SMTP_USER);
-    console.log("PASS:", process.env.SMTP_PASS);
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: 465, // 🔥 نستعمل 465 (أكثر استقرار مع Gmail)
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    await transporter.verify();
-    console.log("SMTP OK ✅");
-
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: process.env.SMTP_USER,
-      subject: "TEST OTP ✔️",
-      text: "Email fonctionne parfaitement 🚀",
-    });
+    await sendEmail(
+      process.env.SMTP_USER,
+      "TEST OTP ✔️",
+      "<p>Email fonctionne parfaitement 🚀</p>"
+    );
 
     res.json({
       success: true,
@@ -77,7 +61,7 @@ app.get("/test-email", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("SMTP ERROR ❌:", err);
+    console.error("EMAIL API ERROR ❌:", err);
 
     res.json({
       success: false,
