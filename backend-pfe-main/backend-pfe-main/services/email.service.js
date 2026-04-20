@@ -115,8 +115,8 @@ const buildConfirmHtml = ({ confirmUrl, denyUrl, details }) => `
                 <div style="margin-top:12px;padding:12px;background:#f3f4f6;border-radius:10px;font-size:13px;line-height:1.6;">
                   <div><b>Heure:</b> ${details?.time || "-"}</div>
                   <div><b>Appareil:</b> ${details?.deviceLabel || "-"}</div>
-                  <div><b>IP:</b> ${details?.ip || "-"}</div>
                   <div><b>Lieu:</b> ${details?.location || "-"}</div>
+                  <div><b>IP:</b> ${details?.ip || "-"}</div>
                 </div>
                 <div style="margin-top:18px;">
                   <a href="${confirmUrl}" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:700;">

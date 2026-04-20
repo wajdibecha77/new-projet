@@ -1,9 +1,8 @@
 ﻿const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
-const geoip = require("geoip-lite");
+const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const https = require("https");
 
 const User = require("../models/User");
 const PasswordResetToken = require("../models/PasswordResetToken");
@@ -32,14 +31,6 @@ const formatDateFR = (d) => new Date(d).toLocaleString("fr-FR", { timeZone: "Afr
 const runtimeVerifiedDevices = new Map();
 
 // -------------------- helpers --------------------
-const getVisiteurIp = (req) => {
-  const xf = req.headers["x-forwarded-for"];
-  let ip = (Array.isArray(xf) ? xf[0] : xf || "").split(",")[0].trim();
-  ip = ip || req.socket?.remoteAddress || "";
-  if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
-  return ip;
-};
-
 const getDeviceInfo = (req) => {
   const ua = String(req.body?.deviceInfo?.userAgent || req.headers["user-agent"] || "");
   const r = new UAParser(ua).getResult();
@@ -54,13 +45,49 @@ const getDeviceInfo = (req) => {
   return { ua, deviceType, deviceVendor, deviceModel, browser, os };
 };
 
-const getApproxLocationLabel = (ip) => {
-  if (!ip) return "";
-  const g = geoip.lookup(ip);
-  if (!g) return "";
-  const city = g.city || "";
-  const country = g.country || "";
-  return `${city ? city + ", " : ""}${country}`.trim();
+const countryCodeToFlag = (countryCode) => {
+  const code = String(countryCode || "").trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return "";
+  return String.fromCodePoint(...[...code].map((char) => 127397 + char.charCodeAt(0)));
+};
+
+const isPrivateOrLocalIp = (ip) => {
+  const value = String(ip || "").trim().toLowerCase();
+  if (!value) return true;
+  if (value === "::1" || value === "localhost") return true;
+  if (value.startsWith("127.")) return true;
+  if (value.startsWith("10.")) return true;
+  if (value.startsWith("192.168.")) return true;
+  if (value.startsWith("172.")) {
+    const secondOctet = Number(value.split(".")[1] || -1);
+    if (secondOctet >= 16 && secondOctet <= 31) return true;
+  }
+  if (value.startsWith("fc") || value.startsWith("fd")) return true;
+  return false;
+};
+
+const getLocationFromIP = async (ip) => {
+  const normalizedIp = String(ip || "").trim();
+  if (!normalizedIp || isPrivateOrLocalIp(normalizedIp)) return "Unknown";
+
+  try {
+    const response = await axios.get(`https://ipapi.co/${encodeURIComponent(normalizedIp)}/json/`, {
+      timeout: 5000,
+    });
+
+    const city = String(response?.data?.city || "").trim();
+    const countryName = String(response?.data?.country_name || "").trim();
+    const countryCode = String(response?.data?.country_code || "").trim();
+    const flag = countryCodeToFlag(countryCode);
+
+    const locationLabel = [city, countryName].filter(Boolean).join(", ").trim();
+    if (!locationLabel) return "Unknown";
+
+    return flag ? `${locationLabel} ${flag}` : locationLabel;
+  } catch (error) {
+    console.error("[GEO] ipapi error:", error?.message || error);
+    return "Unknown";
+  }
 };
 
 const deviceHashFromReq = (req) => {
@@ -102,50 +129,6 @@ const signLoginConfirmToken = ({ userId, email, deviceId }) => {
     { expiresIn: "10m" }
   );
 };
-
-// âœ… Node14 reverse geocode via https (OpenStreetMap Nominatim)
-const reverseGeocodeOSM = (lat, lng) =>
-  new Promise((resolve) => {
-    if (lat == null || lng == null) return resolve("");
-
-    const url =
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=14&addressdetails=1`;
-
-    const req = https.get(
-      url,
-      {
-        headers: {
-          // Ù„Ø§Ø²Ù… User-Agent ÙÙŠ Nominatim
-          "User-Agent": "PFE-App/1.0 (contact: moatezguez1@gmail.com)",
-          "Accept-Language": "fr",
-        },
-      },
-      (res) => {
-        let data = "";
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => {
-          try {
-            const json = JSON.parse(data);
-            const a = json?.address || {};
-            const city = a.city || a.town || a.village || a.municipality || "";
-            const state = a.state || "";
-            const country = a.country || "";
-
-            const label = [city, state, country].filter(Boolean).join(", ").trim();
-            return resolve(label || "");
-          } catch {
-            return resolve("");
-          }
-        });
-      }
-    );
-
-    req.on("error", () => resolve(""));
-    req.setTimeout(6000, () => {
-      req.destroy();
-      resolve("");
-    });
-  });
 
 // -------------------- emails --------------------
 const sendResetCodeEmail = async (toEmail, code) => {
@@ -395,7 +378,13 @@ module.exports = {
       const confirmUrl = `${appUrl}/#/auth/confirm-login?token=${encodeURIComponent(confirmToken)}`;
       const denyUrl = `${appUrl}/#/auth/signin?securityAlert=1`;
 
-      const clientIp = getVisiteurIp(req);
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.socket?.remoteAddress;
+      const clientIp = String(ip || "").trim().replace(/^::ffff:/, "");
+      const location = await getLocationFromIP(clientIp);
+      console.log("[GEO] IP:", clientIp || "Unknown");
+      console.log("[GEO] Location:", location);
       const device = getDeviceInfo(req);
       try {
         await sendLoginConfirmationEmail({
@@ -411,7 +400,7 @@ module.exports = {
             os: device.os,
             browser: device.browser,
             ip: clientIp,
-            location: getApproxLocationLabel(clientIp),
+            location,
           },
         });
       } catch (e) {
