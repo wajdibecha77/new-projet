@@ -56,7 +56,15 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    resetOtp: {
+        type: String,
+        required: false
+    },
     passwordResetOtpExpiresAt: {
+        type: Date,
+        required: false
+    },
+    resetOtpExpires: {
         type: Date,
         required: false
     },

@@ -235,6 +235,11 @@ module.exports = {
 
       await PasswordResetToken.updateMany({ email: normalizedEmail, used: false }, { $set: { used: true } });
       await PasswordResetToken.create({ email: normalizedEmail, code, expiresAt, used: false });
+      user.resetOtp = code;
+      user.resetOtpExpires = expiresAt;
+      user.passwordResetOtp = code;
+      user.passwordResetOtpExpiresAt = expiresAt;
+      await user.save();
 
       await sendResetCodeEmail(normalizeEmail(user.email), code);
 
@@ -262,6 +267,24 @@ module.exports = {
     }
 
     try {
+      const user = await User.findOne({
+        email: { $regex: new RegExp("^" + escapeRegex(normalizedEmail) + "$", "i") },
+      });
+      if (!user) {
+        return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+      }
+
+      const userOtp = String(user.resetOtp || user.passwordResetOtp || "").trim();
+      const userOtpExpires = user.resetOtpExpires || user.passwordResetOtpExpiresAt;
+      if (
+        userOtp &&
+        userOtp === normalizedCode &&
+        userOtpExpires &&
+        new Date(userOtpExpires).getTime() > Date.now()
+      ) {
+        return res.status(200).json({ success: true });
+      }
+
       const tokenDoc = await PasswordResetToken.findOne({
         email: normalizedEmail,
         code: normalizedCode,
@@ -287,6 +310,19 @@ module.exports = {
     }
 
     try {
+      const user = await User.findOne({
+        email: { $regex: new RegExp("^" + escapeRegex(normalizedEmail) + "$", "i") },
+      });
+      if (!user) return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+
+      const userOtp = String(user.resetOtp || user.passwordResetOtp || "").trim();
+      const userOtpExpires = user.resetOtpExpires || user.passwordResetOtpExpiresAt;
+      const isUserOtpValid =
+        !!userOtp &&
+        userOtp === normalizedCode &&
+        !!userOtpExpires &&
+        new Date(userOtpExpires).getTime() > Date.now();
+
       const tokenDoc = await PasswordResetToken.findOne({
         email: normalizedEmail,
         code: normalizedCode,
@@ -294,17 +330,21 @@ module.exports = {
         expiresAt: { $gt: new Date() },
       }).sort({ createdAt: -1 });
 
-      if (!tokenDoc) return res.status(400).json({ success: false, message: "Code invalide, dÃ©jÃ  utilisÃ©, ou expirÃ©." });
-
-      const user = await User.findOne({
-        email: { $regex: new RegExp("^" + escapeRegex(normalizedEmail) + "$", "i") },
-      });
-
-      if (!user) return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+      if (!isUserOtpValid && !tokenDoc) {
+        return res.status(400).json({ success: false, message: "Code invalide, dÃ©jÃ  utilisÃ©, ou expirÃ©." });
+      }
 
       const hash = await bcrypt.hash(newPassword, 10);
-      await User.findByIdAndUpdate(user._id, { password: hash }, { new: true });
-      await PasswordResetToken.findByIdAndUpdate(tokenDoc._id, { used: true }, { new: true });
+      user.password = hash;
+      user.resetOtp = undefined;
+      user.resetOtpExpires = undefined;
+      user.passwordResetOtp = undefined;
+      user.passwordResetOtpExpiresAt = undefined;
+      await user.save();
+
+      if (tokenDoc?._id) {
+        await PasswordResetToken.findByIdAndUpdate(tokenDoc._id, { used: true }, { new: true });
+      }
 
       return res.status(200).json({ success: true });
     } catch (error) {
