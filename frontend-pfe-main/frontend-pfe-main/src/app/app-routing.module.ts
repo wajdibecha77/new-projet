@@ -129,9 +129,11 @@ const routes: Routes = [
     children: [
       { path: "signup", component: SignupComponent },
       { path: "signin", component: SigninComponent },
-      { path: "verify-otp", component: LoginVerifyComponent },
+      { path: "login-verify-otp", component: LoginVerifyComponent },
       { path: "confirm-login", component: ConfirmLoginComponent },
       { path: "forgot-password", component: ForgotPasswordComponent },
+      { path: "verify-otp", component: ForgotPasswordVerifyComponent },
+      { path: "reset-password", component: ForgotPasswordResetComponent },
       { path: "forgot-password/verify", component: ForgotPasswordVerifyComponent },
       { path: "forgot-password/reset", component: ForgotPasswordResetComponent },
     ],

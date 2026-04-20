@@ -13,6 +13,8 @@ export class ForgotPasswordVerifyComponent implements OnInit {
     public otp: string = "";
     public isSubmitting: boolean = false;
     public isResending: boolean = false;
+    public statusMessage: string = "";
+    public statusType: "success" | "error" | "" = "";
 
     constructor(
         private route: ActivatedRoute,
@@ -37,6 +39,8 @@ export class ForgotPasswordVerifyComponent implements OnInit {
         }
 
         if (!this.email || !this.otp) {
+            this.statusType = "";
+            this.statusMessage = "";
             this.notifier.show({
                 type: "warning",
                 message: "Veuillez saisir le code OTP recu par email.",
@@ -47,6 +51,8 @@ export class ForgotPasswordVerifyComponent implements OnInit {
 
         const normalizedOtp = String(this.otp || "").trim();
         if (!/^\d{6}$/.test(normalizedOtp)) {
+            this.statusType = "error";
+            this.statusMessage = "❌ Code incorrect.";
             this.notifier.show({
                 type: "warning",
                 message: "Le code doit contenir 6 chiffres.",
@@ -56,19 +62,25 @@ export class ForgotPasswordVerifyComponent implements OnInit {
         }
 
         this.isSubmitting = true;
+        this.statusType = "";
+        this.statusMessage = "";
         this.authService.verifyResetCode(this.email, normalizedOtp).subscribe(
             () => {
                 sessionStorage.setItem("reset_email", this.email);
                 sessionStorage.setItem("reset_code", normalizedOtp);
+                this.statusType = "success";
+                this.statusMessage = "✔ Code envoye et valide.";
                 this.notifier.show({
                     type: "success",
                     message: "Code valide. Continuez la reinitialisation.",
                     id: "THAT_NOTIFICATION_ID",
                 });
-                this.router.navigateByUrl("/auth/forgot-password/reset");
+                this.router.navigateByUrl("/auth/reset-password");
                 this.isSubmitting = false;
             },
             (err) => {
+                this.statusType = "error";
+                this.statusMessage = "❌ Code incorrect.";
                 this.notifier.show({
                     type: "error",
                     message:
@@ -87,8 +99,12 @@ export class ForgotPasswordVerifyComponent implements OnInit {
         }
 
         this.isResending = true;
+        this.statusType = "";
+        this.statusMessage = "";
         this.authService.forgotPassword(this.email).subscribe(
             (res: any) => {
+                this.statusType = "success";
+                this.statusMessage = "✔ Code envoye.";
                 this.notifier.show({
                     type: "success",
                     message: "Nouveau code envoye.",

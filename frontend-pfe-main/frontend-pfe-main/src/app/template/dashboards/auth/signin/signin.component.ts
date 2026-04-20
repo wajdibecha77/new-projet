@@ -110,7 +110,7 @@ export class SigninComponent implements OnDestroy {
         const requiresOtp = !!(res?.requiresOtp || res?.challengeRequired);
         if (requiresOtp && ENABLE_OTP_LOGIN) {
           this.authService.clearTrustedDevice(this.email);
-          this.router.navigate(["/auth/verify-otp"], {
+          this.router.navigate(["/auth/login-verify-otp"], {
             queryParams: {
               email: this.email.trim().toLowerCase(),
               challengeId: res?.challengeId || "",

@@ -55,6 +55,7 @@ export class AppComponent implements OnInit, OnDestroy {
     "/auth/signup",
     "/auth/confirm-login",
     "/auth/forgot-password",
+    "/auth/login-verify-otp",
     "/auth/verify-otp",
     "/auth/reset-password",
     "/reclamation-public",

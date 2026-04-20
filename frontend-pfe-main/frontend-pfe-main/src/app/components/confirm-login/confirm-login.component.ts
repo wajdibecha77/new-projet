@@ -69,7 +69,7 @@ export class ConfirmLoginComponent implements OnInit {
   }
 
   goToOtpFallback(): void {
-    this.router.navigate(["/auth/verify-otp"], {
+    this.router.navigate(["/auth/login-verify-otp"], {
       queryParams: { email: this.otpEmail || "" },
     });
   }
@@ -91,4 +91,3 @@ export class ConfirmLoginComponent implements OnInit {
     this.router.navigate(["/dashboard-visiteur"]);
   }
 }
-

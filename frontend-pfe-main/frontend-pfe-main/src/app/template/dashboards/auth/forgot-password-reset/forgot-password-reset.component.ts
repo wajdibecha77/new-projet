@@ -14,6 +14,8 @@ export class ForgotPasswordResetComponent implements OnInit {
     public email: string = "";
     public resetCode: string = "";
     public isSubmitting: boolean = false;
+    public statusMessage: string = "";
+    public statusType: "success" | "error" | "" = "";
 
     constructor(
         private router: Router,
@@ -36,6 +38,8 @@ export class ForgotPasswordResetComponent implements OnInit {
         }
 
         if (!this.newPassword || !this.confirmPassword) {
+            this.statusType = "";
+            this.statusMessage = "";
             this.notifier.show({
                 type: "warning",
                 message: "Veuillez remplir tous les champs.",
@@ -45,6 +49,8 @@ export class ForgotPasswordResetComponent implements OnInit {
         }
 
         if (this.newPassword.length < 8) {
+            this.statusType = "";
+            this.statusMessage = "";
             this.notifier.show({
                 type: "warning",
                 message: "Le mot de passe doit contenir au moins 8 caracteres.",
@@ -54,6 +60,8 @@ export class ForgotPasswordResetComponent implements OnInit {
         }
 
         if (this.newPassword !== this.confirmPassword) {
+            this.statusType = "error";
+            this.statusMessage = "❌ Les mots de passe ne correspondent pas.";
             this.notifier.show({
                 type: "warning",
                 message: "Les mots de passe ne correspondent pas.",
@@ -63,10 +71,14 @@ export class ForgotPasswordResetComponent implements OnInit {
         }
 
         this.isSubmitting = true;
+        this.statusType = "";
+        this.statusMessage = "";
         this.authService
             .resetPassword(this.email, this.resetCode, this.newPassword)
             .subscribe(
                 (res: any) => {
+                    this.statusType = "success";
+                    this.statusMessage = "✔ Mot de passe modifie avec succes.";
                     this.notifier.show({
                         type: "success",
                         message: "Mot de passe modifie avec succes.",
@@ -75,11 +87,16 @@ export class ForgotPasswordResetComponent implements OnInit {
                     sessionStorage.removeItem("reset_email");
                     sessionStorage.removeItem("reset_code");
                     setTimeout(() => {
-                        this.router.navigateByUrl("/login");
+                        this.router.navigateByUrl("/auth/signin");
                     }, 1200);
                     this.isSubmitting = false;
                 },
                 (err) => {
+                    this.statusType = "error";
+                    this.statusMessage =
+                        "❌ " +
+                        (err?.error?.message ||
+                            "Impossible de modifier le mot de passe.");
                     this.notifier.show({
                         type: "error",
                         message:

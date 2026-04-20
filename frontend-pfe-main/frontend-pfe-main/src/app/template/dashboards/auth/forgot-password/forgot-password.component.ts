@@ -12,6 +12,8 @@ export class ForgotPasswordComponent implements OnInit {
     public email: string = "";
     public isSubmitting: boolean = false;
     public securityAlert: boolean = false;
+    public statusMessage: string = "";
+    public statusType: "success" | "error" | "" = "";
 
     constructor(
         private authService: AuthService,
@@ -40,6 +42,8 @@ export class ForgotPasswordComponent implements OnInit {
 
         const normalizedEmail = (this.email || "").trim().toLowerCase();
         if (!normalizedEmail) {
+            this.statusType = "";
+            this.statusMessage = "";
             this.notifier.show({
                 type: "warning",
                 message: "Veuillez saisir votre adresse email.",
@@ -49,19 +53,28 @@ export class ForgotPasswordComponent implements OnInit {
         }
 
         this.isSubmitting = true;
+        this.statusType = "";
+        this.statusMessage = "";
         this.authService.forgotPassword(normalizedEmail).subscribe(
             (res: any) => {
+                this.statusType = "success";
+                this.statusMessage = "✔ Code envoye.";
                 this.notifier.show({
                     type: "success",
                     message: "Code envoye par email.",
                     id: "THAT_NOTIFICATION_ID",
                 });
-                this.router.navigate(["/auth/forgot-password/verify"], {
+                this.router.navigate(["/auth/verify-otp"], {
                     queryParams: { email: normalizedEmail },
                 });
                 this.isSubmitting = false;
             },
             (err) => {
+                this.statusType = "error";
+                this.statusMessage = "❌ " + (
+                    err?.error?.message ||
+                    "Impossible d'envoyer l'email de reinitialisation."
+                );
                 this.notifier.show({
                     type: "error",
                     message:
@@ -74,4 +87,3 @@ export class ForgotPasswordComponent implements OnInit {
         );
     }
 }
-
