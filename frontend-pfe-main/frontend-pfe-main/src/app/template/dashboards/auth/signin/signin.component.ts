@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
 import { AuthService } from "src/app/services/auth.service";
 
@@ -9,13 +9,15 @@ const ENABLE_OTP_LOGIN = false;
   templateUrl: "./signin.component.html",
   styleUrls: ["./signin.component.scss"],
 })
-export class SigninComponent {
+export class SigninComponent implements OnDestroy {
   email = "";
   password = "";
   showPassword = false;
   loading = false;
   errorMessage = "";
   successMessage = "";
+  emailSent = false;
+  private emailSentTimeout?: ReturnType<typeof setTimeout>;
   private readonly technicianRoles = [
     "INFORMATICIEN",
     "ELECTRICIEN",
@@ -31,6 +33,22 @@ export class SigninComponent {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  ngOnDestroy(): void {
+    if (this.emailSentTimeout) {
+      clearTimeout(this.emailSentTimeout);
+    }
+  }
+
+  private showEmailConfirmationAlert(): void {
+    this.emailSent = true;
+    if (this.emailSentTimeout) {
+      clearTimeout(this.emailSentTimeout);
+    }
+    this.emailSentTimeout = setTimeout(() => {
+      this.emailSent = false;
+    }, 5000);
   }
 
   private isTechnicianRole(role: string): boolean {
@@ -75,6 +93,7 @@ export class SigninComponent {
     this.loading = true;
     this.errorMessage = "";
     this.successMessage = "";
+    this.emailSent = false;
 
     this.authService.loginSecure(this.email.trim(), this.password).subscribe({
       next: (res) => {
@@ -82,8 +101,9 @@ export class SigninComponent {
         console.log("LOGIN RESPONSE:", res);
 
         if (res?.requiresEmailConfirmation) {
-          this.successMessage = "Verifiez votre email pour continuer.";
+          this.successMessage = "";
           this.errorMessage = "";
+          this.showEmailConfirmationAlert();
           return;
         }
 
@@ -109,11 +129,13 @@ export class SigninComponent {
         const role = String(res?.user?.role || "").toUpperCase();
         localStorage.setItem("role", role);
 
+        this.emailSent = false;
         this.successMessage = "Connexion reussie.";
         this.goToHome(role);
       },
       error: (err) => {
         this.loading = false;
+        this.emailSent = false;
         this.successMessage = "";
         this.errorMessage = this.sanitizeLoginMessage(
           err?.error?.message || "Erreur lors de la connexion."

@@ -68,6 +68,11 @@
           {{ loading ? "Connexion..." : "Se connecter" }}
         </button>
 
+        <div *ngIf="emailSent" class="alert-success-custom">
+          📩 Un email de confirmation a ete envoye.<br />
+          <small>Veuillez verifier votre boite mail pour continuer.</small>
+        </div>
+
         <p *ngIf="successMessage" class="success-msg">
           {{ successMessage }}
         </p>
