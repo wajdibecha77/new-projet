@@ -1,5 +1,4 @@
 ﻿const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
 const geoip = require("geoip-lite");
@@ -10,6 +9,10 @@ const User = require("../models/User");
 const PasswordResetToken = require("../models/PasswordResetToken");
 const Notification = require("../models/Notification");
 const LoginChallenge = require("../models/LoginChallenge");
+const {
+  sendOtpEmail: sendOtpEmailOAuth,
+  sendLoginConfirmationEmail: sendLoginConfirmationEmailOAuth,
+} = require("../services/email.service");
 
 const CODE_EXPIRE_MINUTES = 10;
 const LOGIN_OTP_EXPIRE_MINUTES = 10;
@@ -73,60 +76,6 @@ const markVerifiedInCurrentRuntime = (userId, deviceHash) => {
   runtimeVerifiedDevices.set(runtimeVerificationKey(userId, deviceHash), {
     verifiedAt: new Date(),
   });
-};
-
-const smtpTransporter = () => {
-  const smtpHost = "smtp.gmail.com";
-  const smtpPort = 587;
-  const smtpUser = String(process.env.SMTP_USER || "").trim();
-  const smtpPass = String(process.env.SMTP_PASS || "");
-  const smtpFrom = process.env.SMTP_FROM || smtpUser;
-  const smtpSecure = false;
-
-  if (!smtpUser || !smtpPass) {
-    throw new Error("Configuration SMTP manquante (SMTP_USER, SMTP_PASS).");
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
-    auth: { user: smtpUser, pass: smtpPass },
-  });
-
-  return { transporter, smtpFrom, smtpUser, smtpHost, smtpPort };
-};
-
-const throwSmtpCredentialError = (error) => {
-  const code = String(error?.code || "").toUpperCase();
-  const message = String(error?.message || "");
-
-  if (
-    error?.responseCode === 535 ||
-    message.includes("BadCredentials")
-  ) {
-    throw new Error(
-      "Identifiants SMTP invalides. Pour Gmail, activez la validation en 2 etapes et utilisez un App Password dans SMTP_PASS."
-    );
-  }
-  if (code === "ETIMEDOUT") {
-    throw new Error("SMTP timeout: le serveur de messagerie ne repond pas a temps.");
-  }
-  if (code === "ECONNECTION" || code === "ESOCKET") {
-    throw new Error("SMTP connexion echouee: impossible de contacter le serveur SMTP.");
-  }
-  if (code === "EENVELOPE") {
-    throw new Error("Erreur SMTP envelope: adresse email destinataire invalide.");
-  }
-  if (error?.responseCode === 534 || error?.responseCode === 530) {
-    throw new Error("Gmail bloque la connexion SMTP. Verifiez la securite du compte Google et l'App Password.");
-  }
-
-  console.error("SMTP ERROR:", error);
-  throw new Error(message || "Erreur SMTP inconnue.");
 };
 
 const signJwt = (user) => {
@@ -200,207 +149,32 @@ const reverseGeocodeOSM = (lat, lng) =>
 
 // -------------------- emails --------------------
 const sendResetCodeEmail = async (toEmail, code) => {
-  return sendOtpEmail(toEmail, code, "forgot-password");
+  console.log("[EMAIL] forgot-password OTP request ->", normalizeEmail(toEmail));
+  return sendOtpEmailOAuth({
+    to: toEmail,
+    code,
+    purpose: "forgot-password",
+    expiresMinutes: CODE_EXPIRE_MINUTES,
+  });
 };
 
 const sendLoginOtpEmail = async (toEmail, code) => {
-  return sendOtpEmail(toEmail, code, "login");
-};
-
-const sendOtpEmail = async (toEmail, code, context = "otp") => {
-  const { transporter, smtpFrom, smtpUser, smtpHost, smtpPort } = smtpTransporter();
-  try {
-    const normalized = normalizeEmail(toEmail);
-    console.log("OTP envoye a :", normalized);
-    console.log(`[SMTP] tentative connexion ${smtpHost}:${smtpPort} avec ${smtpUser}`);
-
-    await transporter.verify();
-    console.log("[SMTP] verification reussie ✅");
-
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: normalized,
-      subject: "Code de verification - TAV Airports",
-      text:
-        "Bonjour,\n\n" +
-        "Votre code de verification est : " +
-        code +
-        "\n\n" +
-        "Ce code est valable pendant 10 minutes.\n\n" +
-        "Si vous n'etes pas a l'origine de cette demande, veuillez ignorer cet email.\n\n" +
-        "Cordialement,\nTAV Airports",
-    });
-    console.log(`OTP envoye avec succes (${context}) ->`, normalized);
-  } catch (error) {
-    const errorDetails = {
-      message: error?.message || "Erreur SMTP inconnue",
-      code: error?.code || "",
-      responseCode: error?.responseCode || "",
-      response: error?.response || "",
-      command: error?.command || "",
-    };
-    console.error("Erreur SMTP :", errorDetails);
-    throwSmtpCredentialError(error);
-  }
-};
-const sendNewLoginAlertEmail = async ({ toEmail, approveUrl, denyUrl, details }) => {
-  const { transporter, smtpFrom } = smtpTransporter();
-
-  const html = `
-  <!doctype html>
-  <html>
-    <body style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8fb;padding:24px 0;">
-        <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.08);">
-              <tr>
-                <td style="padding:22px 24px;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff;">
-                  <div style="font-size:18px;font-weight:700;">VÃ©rification de connexion</div>
-                  <div style="opacity:.95;margin-top:6px;">Nouvelle tentative de connexion dÃ©tectÃ©e</div>
-                </td>
-              </tr>
-
-              <tr>
-                <td style="padding:22px 24px;">
-                  <div style="font-size:14px;line-height:1.6;">
-                    Bonjour,<br/>
-                    Nous avons dÃ©tectÃ© une tentative de connexion Ã  votre compte. Confirmez si câ€™est bien vous.
-                  </div>
-
-                  <div style="margin-top:16px;padding:14px;background:#f3f4f6;border-radius:12px;font-size:13px;line-height:1.6;">
-                    <div><b>Heure :</b> ${details.time}</div>
-                    <div><b>Appareil :</b> ${details.deviceLabel}</div>
-                    <div><b>SystÃ¨me :</b> ${details.os || "Inconnu"}</div>
-                    <div><b>Navigateur :</b> ${details.browser || "Inconnu"}</div>
-                    <div><b>IP :</b> ${details.ip || "Inconnue"}</div>
-
-                    <div>
-                      <b>Lieu :</b> ${details.location || "Inconnu"}
-                      ${details.mapsUrl
-      ? ` â€” <a href="${details.mapsUrl}" style="color:#2563eb;text-decoration:none;font-weight:700;">Voir sur Google Maps</a>`
-      : ""
-    }
-                    </div>
-                  </div>
-
-                  <div style="margin-top:18px;">
-                    <a href="${approveUrl}"
-                      style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;
-                              padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;">
-                      âœ… Câ€™est moi
-                    </a>
-
-                    <a href="${denyUrl}"
-                      style="display:inline-block;background:#ef4444;color:#fff;text-decoration:none;
-                              padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;margin-left:10px;">
-                      âŒ Ce nâ€™est pas moi
-                    </a>
-                  </div>
-
-                  <div style="margin-top:18px;font-size:12px;color:#6b7280;line-height:1.6;">
-                    Si ce nâ€™est pas vous, refusez la connexion et changez votre mot de passe immÃ©diatement.
-                  </div>
-
-                  <div style="margin-top:18px;font-size:11px;color:#9ca3af;">
-                    Â© ${new Date().getFullYear()} â€” SÃ©curitÃ© & confidentialitÃ©
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-  </html>`;
-
-  await transporter.sendMail({
-    from: smtpFrom,
+  console.log("[EMAIL] login OTP request ->", normalizeEmail(toEmail));
+  return sendOtpEmailOAuth({
     to: toEmail,
-    subject: "Nouvelle tentative de connexion â€” Confirmation requise",
-    html,
-    text:
-      `Nouvelle tentative de connexion.\n` +
-      `Heure: ${details.time}\n` +
-      `Appareil: ${details.deviceLabel}\n` +
-      `OS: ${details.os}\n` +
-      `Navigateur: ${details.browser}\n` +
-      `IP: ${details.ip}\n` +
-      `Lieu: ${details.location}\n` +
-      (details.mapsUrl ? `Google Maps: ${details.mapsUrl}\n` : "") +
-      `\nCâ€™est moi: ${approveUrl}\n` +
-      `Ce nâ€™est pas moi: ${denyUrl}\n`,
+    code,
+    purpose: "login",
+    expiresMinutes: LOGIN_OTP_EXPIRE_MINUTES,
   });
 };
-
-const sendLoginConfirmationEmail = async ({ toEmail, confirmUrl, details }) => {
-  const { transporter, smtpFrom } = smtpTransporter();
-  const normalized = normalizeEmail(toEmail);
-
-  const html = `
-  <!doctype html>
-  <html>
-    <body style="margin:0;padding:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8fb;padding:24px 0;">
-        <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.08);">
-              <tr>
-                <td style="padding:22px 24px;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff;">
-                  <div style="font-size:18px;font-weight:700;">Verification de connexion</div>
-                  <div style="opacity:.95;margin-top:6px;">Nouvelle connexion detectee</div>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:22px 24px;">
-                  <div style="font-size:14px;line-height:1.6;">
-                    Bonjour,<br/>
-                    Une connexion depuis un appareil non reconnu a ete detectee.
-                  </div>
-                  <div style="margin-top:16px;padding:14px;background:#f3f4f6;border-radius:12px;font-size:13px;line-height:1.6;">
-                    <div><b>Heure:</b> ${details.time}</div>
-                    <div><b>Appareil:</b> ${details.deviceLabel || "Inconnu"}</div>
-                    <div><b>Systeme:</b> ${details.os || "Inconnu"}</div>
-                    <div><b>Navigateur:</b> ${details.browser || "Inconnu"}</div>
-                    <div><b>IP:</b> ${details.ip || "Inconnue"}</div>
-                    <div><b>Lieu:</b> ${details.location || "Inconnu"}</div>
-                  </div>
-                  <div style="margin-top:18px;">
-                    <a href="${confirmUrl}"
-                      style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;
-                              padding:12px 16px;border-radius:12px;font-weight:700;font-size:14px;">
-                      C'est moi - Confirmer la connexion
-                    </a>
-                  </div>
-                  <div style="margin-top:18px;font-size:12px;color:#6b7280;line-height:1.6;">
-                    Si ce n'etait pas vous, ignorez cet email.
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-  </html>`;
-
-  await transporter.sendMail({
-    from: smtpFrom,
-    to: normalized,
-    subject: "Confirmez votre connexion",
-    html,
-    text:
-      `Nouvelle connexion detectee.\n` +
-      `Heure: ${details.time}\n` +
-      `Appareil: ${details.deviceLabel || "Inconnu"}\n` +
-      `OS: ${details.os || "Inconnu"}\n` +
-      `Navigateur: ${details.browser || "Inconnu"}\n` +
-      `IP: ${details.ip || "Inconnue"}\n` +
-      `Lieu: ${details.location || "Inconnu"}\n\n` +
-      `Confirmer: ${confirmUrl}\n`,
+const sendLoginConfirmationEmail = async ({ toEmail, confirmUrl, denyUrl, details }) => {
+  console.log("[EMAIL] login confirmation request ->", normalizeEmail(toEmail));
+  return sendLoginConfirmationEmailOAuth({
+    to: toEmail,
+    confirmUrl,
+    denyUrl,
+    details,
   });
-
-  console.log("[AUTH] Email de confirmation envoye ->", normalized);
 };
 
 // -------------------- controllers --------------------
@@ -619,6 +393,7 @@ module.exports = {
 
       const appUrl = String(process.env.APP_PUBLIC_URL || "http://localhost:4200").replace(/\/+$/, "");
       const confirmUrl = `${appUrl}/#/auth/confirm-login?token=${encodeURIComponent(confirmToken)}`;
+      const denyUrl = `${appUrl}/#/auth/signin?securityAlert=1`;
 
       const clientIp = getVisiteurIp(req);
       const device = getDeviceInfo(req);
@@ -626,6 +401,7 @@ module.exports = {
         await sendLoginConfirmationEmail({
           toEmail: user.email,
           confirmUrl,
+          denyUrl,
           details: {
             time: formatDateFR(new Date()),
             deviceLabel: [device.deviceVendor, device.deviceModel, device.deviceType]
