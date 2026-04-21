@@ -26,7 +26,7 @@ export class ReclamationService {
   /* ================= CREATE ================= */
   addReclamation(data: any, isPublic = false): Observable<any> {
     if (isPublic) {
-      return this.http.post(`${this.PUBLIC_API}/reclamations/public`, data);
+      return this.http.post(`${this.PUBLIC_API}/reclamations/add-public`, data);
     }
 
     return this.http.post(`${this.API}/reclamations/add`, data, {
