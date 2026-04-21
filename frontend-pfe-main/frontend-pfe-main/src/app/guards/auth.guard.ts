@@ -1,12 +1,15 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from "@angular/router";
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from "@angular/router";
 
 @Injectable({ providedIn: "root" })
 export class AuthGuard implements CanActivate {
   constructor(private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
-    if (route.routeConfig?.path === "reclamation-public") {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
+    const publicRoutes = ["/reclamation-public"];
+    const currentUrl = (state.url || "").split("?")[0];
+
+    if (publicRoutes.includes(currentUrl)) {
       return true;
     }
 
