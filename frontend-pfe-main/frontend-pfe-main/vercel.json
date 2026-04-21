@@ -3,10 +3,11 @@
   "installCommand": "npm install --legacy-peer-deps --force --no-audit --no-fund",
   "buildCommand": "NODE_OPTIONS=--openssl-legacy-provider npx ng build --configuration production",
   "outputDirectory": "dist/frontend-pfe-main",
-  "rewrites": [
+  "routes": [
+    { "handle": "filesystem" },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
