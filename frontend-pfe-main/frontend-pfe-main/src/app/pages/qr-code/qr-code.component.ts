@@ -14,10 +14,12 @@ export class QrCodeComponent implements OnInit {
       environment.production && environment.publicUrl
         ? environment.publicUrl
         : typeof window !== "undefined"
-          ? window.location.origin
-          : "";
+        ? window.location.origin
+        : "";
 
+    // ✅ FIX: add # for Angular hash routing
     this.qrCodeUrl = `${origin}/#/reclamation-public`;
+
     console.log("QR URL generated:", this.qrCodeUrl);
   }
 }
