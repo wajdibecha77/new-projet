@@ -88,6 +88,16 @@ const stripHtml = (html) =>
     .trim();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const extractEmailFromFromHeader = (value) => {
+  const raw = String(value || "").trim();
+  const match = raw.match(/<([^<>]+)>/);
+  if (match && match[1]) return String(match[1]).trim();
+  return raw;
+};
+
+const isValidEmailAddress = (value) => simpleEmailRegex.test(String(value || "").trim());
 
 const isRetryableResendError = (error) => {
   const status = Number(error?.response?.status || 0);
@@ -112,8 +122,10 @@ const sendWithResendApi = async ({ from, to, subject, html }) => {
   }
 
   const fromAddress = String(resendFrom || from || "").trim();
-  if (!fromAddress) {
-    throw new Error("RESEND_FROM is missing");
+  if (!fromAddress || !isValidEmailAddress(extractEmailFromFromHeader(fromAddress))) {
+    throw new Error(
+      "RESEND_FROM invalide. Exemple: onboarding@resend.dev ou Admin TAV <onboarding@resend.dev>"
+    );
   }
 
   const payload = {
@@ -164,7 +176,10 @@ const sendMailWithFailover = async (mailOptions) => {
     try {
       return await sendWithResendApi(mailOptions);
     } catch (resendError) {
-      console.warn("[EMAIL] RESEND primary failed, retrying SMTP fallback.");
+      if (!isRetryableResendError(resendError)) {
+        throw resendError;
+      }
+      console.warn("[EMAIL] RESEND primary failed with retryable error, retrying SMTP fallback.");
       try {
         return await transporter.sendMail(mailOptions);
       } catch (smtpPrimaryError) {
