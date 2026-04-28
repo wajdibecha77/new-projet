@@ -14,6 +14,9 @@ const escapeHtml = (value) =>
 
 const smtpUser = normalizeEmail(cleanEnvValue(process.env.SMTP_USER));
 const smtpPass = cleanAppPassword(process.env.SMTP_PASS);
+const smtpHost = cleanEnvValue(process.env.SMTP_HOST || "smtp.gmail.com");
+const smtpPort = Number(cleanEnvValue(process.env.SMTP_PORT || "587")) || 587;
+const smtpSecure = String(process.env.SMTP_SECURE || "false").trim().toLowerCase() === "true";
 
 if (!smtpUser) {
   console.warn("[EMAIL] SMTP_USER is missing in .env");
@@ -25,18 +28,26 @@ if (!smtpPass) {
 
 // ================= TRANSPORTER =================
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpSecure,
   auth: {
     user: smtpUser,
     pass: smtpPass,
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // ================= VERIFY CONNECTION =================
 transporter.verify((err) => {
   if (err) {
     const msg = String(err?.message || err || "");
-    console.error("SMTP ERROR:", msg);
+    console.error("SMTP ERROR:", err);
     if (/Invalid login|BadCredentials|Username and Password not accepted/i.test(msg)) {
       console.error(
         "SMTP AUTH HELP: Verify SMTP_USER + 16-char Gmail App Password, enable 2-Step Verification, and generate a new App Password if needed."

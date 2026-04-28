@@ -476,10 +476,10 @@ module.exports = {
           },
         });
       } catch (e) {
-        console.error("SMTP ERROR:", e);
-        return res.status(200).json({
+        console.error("FULL EMAIL ERROR:", e);
+        return res.status(500).json({
           success: false,
-          message: "Email non envoye mais serveur OK",
+          message: e.message,
         });
       }
 
