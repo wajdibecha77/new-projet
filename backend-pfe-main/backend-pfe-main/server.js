@@ -70,6 +70,9 @@ app.get("/test-email", async (req, res) => {
       code: error?.code || null,
       command: error?.command || null,
       response: error?.response?.data || error?.response || null,
+      emailProvider: String(process.env.EMAIL_PROVIDER || "auto"),
+      hasResendKey: Boolean(String(process.env.RESEND_API_KEY || "").trim()),
+      resendFrom: String(process.env.RESEND_FROM || "").trim() || null,
     });
   }
 });

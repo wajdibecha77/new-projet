@@ -111,8 +111,13 @@ const sendWithResendApi = async ({ from, to, subject, html }) => {
     throw new Error("RESEND_API_KEY is missing");
   }
 
+  const fromAddress = String(resendFrom || from || "").trim();
+  if (!fromAddress) {
+    throw new Error("RESEND_FROM is missing");
+  }
+
   const payload = {
-    from: String(from || resendFrom).trim(),
+    from: fromAddress,
     to: [String(to || "").trim()],
     subject: String(subject || "").trim(),
     html: String(html || ""),
