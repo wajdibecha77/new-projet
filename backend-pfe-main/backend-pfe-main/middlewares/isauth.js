@@ -1,7 +1,12 @@
 const jwt = require("jsonwebtoken");
 
 function isauth(req, res, next) {
-  const token = req.header("x-auth-token");
+  const legacyToken = req.header("x-auth-token");
+  const authHeader = String(req.header("authorization") || "");
+  const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
+  const token = bearerToken || legacyToken;
 
   if (!token) {
     return res.status(401).json({

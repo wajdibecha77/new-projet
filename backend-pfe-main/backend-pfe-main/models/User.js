@@ -32,6 +32,11 @@ const UserSchema = new mongoose.Schema({
         required: false
     },
     trustedDevices: {
+        // Trusted devices list:
+        // each entry stores a client-provided deviceId that was explicitly
+        // approved by the account owner through email confirmation.
+        // On future logins, known deviceIds can bypass extra verification
+        // (unless demo/force mode is enabled).
         type: [String],
         default: []
     },

@@ -1,4 +1,4 @@
-﻿const bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const UAParser = require("ua-parser-js");
 const axios = require("axios");
@@ -9,8 +9,8 @@ const PasswordResetToken = require("../models/PasswordResetToken");
 const Notification = require("../models/Notification");
 const LoginChallenge = require("../models/LoginChallenge");
 const {
-  sendOtpEmail: sendOtpEmailOAuth,
-  sendLoginConfirmationEmail: sendLoginConfirmationEmailOAuth,
+  sendOtpEmail,
+  sendLoginConfirmationEmail: sendLoginConfirmationEmailByEmail,
 } = require("../services/email.service");
 
 const CODE_EXPIRE_MINUTES = 10;
@@ -115,6 +115,12 @@ const signJwt = (user) => {
   );
 };
 
+const formatAuthUser = (user) => ({
+  _id: user?._id,
+  email: user?.email,
+  role: user?.role || "USER",
+});
+
 const signLoginConfirmToken = ({ userId, email, deviceId }) => {
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET manquant dans .env");
 
@@ -130,10 +136,21 @@ const signLoginConfirmToken = ({ userId, email, deviceId }) => {
   );
 };
 
+const isForceEmailVerificationEnabled = () => {
+  // Demo/defense mode toggle:
+  // - FORCE_EMAIL_VERIFICATION=true forces email confirmation for every login
+  // - ALWAYS_REQUIRE_EMAIL_VERIFICATION kept for backward compatibility
+  const rawValue =
+    process.env.FORCE_EMAIL_VERIFICATION ??
+    process.env.ALWAYS_REQUIRE_EMAIL_VERIFICATION ??
+    "false";
+  return String(rawValue).trim().toLowerCase() === "true";
+};
+
 // -------------------- emails --------------------
 const sendResetCodeEmail = async (toEmail, code) => {
   console.log("[EMAIL] forgot-password OTP request ->", normalizeEmail(toEmail));
-  return sendOtpEmailOAuth({
+  return sendOtpEmail({
     to: toEmail,
     code,
     purpose: "forgot-password",
@@ -143,7 +160,7 @@ const sendResetCodeEmail = async (toEmail, code) => {
 
 const sendLoginOtpEmail = async (toEmail, code) => {
   console.log("[EMAIL] login OTP request ->", normalizeEmail(toEmail));
-  return sendOtpEmailOAuth({
+  return sendOtpEmail({
     to: toEmail,
     code,
     purpose: "login",
@@ -152,7 +169,7 @@ const sendLoginOtpEmail = async (toEmail, code) => {
 };
 const sendLoginConfirmationEmail = async ({ toEmail, confirmUrl, denyUrl, details }) => {
   console.log("[EMAIL] login confirmation request ->", normalizeEmail(toEmail));
-  return sendLoginConfirmationEmailOAuth({
+  return sendLoginConfirmationEmailByEmail({
     to: toEmail,
     confirmUrl,
     denyUrl,
@@ -389,25 +406,40 @@ module.exports = {
 
       const ok = await bcrypt.compare(password, user.password);
       if (!ok) return res.status(401).json({ success: false, message: "Identifiants invalides." });
+      console.log("LOGIN USER =", user);
 
+      const forceVerification = process.env.FORCE_EMAIL_VERIFICATION === "true";
       const trustedDevices = Array.isArray(user.trustedDevices) ? user.trustedDevices : [];
       const isTrustedDevice = trustedDevices.includes(deviceId);
+
+      // Demo/debug logs requested for jury presentation and incident analysis.
+      console.log("LOGIN:", email);
+      console.log("DEVICE:", deviceId);
+      console.log("isTrusted:", isTrustedDevice);
+      console.log("FORCE MODE:", forceVerification);
       console.log("[AUTH] loginSecure", {
         email,
         userId: String(user._id),
         deviceId,
         isTrustedDevice,
+        forceVerification,
       });
 
-      if (isTrustedDevice) {
+      // Adaptive authentication concept:
+      // - Trusted known device + force mode off  => direct JWT login
+      // - New device OR force mode on            => email confirmation required
+      // This reduces account-takeover risk on unknown devices while preserving UX
+      // on previously verified devices.
+      if (isTrustedDevice && !forceVerification) {
         const token = signJwt(user);
         return res.status(200).json({
           success: true,
           token,
-          user,
+          user: formatAuthUser(user),
         });
       }
 
+      // Otherwise, this login must be confirmed from email before issuing JWT.
       const confirmToken = signLoginConfirmToken({
         userId: user._id,
         email: user.email,
@@ -492,6 +524,9 @@ module.exports = {
       }
 
       const trustedDevices = new Set(Array.isArray(user.trustedDevices) ? user.trustedDevices : []);
+      // Security rationale:
+      // only after the user confirms from email, we trust this deviceId for
+      // subsequent sign-ins and store it in trustedDevices.
       trustedDevices.add(deviceId);
       user.trustedDevices = Array.from(trustedDevices);
       await user.save();
@@ -502,7 +537,7 @@ module.exports = {
       });
 
       const token = signJwt(user);
-      return res.status(200).json({ success: true, token, user });
+      return res.status(200).json({ success: true, token, user: formatAuthUser(user) });
     } catch (error) {
       // Fallback OTP si token expiré.
       if (error?.name === "TokenExpiredError") {
@@ -604,7 +639,7 @@ module.exports = {
         success: true,
         requireOtp: false,
         token,
-        user,
+        user: formatAuthUser(user),
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message || "Erreur verification OTP." });
@@ -720,7 +755,7 @@ module.exports = {
         await user.save();
 
         const token = signJwt(user);
-        return res.status(200).json({ success: true, token, user });
+        return res.status(200).json({ success: true, token, user: formatAuthUser(user) });
       } catch (error) {
         return res.status(500).json({ success: false, message: error.message || "Erreur serveur." });
       }
@@ -760,12 +795,9 @@ module.exports = {
       const user = await User.findById(challenge.userId);
       const token = signJwt(user);
 
-      return res.status(200).json({ success: true, verifiedInRuntime: true, token, user });
+      return res.status(200).json({ success: true, verifiedInRuntime: true, token, user: formatAuthUser(user) });
     } catch {
       return res.status(500).json({ success: false, message: "Erreur serveur." });
     }
   },
 };
-
-
-

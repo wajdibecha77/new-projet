@@ -1,10 +1,10 @@
-﻿require("dotenv").config();
+require("dotenv").config({ override: true });
 
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
-const { sendEmail } = require("./services/email.service");
+const { transporter } = require("./services/email.service");
 
 const app = express();
 
@@ -34,7 +34,7 @@ app.use("/notifications", require("./routes/NotificationRouter"));
 
 // ================= TEST ROUTES =================
 app.get("/", (req, res) => {
-  res.send("Server OK 🚀");
+  res.send("Server OK ??");
 });
 
 app.get("/hello/:name", (req, res) => {
@@ -45,28 +45,20 @@ app.get("/getfile/:image", (req, res) => {
   res.sendFile(path.join(__dirname, "uploads", req.params.image));
 });
 
-// ================= 🔥 TEST EMAIL ROUTE =================
+// ================= ?? TEST EMAIL ROUTE =================
 app.get("/test-email", async (req, res) => {
   try {
-    console.log("USER:", process.env.SMTP_USER);
-    await sendEmail(
-      process.env.SMTP_USER,
-      "TEST OTP ✔️",
-      "<p>Email fonctionne parfaitement 🚀</p>"
-    );
-
-    res.json({
-      success: true,
-      message: "Email sent ✅",
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: process.env.SMTP_USER,
+      subject: "TEST EMAIL",
+      text: "Email works ?",
     });
 
-  } catch (err) {
-    console.error("EMAIL API ERROR ❌:", err);
-
-    res.json({
-      success: false,
-      message: err.message,
-    });
+    res.json({ success: true, message: "Email sent" });
+  } catch (error) {
+    console.error("EMAIL ERROR:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -91,7 +83,7 @@ app.get("/test-gemini", async (req, res) => {
           role: "user",
           parts: [
             {
-              text: "câble électrique brûlé près d'une porte"
+              text: "c�ble �lectrique br�l� pr�s d'une porte"
             }
           ]
         }
@@ -105,7 +97,7 @@ app.get("/test-gemini", async (req, res) => {
     res.json({ result: text });
 
   } catch (err) {
-    console.error("❌ Gemini ERROR FULL:", err);
+    console.error("? Gemini ERROR FULL:", err);
     res.status(500).json({ msg: err.message });
   }
 });
@@ -123,13 +115,13 @@ if (!process.env.MONGO_URI) {
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("[DB] MongoDB connected ✅");
+    console.log("[DB] MongoDB connected ?");
 
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`[SERVER] Running on port ${PORT} 🚀`);
+      console.log(`[SERVER] Running on port ${PORT} ??`);
     });
   })
   .catch((error) => {
-    console.error("[DB] MongoDB connection failed ❌", error);
+    console.error("[DB] MongoDB connection failed ?", error);
     process.exit(1);
   });

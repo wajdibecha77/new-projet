@@ -78,7 +78,7 @@ const sendEmail = async (rec) => {
 `;
 
   await sendEmailViaApi(email, "Votre reclamation est prise en charge", html);
-  console.log("[EMAIL API] sent via Gmail API", { to: email, subject: "Votre reclamation est prise en charge" });
+  console.log("[EMAIL] sent", { to: email, subject: "Votre reclamation est prise en charge" });
 };
 
 const mapReclamationType = (rawType) => {
