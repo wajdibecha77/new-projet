@@ -408,7 +408,7 @@ module.exports = {
       if (!ok) return res.status(401).json({ success: false, message: "Identifiants invalides." });
       console.log("LOGIN USER =", user);
 
-      const forceVerification = process.env.FORCE_EMAIL_VERIFICATION === "true";
+      const forceVerification = isForceEmailVerificationEnabled();
       const trustedDevices = Array.isArray(user.trustedDevices) ? user.trustedDevices : [];
       const isTrustedDevice = trustedDevices.includes(deviceId);
 
@@ -479,7 +479,8 @@ module.exports = {
         console.error("FULL EMAIL ERROR:", e);
         return res.status(500).json({
           success: false,
-          message: e.message,
+          message: e?.message || "Erreur envoi email",
+          code: e?.code || null,
         });
       }
 
