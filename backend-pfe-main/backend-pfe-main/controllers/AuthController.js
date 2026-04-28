@@ -478,15 +478,23 @@ module.exports = {
       } catch (e) {
         console.error("FULL EMAIL ERROR:", e);
         const code = String(e?.code || "").toUpperCase();
+        const status = Number(e?.response?.status || 0);
         const isSmtpConnectionIssue =
           ["ETIMEDOUT", "ESOCKET", "ECONNECTION", "ECONNRESET", "EHOSTUNREACH", "ENOTFOUND"].includes(code) ||
           /timeout|timed out|connect|smtp/i.test(String(e?.message || ""));
+        const isGmailApiAuthIssue =
+          [400, 401, 403].includes(status) &&
+          /gmail|oauth|token|credential|insufficient|invalid/i.test(
+            `${e?.message || ""} ${JSON.stringify(e?.response?.data || {})}`
+          );
 
         return res.status(500).json({
           success: false,
           message: isSmtpConnectionIssue
-            ? "Email service indisponible (SMTP bloqué ou timeout). Configurez RESEND_API_KEY sur Railway ou passez au plan Pro pour SMTP."
-            : (e?.message || "Erreur envoi email"),
+            ? "Email service indisponible (SMTP bloqué ou timeout)."
+            : (isGmailApiAuthIssue
+                ? "Gmail API refuse l'envoi. Vérifiez GMAIL_API_CLIENT_ID/SECRET/REFRESH_TOKEN et le scope gmail.send."
+                : (e?.message || "Erreur envoi email")),
           code: e?.code || null,
         });
       }

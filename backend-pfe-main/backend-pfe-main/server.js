@@ -73,6 +73,9 @@ app.get("/test-email", async (req, res) => {
       emailProvider: String(process.env.EMAIL_PROVIDER || "auto"),
       hasResendKey: Boolean(String(process.env.RESEND_API_KEY || "").trim()),
       resendFrom: String(process.env.RESEND_FROM || "").trim() || null,
+      hasGmailApiClientId: Boolean(String(process.env.GMAIL_API_CLIENT_ID || "").trim()),
+      hasGmailApiRefreshToken: Boolean(String(process.env.GMAIL_API_REFRESH_TOKEN || "").trim()),
+      gmailApiUser: String(process.env.GMAIL_API_USER || "").trim() || null,
     });
   }
 });

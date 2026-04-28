@@ -5,6 +5,7 @@ const axios = require("axios");
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 const cleanEnvValue = (value) => String(value || "").trim().replace(/^['\"]|['\"]$/g, "");
 const cleanAppPassword = (value) => cleanEnvValue(value).replace(/\s+/g, "");
+const cleanTokenValue = (value) => cleanEnvValue(value).replace(/\s+/g, "");
 const escapeHtml = (value) =>
   String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
@@ -23,9 +24,21 @@ const resendApiKey = cleanEnvValue(process.env.RESEND_API_KEY);
 const resendFrom = cleanEnvValue(process.env.RESEND_FROM || process.env.SMTP_FROM || smtpUser);
 const resendMaxRetries = Number(cleanEnvValue(process.env.RESEND_MAX_RETRIES || "3")) || 3;
 const resendRetryBaseMs = Number(cleanEnvValue(process.env.RESEND_RETRY_BASE_MS || "700")) || 700;
+const gmailApiClientId = cleanEnvValue(process.env.GMAIL_API_CLIENT_ID);
+const gmailApiClientSecret = cleanEnvValue(process.env.GMAIL_API_CLIENT_SECRET);
+const gmailApiRefreshToken = cleanTokenValue(process.env.GMAIL_API_REFRESH_TOKEN);
+const gmailApiUser = normalizeEmail(cleanEnvValue(process.env.GMAIL_API_USER || smtpUser));
+const gmailApiFrom = cleanEnvValue(process.env.GMAIL_API_FROM || process.env.SMTP_FROM || gmailApiUser);
+const gmailApiMaxRetries = Number(cleanEnvValue(process.env.GMAIL_API_MAX_RETRIES || "3")) || 3;
+const gmailApiRetryBaseMs = Number(cleanEnvValue(process.env.GMAIL_API_RETRY_BASE_MS || "700")) || 700;
 const isRailwayRuntime = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
 const emailProvider = cleanEnvValue(
-  process.env.EMAIL_PROVIDER || (isRailwayRuntime && resendApiKey ? "resend" : "auto")
+  process.env.EMAIL_PROVIDER ||
+    (
+      isRailwayRuntime && gmailApiClientId && gmailApiClientSecret && gmailApiRefreshToken
+        ? "gmail_api"
+        : (isRailwayRuntime && resendApiKey ? "resend" : "auto")
+    )
 ).toLowerCase();
 
 if (!smtpUser) {
@@ -34,6 +47,13 @@ if (!smtpUser) {
 
 if (!smtpPass) {
   console.warn("[EMAIL] SMTP_PASS is missing in .env");
+}
+
+if (emailProvider === "gmail_api") {
+  if (!gmailApiClientId) console.warn("[EMAIL] GMAIL_API_CLIENT_ID is missing in .env");
+  if (!gmailApiClientSecret) console.warn("[EMAIL] GMAIL_API_CLIENT_SECRET is missing in .env");
+  if (!gmailApiRefreshToken) console.warn("[EMAIL] GMAIL_API_REFRESH_TOKEN is missing in .env");
+  if (!gmailApiUser) console.warn("[EMAIL] GMAIL_API_USER is missing in .env");
 }
 
 // ================= TRANSPORTER =================
@@ -78,6 +98,8 @@ const isConnectionError = (error) => {
 };
 
 const canUseResendApi = () => !!resendApiKey;
+const canUseGmailApi =
+  () => !!(gmailApiClientId && gmailApiClientSecret && gmailApiRefreshToken && gmailApiUser);
 
 const stripHtml = (html) =>
   String(html || "")
@@ -108,12 +130,99 @@ const isRetryableResendError = (error) => {
   return noResponse;
 };
 
-const getRetryDelayFromError = (error, attemptIndex) => {
-  const retryAfterHeader = Number(error?.response?.headers?.["retry-after"] || 0);
-  if (retryAfterHeader > 0) {
-    return retryAfterHeader * 1000;
+const isRetryableGmailError = (error) => {
+  const status = Number(error?.response?.status || 0);
+  const code = String(error?.code || "").toUpperCase();
+  const message = String(error?.message || "").toLowerCase();
+  if ([429, 500, 502, 503, 504].includes(status)) return true;
+  if (["ECONNABORTED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND", "EAI_AGAIN"].includes(code)) return true;
+  return /timeout|temporar|try again|rate limit|network/i.test(message);
+};
+
+const getProviderRetryDelay = (provider, error, attemptIndex) => {
+  const base = provider === "gmail_api" ? gmailApiRetryBaseMs : resendRetryBaseMs;
+  const retryAfterMs = Number(error?.response?.headers?.["retry-after"] || 0) * 1000;
+  if (retryAfterMs > 0) return retryAfterMs;
+  return base * Math.pow(2, attemptIndex);
+};
+
+const encodeHeaderUtf8 = (value) => `=?UTF-8?B?${Buffer.from(String(value || ""), "utf8").toString("base64")}?=`;
+
+const toBase64MimeLines = (value) =>
+  Buffer.from(String(value || ""), "utf8")
+    .toString("base64")
+    .replace(/(.{1,76})/g, "$1\r\n")
+    .trim();
+
+const toBase64Url = (value) =>
+  Buffer.from(String(value || ""), "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+const buildGmailRawMessage = ({ from, to, subject, html }) => {
+  const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const text = stripHtml(html);
+  const lines = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${encodeHeaderUtf8(subject)}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary=\"${boundary}\"`,
+    "",
+    `--${boundary}`,
+    "Content-Type: text/plain; charset=\"UTF-8\"",
+    "Content-Transfer-Encoding: base64",
+    "",
+    toBase64MimeLines(text),
+    `--${boundary}`,
+    "Content-Type: text/html; charset=\"UTF-8\"",
+    "Content-Transfer-Encoding: base64",
+    "",
+    toBase64MimeLines(html),
+    `--${boundary}--`,
+    "",
+  ];
+  return toBase64Url(lines.join("\r\n"));
+};
+
+let gmailTokenCache = { accessToken: "", expiresAtMs: 0 };
+
+const getGmailAccessToken = async () => {
+  const now = Date.now();
+  if (gmailTokenCache.accessToken && gmailTokenCache.expiresAtMs > now + 30000) {
+    return gmailTokenCache.accessToken;
   }
-  return resendRetryBaseMs * Math.pow(2, attemptIndex);
+
+  const body = new URLSearchParams({
+    client_id: gmailApiClientId,
+    client_secret: gmailApiClientSecret,
+    refresh_token: gmailApiRefreshToken,
+    grant_type: "refresh_token",
+  });
+
+  const response = await axios.post(
+    "https://oauth2.googleapis.com/token",
+    body.toString(),
+    {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      timeout: 10000,
+    }
+  );
+
+  const accessToken = String(response?.data?.access_token || "");
+  const expiresInSec = Number(response?.data?.expires_in || 3600);
+  if (!accessToken) {
+    throw new Error("Gmail API token response missing access_token");
+  }
+
+  gmailTokenCache = {
+    accessToken,
+    expiresAtMs: now + expiresInSec * 1000,
+  };
+
+  return accessToken;
 };
 
 const sendWithResendApi = async ({ from, to, subject, html }) => {
@@ -163,7 +272,68 @@ const sendWithResendApi = async ({ from, to, subject, html }) => {
       const attemptLabel = `${i + 1}/${resendMaxRetries}`;
       console.error(`[EMAIL][RESEND] attempt ${attemptLabel} failed:`, error?.message || error);
       if (!retryable || i === resendMaxRetries - 1) break;
-      const delayMs = getRetryDelayFromError(error, i);
+      const delayMs = getProviderRetryDelay("resend", error, i);
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError;
+};
+
+const sendWithGmailApi = async ({ from, to, subject, html }) => {
+  if (!canUseGmailApi()) {
+    throw new Error(
+      "Gmail API is not configured. Required: GMAIL_API_CLIENT_ID, GMAIL_API_CLIENT_SECRET, GMAIL_API_REFRESH_TOKEN, GMAIL_API_USER."
+    );
+  }
+
+  const toEmail = String(to || "").trim();
+  const fromAddress = String(from || gmailApiFrom || gmailApiUser).trim();
+  if (!toEmail || !isValidEmailAddress(toEmail)) {
+    throw new Error("Invalid recipient email for Gmail API");
+  }
+  if (!fromAddress || !isValidEmailAddress(extractEmailFromFromHeader(fromAddress))) {
+    throw new Error(
+      "GMAIL_API_FROM invalide. Exemple: projetadm60@gmail.com ou Admin TAV <projetadm60@gmail.com>"
+    );
+  }
+
+  const raw = buildGmailRawMessage({
+    from: fromAddress,
+    to: toEmail,
+    subject: String(subject || "").trim(),
+    html: String(html || ""),
+  });
+
+  let lastError;
+  for (let i = 0; i < gmailApiMaxRetries; i += 1) {
+    try {
+      const accessToken = await getGmailAccessToken();
+      const response = await axios.post(
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        { raw },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        }
+      );
+
+      return {
+        messageId: response?.data?.id || null,
+        accepted: [toEmail],
+        rejected: [],
+        provider: "gmail_api",
+      };
+    } catch (error) {
+      lastError = error;
+      const retryable = isRetryableGmailError(error);
+      const attemptLabel = `${i + 1}/${gmailApiMaxRetries}`;
+      console.error(`[EMAIL][GMAIL_API] attempt ${attemptLabel} failed:`, error?.message || error);
+      if (!retryable || i === gmailApiMaxRetries - 1) break;
+      const delayMs = getProviderRetryDelay("gmail_api", error, i);
       await sleep(delayMs);
     }
   }
@@ -172,6 +342,37 @@ const sendWithResendApi = async ({ from, to, subject, html }) => {
 };
 
 const sendMailWithFailover = async (mailOptions) => {
+  if (emailProvider === "gmail_api") {
+    try {
+      return await sendWithGmailApi(mailOptions);
+    } catch (gmailError) {
+      if (!isRetryableGmailError(gmailError)) {
+        throw gmailError;
+      }
+
+      // Retryable Gmail API errors can fallback to RESEND (if configured) or SMTP.
+      if (canUseResendApi()) {
+        console.warn("[EMAIL] Gmail API retryable failure. Falling back to RESEND API.");
+        try {
+          return await sendWithResendApi(mailOptions);
+        } catch (resendError) {
+          // continue to SMTP fallback below
+          console.warn("[EMAIL] RESEND fallback also failed after Gmail API failure.");
+          if (!smtpFallbackEnabled) throw resendError;
+        }
+      }
+
+      try {
+        return await transporter.sendMail(mailOptions);
+      } catch (smtpPrimaryError) {
+        if (smtpFallbackEnabled && isConnectionError(smtpPrimaryError)) {
+          return fallbackTransporter.sendMail(mailOptions);
+        }
+        throw smtpPrimaryError;
+      }
+    }
+  }
+
   if (emailProvider === "resend" && canUseResendApi()) {
     try {
       return await sendWithResendApi(mailOptions);
@@ -223,7 +424,7 @@ const sendMailWithFailover = async (mailOptions) => {
 };
 
 // ================= VERIFY CONNECTION =================
-if (emailProvider !== "resend") {
+if (emailProvider === "smtp" || emailProvider === "auto") {
   transporter.verify((err) => {
     if (err) {
       const msg = String(err?.message || err || "");
@@ -237,13 +438,22 @@ if (emailProvider !== "resend") {
       console.log(`SMTP READY (${smtpHost}:${smtpPort}, secure=${smtpSecure})`);
     }
   });
-} else {
+} else if (emailProvider === "resend") {
   console.log("[EMAIL] Provider mode: RESEND primary (SMTP fallback enabled).");
+} else if (emailProvider === "gmail_api") {
+  console.log("[EMAIL] Provider mode: GMAIL API primary (HTTPS).");
+} else {
+  console.warn(`[EMAIL] Unknown EMAIL_PROVIDER='${emailProvider}', using auto failover behavior.`);
 }
 
 // ================= GENERIC EMAIL =================
 async function sendEmail(to, subject, html) {
-  const from = String(process.env.SMTP_FROM || smtpUser).trim() || smtpUser;
+  const from =
+    emailProvider === "gmail_api"
+      ? (String(gmailApiFrom || gmailApiUser).trim() || gmailApiUser)
+      : (emailProvider === "resend"
+          ? (String(resendFrom || process.env.SMTP_FROM || smtpUser).trim() || smtpUser)
+          : (String(process.env.SMTP_FROM || smtpUser).trim() || smtpUser));
   const toEmail = normalizeEmail(to);
 
   if (!toEmail) {
