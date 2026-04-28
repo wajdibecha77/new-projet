@@ -1,10 +1,10 @@
-require("dotenv").config({ override: true });
+ï»¿require("dotenv").config({ override: true });
 
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
-const { transporter } = require("./services/email.service");
+const { sendEmail } = require("./services/email.service");
 
 const app = express();
 
@@ -48,20 +48,31 @@ app.get("/getfile/:image", (req, res) => {
 // ================= ?? TEST EMAIL ROUTE =================
 app.get("/test-email", async (req, res) => {
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: process.env.SMTP_USER,
-      subject: "TEST EMAIL",
-      text: "Email works ?",
-    });
+    const to = String(req.query?.to || process.env.SMTP_USER || "").trim();
+    if (!to) {
+      return res.status(400).json({ success: false, message: "Recipient email is required" });
+    }
 
-    res.json({ success: true, message: "Email sent" });
+    const info = await sendEmail(to, "TEST EMAIL", "<p>Email works.</p>");
+
+    res.json({
+      success: true,
+      message: "Email sent",
+      to,
+      provider: info?.provider || "smtp",
+      messageId: info?.messageId || null,
+    });
   } catch (error) {
     console.error("EMAIL ERROR:", error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error?.message || "Email failed",
+      code: error?.code || null,
+      command: error?.command || null,
+      response: error?.response?.data || error?.response || null,
+    });
   }
 });
-
 // ================= GEMINI TEST =================
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -83,7 +94,7 @@ app.get("/test-gemini", async (req, res) => {
           role: "user",
           parts: [
             {
-              text: "câble électrique brûlé près d'une porte"
+              text: "cÃ¢ble Ã©lectrique brÃ»lÃ© prÃ¨s d'une porte"
             }
           ]
         }
@@ -125,3 +136,4 @@ mongoose
     console.error("[DB] MongoDB connection failed ?", error);
     process.exit(1);
   });
+

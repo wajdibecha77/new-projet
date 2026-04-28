@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 
 // ================= HELPERS =================
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
@@ -18,6 +19,14 @@ const smtpHost = cleanEnvValue(process.env.SMTP_HOST || "smtp.gmail.com");
 const smtpPort = Number(cleanEnvValue(process.env.SMTP_PORT || "587")) || 587;
 const smtpSecure = String(process.env.SMTP_SECURE || "false").trim().toLowerCase() === "true";
 const smtpFallbackEnabled = String(process.env.SMTP_FALLBACK_ENABLED || "true").trim().toLowerCase() === "true";
+const resendApiKey = cleanEnvValue(process.env.RESEND_API_KEY);
+const resendFrom = cleanEnvValue(process.env.RESEND_FROM || process.env.SMTP_FROM || smtpUser);
+const resendMaxRetries = Number(cleanEnvValue(process.env.RESEND_MAX_RETRIES || "3")) || 3;
+const resendRetryBaseMs = Number(cleanEnvValue(process.env.RESEND_RETRY_BASE_MS || "700")) || 700;
+const isRailwayRuntime = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+const emailProvider = cleanEnvValue(
+  process.env.EMAIL_PROVIDER || (isRailwayRuntime && resendApiKey ? "resend" : "auto")
+).toLowerCase();
 
 if (!smtpUser) {
   console.warn("[EMAIL] SMTP_USER is missing in .env");
@@ -68,35 +77,149 @@ const isConnectionError = (error) => {
   );
 };
 
+const canUseResendApi = () => !!resendApiKey;
+
+const stripHtml = (html) =>
+  String(html || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableResendError = (error) => {
+  const status = Number(error?.response?.status || 0);
+  const code = String(error?.code || "").toUpperCase();
+  const noResponse = !error?.response;
+  if ([429, 500, 502, 503, 504].includes(status)) return true;
+  if (["ECONNABORTED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND", "EAI_AGAIN"].includes(code)) return true;
+  return noResponse;
+};
+
+const getRetryDelayFromError = (error, attemptIndex) => {
+  const retryAfterHeader = Number(error?.response?.headers?.["retry-after"] || 0);
+  if (retryAfterHeader > 0) {
+    return retryAfterHeader * 1000;
+  }
+  return resendRetryBaseMs * Math.pow(2, attemptIndex);
+};
+
+const sendWithResendApi = async ({ from, to, subject, html }) => {
+  if (!canUseResendApi()) {
+    throw new Error("RESEND_API_KEY is missing");
+  }
+
+  const payload = {
+    from: String(from || resendFrom).trim(),
+    to: [String(to || "").trim()],
+    subject: String(subject || "").trim(),
+    html: String(html || ""),
+    text: stripHtml(html),
+  };
+
+  let lastError;
+  for (let i = 0; i < resendMaxRetries; i += 1) {
+    try {
+      const response = await axios.post(
+        "https://api.resend.com/emails",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        }
+      );
+
+      return {
+        messageId: response?.data?.id,
+        accepted: [to],
+        rejected: [],
+        provider: "resend",
+      };
+    } catch (error) {
+      lastError = error;
+      const retryable = isRetryableResendError(error);
+      const attemptLabel = `${i + 1}/${resendMaxRetries}`;
+      console.error(`[EMAIL][RESEND] attempt ${attemptLabel} failed:`, error?.message || error);
+      if (!retryable || i === resendMaxRetries - 1) break;
+      const delayMs = getRetryDelayFromError(error, i);
+      await sleep(delayMs);
+    }
+  }
+
+  throw lastError;
+};
+
 const sendMailWithFailover = async (mailOptions) => {
+  if (emailProvider === "resend" && canUseResendApi()) {
+    try {
+      return await sendWithResendApi(mailOptions);
+    } catch (resendError) {
+      console.warn("[EMAIL] RESEND primary failed, retrying SMTP fallback.");
+      try {
+        return await transporter.sendMail(mailOptions);
+      } catch (smtpPrimaryError) {
+        if (smtpFallbackEnabled && isConnectionError(smtpPrimaryError)) {
+          return fallbackTransporter.sendMail(mailOptions);
+        }
+        throw smtpPrimaryError;
+      }
+    }
+  }
+
+  // Railway Free/Trial/Hobby often blocks outbound SMTP.
+  // If RESEND_API_KEY is configured and SMTP is unreachable, fallback to HTTPS API.
   try {
     return await transporter.sendMail(mailOptions);
   } catch (error) {
-    if (!smtpFallbackEnabled || !isConnectionError(error)) {
-      throw error;
+    const primaryFailedWithConnectionError = isConnectionError(error);
+
+    if (smtpFallbackEnabled && primaryFailedWithConnectionError) {
+      try {
+        console.warn(
+          `[EMAIL] Primary SMTP failed on ${smtpHost}:${smtpPort} (secure=${smtpSecure}). Retrying with ${smtpHost}:${fallbackPort} (secure=${fallbackSecure}).`
+        );
+        return await fallbackTransporter.sendMail(mailOptions);
+      } catch (fallbackError) {
+        if (canUseResendApi() && isConnectionError(fallbackError)) {
+          console.warn("[EMAIL] SMTP unreachable on Railway. Falling back to RESEND API (HTTPS).");
+          return sendWithResendApi(mailOptions);
+        }
+        throw fallbackError;
+      }
     }
 
-    console.warn(
-      `[EMAIL] Primary SMTP failed on ${smtpHost}:${smtpPort} (secure=${smtpSecure}). Retrying with ${smtpHost}:${fallbackPort} (secure=${fallbackSecure}).`
-    );
-    return fallbackTransporter.sendMail(mailOptions);
+    if (canUseResendApi() && primaryFailedWithConnectionError) {
+      console.warn("[EMAIL] SMTP unreachable on Railway. Falling back to RESEND API (HTTPS).");
+      return sendWithResendApi(mailOptions);
+    }
+
+    throw error;
   }
 };
 
 // ================= VERIFY CONNECTION =================
-transporter.verify((err) => {
-  if (err) {
-    const msg = String(err?.message || err || "");
-    console.error(`SMTP ERROR (${smtpHost}:${smtpPort}, secure=${smtpSecure}):`, err);
-    if (/Invalid login|BadCredentials|Username and Password not accepted/i.test(msg)) {
-      console.error(
-        "SMTP AUTH HELP: Verify SMTP_USER + 16-char Gmail App Password, enable 2-Step Verification, and generate a new App Password if needed."
-      );
+if (emailProvider !== "resend") {
+  transporter.verify((err) => {
+    if (err) {
+      const msg = String(err?.message || err || "");
+      console.error(`SMTP ERROR (${smtpHost}:${smtpPort}, secure=${smtpSecure}):`, err);
+      if (/Invalid login|BadCredentials|Username and Password not accepted/i.test(msg)) {
+        console.error(
+          "SMTP AUTH HELP: Verify SMTP_USER + 16-char Gmail App Password, enable 2-Step Verification, and generate a new App Password if needed."
+        );
+      }
+    } else {
+      console.log(`SMTP READY (${smtpHost}:${smtpPort}, secure=${smtpSecure})`);
     }
-  } else {
-    console.log(`SMTP READY (${smtpHost}:${smtpPort}, secure=${smtpSecure})`);
-  }
-});
+  });
+} else {
+  console.log("[EMAIL] Provider mode: RESEND primary (SMTP fallback enabled).");
+}
 
 // ================= GENERIC EMAIL =================
 async function sendEmail(to, subject, html) {

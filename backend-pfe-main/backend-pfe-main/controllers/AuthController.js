@@ -477,9 +477,16 @@ module.exports = {
         });
       } catch (e) {
         console.error("FULL EMAIL ERROR:", e);
+        const code = String(e?.code || "").toUpperCase();
+        const isSmtpConnectionIssue =
+          ["ETIMEDOUT", "ESOCKET", "ECONNECTION", "ECONNRESET", "EHOSTUNREACH", "ENOTFOUND"].includes(code) ||
+          /timeout|timed out|connect|smtp/i.test(String(e?.message || ""));
+
         return res.status(500).json({
           success: false,
-          message: e?.message || "Erreur envoi email",
+          message: isSmtpConnectionIssue
+            ? "Email service indisponible (SMTP bloqué ou timeout). Configurez RESEND_API_KEY sur Railway ou passez au plan Pro pour SMTP."
+            : (e?.message || "Erreur envoi email"),
           code: e?.code || null,
         });
       }
