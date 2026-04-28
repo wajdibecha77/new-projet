@@ -1,4 +1,11 @@
-import { Component, OnDestroy, OnInit, AfterViewInit } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  HostBinding,
+  HostListener,
+  OnDestroy,
+  OnInit,
+} from "@angular/core";
 import { NavigationEnd, Router } from "@angular/router";
 import { Subject, interval } from "rxjs";
 import { filter, startWith, switchMap, takeUntil } from "rxjs/operators";
@@ -13,12 +20,15 @@ declare var feather: any;
   styleUrls: ["./sidebar.component.scss"],
 })
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
-
   public role = localStorage.getItem("role") || "";
   public notificationsCount = 0;
+  public sidebarItems: any[] = [];
   private destroy$ = new Subject<void>();
 
-  public sidebarItems: any[] = [];
+  @HostBinding("class.open")
+  get isOpen(): boolean {
+    return this.sidebar.isOpen;
+  }
 
   constructor(
     private notificationService: NotificationService,
@@ -27,49 +37,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.buildSidebarItems();
+    this.syncSidebarForViewport();
 
-    /* 🔥 SIDEBAR حسب ROLE */
-    if (this.role === "ADMIN") {
-      this.sidebarItems = [
-        { path: "/dashboard", title: "Dashboard", icon: "grid" },
-        { path: "/users", title: "Users", icon: "users" },
-        { path: "/interventions", title: "Interventions", icon: "tool" },
-
-        // 🔥 NEW FEATURE (Réclamations ADMIN)
-        { path: "/reclamations", title: "Réclamations", icon: "alert-circle" },
-
-        { path: "/services", title: "Services", icon: "inbox" },
-        { path: "/fournisseurs", title: "Fournisseurs", icon: "user" },
-        { path: "/commandes", title: "Commandes", icon: "list" },
-        { path: "/create-user", title: "Create User", icon: "user" },
-        { path: "/profile", title: "User Profile", icon: "settings" },
-        { path: "/notifications", title: "Notifications", icon: "bell" },
-        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
-      ];
-    } else if (this.isTechnicianRole(this.role)) {
-      // 👷 TECHNICIEN
-      this.sidebarItems = [
-        { path: "/dashboard-client", title: "Dashboard", icon: "grid" },
-        { path: "/mes-interventions", title: "Mes interventions", icon: "tool" },
-        { path: "/notifications", title: "Messages", icon: "mail" },
-        { path: "/profile", title: "User Profile", icon: "settings" },
-        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
-      ];
-    } else {
-      // 👤 CLIENT/VISITEUR
-      this.sidebarItems = [
-        { path: "/dashboard-visiteur", title: "Dashboard", icon: "grid" },
-        { path: "/reclamation", title: "Réclamation", icon: "alert-circle" },
-        { path: "/notifications", title: "Messages", icon: "mail" },
-        { path: "/profile", title: "User Profile", icon: "settings" },
-        { path: "/qr-code", title: "QR Code (Demo)", icon: "maximize" },
-      ];
-    }
-
-    /* 🔔 NOTIFICATIONS */
     this.notificationService.notificationsCount$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(count => this.notificationsCount = count);
+      .subscribe((count) => {
+        this.notificationsCount = count;
+      });
 
     interval(30000)
       .pipe(
@@ -78,28 +53,27 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: count => this.notificationsCount = count,
-        error: () => this.notificationsCount = 0,
+        next: (count) => (this.notificationsCount = count),
+        error: () => (this.notificationsCount = 0),
       });
 
-    /* 🔄 ROUTE EVENTS */
     this.router.events
       .pipe(
-        filter(event => event instanceof NavigationEnd),
+        filter((event) => event instanceof NavigationEnd),
         takeUntil(this.destroy$)
       )
       .subscribe((event: NavigationEnd) => {
-
         if (event.urlAfterRedirects === "/notifications") {
           this.notificationsCount = 0;
         }
 
-        this.sidebar.close();
+        if (this.isMobileViewport()) {
+          this.sidebar.close();
+        }
       });
   }
 
-  /* 🔥 ICONS FIX */
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     if (typeof feather !== "undefined") {
       feather.replace();
     }
@@ -110,17 +84,83 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroy$.complete();
   }
 
-  private isTechnicianRole(role: string): boolean {
-    const technicianRoles = ['INFORMATICIEN', 'ELECTRICIEN', 'MECANICIEN', 'PLOMBERIE', 'TECHNICIEN'];
-    return technicianRoles.includes(role?.toUpperCase());
+  closeSidebar(): void {
+    if (this.isMobileViewport()) {
+      this.sidebar.close();
+    }
   }
 
-  closeSidebar() {
-    this.sidebar.close();
+  @HostListener("window:resize")
+  onResize(): void {
+    this.syncSidebarForViewport();
   }
 
-  logout() {
+  logout(): void {
     localStorage.clear();
-    this.router.navigateByUrl("/auth/signin");
+    this.sidebar.close();
+    this.router.navigateByUrl("/login");
+  }
+
+  isMobileViewport(): boolean {
+    return typeof window !== "undefined" && window.innerWidth < 992;
+  }
+
+  private syncSidebarForViewport(): void {
+    if (this.isMobileViewport()) {
+      this.sidebar.close();
+      return;
+    }
+
+    this.sidebar.isOpen = true;
+  }
+
+  private buildSidebarItems(): void {
+    if (this.role === "ADMIN") {
+      this.sidebarItems = [
+        { path: "/dashboard", title: "Dashboard", icon: "grid" },
+        { path: "/users", title: "Users", icon: "users" },
+        { path: "/interventions", title: "Interventions", icon: "tool" },
+        { path: "/reclamations", title: "Reclamations", icon: "alert-circle" },
+        { path: "/services", title: "Services", icon: "inbox" },
+        { path: "/fournisseurs", title: "Fournisseurs", icon: "user" },
+        { path: "/commandes", title: "Commandes", icon: "list" },
+        { path: "/create-user", title: "Create User", icon: "user" },
+        { path: "/profile", title: "User Profile", icon: "settings" },
+        { path: "/notifications", title: "Notifications", icon: "bell" },
+        { path: "/qr-code", title: "QR Code", icon: "maximize" },
+      ];
+      return;
+    }
+
+    if (this.isTechnicianRole(this.role)) {
+      this.sidebarItems = [
+        { path: "/dashboard-client", title: "Dashboard", icon: "grid" },
+        { path: "/mes-interventions", title: "Mes interventions", icon: "tool" },
+        { path: "/notifications", title: "Messages", icon: "mail" },
+        { path: "/profile", title: "User Profile", icon: "settings" },
+        { path: "/qr-code", title: "QR Code", icon: "maximize" },
+      ];
+      return;
+    }
+
+    this.sidebarItems = [
+      { path: "/dashboard-visiteur", title: "Dashboard", icon: "grid" },
+      { path: "/reclamation", title: "Reclamation", icon: "alert-circle" },
+      { path: "/notifications", title: "Messages", icon: "mail" },
+      { path: "/profile", title: "User Profile", icon: "settings" },
+      { path: "/qr-code", title: "QR Code", icon: "maximize" },
+    ];
+  }
+
+  private isTechnicianRole(role: string): boolean {
+    const technicianRoles = [
+      "INFORMATICIEN",
+      "ELECTRICIEN",
+      "MECANICIEN",
+      "PLOMBERIE",
+      "TECHNICIEN",
+    ];
+
+    return technicianRoles.includes(String(role || "").toUpperCase());
   }
 }

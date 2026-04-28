@@ -17,6 +17,7 @@ export class SigninComponent implements OnDestroy {
   errorMessage = "";
   successMessage = "";
   emailSent = false;
+  user: any = {};
   private emailSentTimeout?: ReturnType<typeof setTimeout>;
   private readonly technicianRoles = [
     "INFORMATICIEN",
@@ -29,7 +30,10 @@ export class SigninComponent implements OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    this.user = JSON.parse(localStorage.getItem("user") || "{}");
+    console.log("USER FROM LOCALSTORAGE =", this.user);
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -100,6 +104,20 @@ export class SigninComponent implements OnDestroy {
         this.loading = false;
         console.log("LOGIN RESPONSE:", res);
 
+        // CASE 1: trusted device (or already confirmed) => direct JWT login
+        if (res?.token) {
+          localStorage.setItem("token", res.token);
+          localStorage.setItem("user", JSON.stringify(res?.user || {}));
+          const role = String(res?.user?.role || "").toUpperCase();
+          localStorage.setItem("role", role);
+
+          this.emailSent = false;
+          this.successMessage = "Connexion reussie.";
+          this.goToHome(role);
+          return;
+        }
+
+        // CASE 2: new/unknown device => user must confirm from email link
         if (res?.requiresEmailConfirmation) {
           this.successMessage = "";
           this.errorMessage = "";
@@ -107,6 +125,7 @@ export class SigninComponent implements OnDestroy {
           return;
         }
 
+        // Keep OTP flow untouched for compatibility with older flows.
         const requiresOtp = !!(res?.requiresOtp || res?.challengeRequired);
         if (requiresOtp && ENABLE_OTP_LOGIN) {
           this.authService.clearTrustedDevice(this.email);
@@ -119,19 +138,8 @@ export class SigninComponent implements OnDestroy {
           return;
         }
 
-        if (!res?.token) {
-          this.errorMessage = this.sanitizeLoginMessage(res?.message);
-          return;
-        }
-
-        localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify(res?.user || {}));
-        const role = String(res?.user?.role || "").toUpperCase();
-        localStorage.setItem("role", role);
-
-        this.emailSent = false;
-        this.successMessage = "Connexion reussie.";
-        this.goToHome(role);
+        // CASE 3: server-side validation/auth error
+        this.errorMessage = this.sanitizeLoginMessage(res?.message);
       },
       error: (err) => {
         this.loading = false;
@@ -144,4 +152,3 @@ export class SigninComponent implements OnDestroy {
     });
   }
 }
-

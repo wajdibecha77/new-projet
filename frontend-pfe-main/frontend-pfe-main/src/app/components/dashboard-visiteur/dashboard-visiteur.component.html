@@ -1,3 +1,4 @@
+<div class='dashboard-page'>
 <ng-container *ngIf="isEmployeeDashboard()">
     <section class="employee-dashboard">
         <div class="employee-dashboard-header">
@@ -124,7 +125,10 @@
                                 <tr *ngFor="let inter of displayedInterventions">
                                     <td>
                                         {{ inter?.name || '-' }}
-                                        <span *ngIf="inter?.isAI" class="ai-badge">🤖 AI</span>
+                                        <span *ngIf="inter?.isAI" class="ai-badge">
+                                            <i class="fa fa-android" aria-hidden="true"></i>
+                                            AI
+                                        </span>
                                     </td>
                                     <td>{{ inter?.lieu || '-' }}</td>
                                     <td>{{ formatDate(inter?.delai) }}</td>
@@ -196,203 +200,159 @@
 
 <!-- Dashboard Technicien -->
 <ng-container *ngIf="isTechnicianDashboard() && currentStats">
-    <div class="row">
-        <div class="col-lg-6 col-sm-6">
-            <div class="stats-card-one mb-30">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-10 line-height-1">Interventions</p>
-                        <h3 class="mb-0 fs-25">{{ currentStats.total }}</h3>
-                    </div>
-
-                    <span class="badge badge-cyan fs-12">
-                        <i class="icofont-swoosh-up mr-1"></i>
-                        <span class="fw-600 m-l-5">Total</span>
-                    </span>
-                </div>
-
-                <div class="mt-15">
-                    <div class="d-flex justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <span>{{ currentDashboardLabel }}</span>
+    <section class="technician-dashboard">
+        <div class="row">
+            <div class="col-12">
+                <div class="tech-top-grid" style="gap: 16px; margin-bottom: 16px;">
+                    <article class="tech-card tech-overview-card" style="border-radius: 12px; padding: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-card-head">
+                            <div>
+                                <p class="tech-card-title">Total interventions</p>
+                                <h3 class="tech-card-value">{{ currentStats.total }}</h3>
+                            </div>
+                            <span class="tech-pill">
+                                <i class="icofont-swoosh-up mr-1"></i>
+                                Total
+                            </span>
                         </div>
-                        <span class="fw-600">{{ currentStats.totalbyInter }}%</span>
-                    </div>
 
-                    <div class="progress progress-sm mt-1">
-                        <div
-                            class="progress-bar bg-success"
-                            [style]="'width:' + currentStats.totalbyInter + '%'"
-                        ></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 col-sm-6">
-            <div class="stats-card-one mb-30">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-10 line-height-1">Mes Interventions</p>
-                        <h3 class="mb-0 fs-25">{{ currentStats.totalMe }}</h3>
-                    </div>
-
-                    <span class="badge badge-cyan font-size-12">
-                        <i class="icofont-swoosh-up mr-1"></i>
-                        <span class="fw-600 m-l-5">Affectees</span>
-                    </span>
-                </div>
-
-                <div class="mt-15">
-                    <div class="d-flex justify-content-between">
-                        <div class="d-flex align-items-center">
+                        <div class="tech-progress-meta">
                             <span>{{ currentDashboardLabel }}</span>
+                            <span class="tech-percent">{{ currentStats.totalbyInter }}%</span>
                         </div>
-                        <span class="fw-600">{{ currentStats.totalbyMe }}%</span>
-                    </div>
 
-                    <div class="progress progress-sm mt-1">
-                        <div
-                            class="progress-bar bg-primary"
-                            [style]="'width:' + currentStats.totalbyMe + '%'"
-                        ></div>
+                        <div class="tech-progress-track">
+                            <div
+                                class="tech-progress-fill fill-success"
+                                [style]="'width:' + currentStats.totalbyInter + '%'"
+                            ></div>
+                        </div>
+                    </article>
+
+                    <article class="tech-card tech-overview-card" style="border-radius: 12px; padding: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-card-head">
+                            <div>
+                                <p class="tech-card-title">Mes interventions assignees</p>
+                                <h3 class="tech-card-value">{{ currentStats.totalMe }}</h3>
+                            </div>
+                            <span class="tech-pill">
+                                <i class="icofont-swoosh-up mr-1"></i>
+                                Affectees
+                            </span>
+                        </div>
+
+                        <div class="tech-progress-meta">
+                            <span>{{ currentDashboardLabel }}</span>
+                            <span class="tech-percent">{{ currentStats.totalbyMe }}%</span>
+                        </div>
+
+                        <div class="tech-progress-track">
+                            <div
+                                class="tech-progress-fill fill-primary"
+                                [style]="'width:' + currentStats.totalbyMe + '%'"
+                            ></div>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="tech-stats-grid stats-cards" style="gap: 16px; margin-bottom: 16px;">
+                    <article class="tech-card tech-mini-card" style="padding: 12px 14px; border-radius: 12px; min-height: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-icon-circle icon-en-cours" style="width: 38px; height: 38px; font-size: 16px;">
+                            <i [class]="currentDashboardIcon" aria-hidden="true"></i>
+                        </div>
+                        <p class="tech-mini-title" style="font-size: 14px;">Interventions en cours</p>
+                        <h3 class="tech-mini-value value-en-cours" style="font-size: 24px;">{{ currentStats.totalEnCours }}</h3>
+                    </article>
+
+                    <article class="tech-card tech-mini-card" style="padding: 12px 14px; border-radius: 12px; min-height: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-icon-circle icon-non-affectees" style="width: 38px; height: 38px; font-size: 16px;">
+                            <i class="fa fa-users" aria-hidden="true"></i>
+                        </div>
+                        <p class="tech-mini-title" style="font-size: 14px;">Interventions non affectees</p>
+                        <h3 class="tech-mini-value value-non-affectees" style="font-size: 24px;">{{ currentStats.totalNotAffected }}</h3>
+                    </article>
+
+                    <article class="tech-card tech-mini-card" style="padding: 12px 14px; border-radius: 12px; min-height: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-icon-circle icon-terminees" style="width: 38px; height: 38px; font-size: 16px;">
+                            <i class="fa fa-check-circle" aria-hidden="true"></i>
+                        </div>
+                        <p class="tech-mini-title" style="font-size: 14px;">Interventions terminees</p>
+                        <h3 class="tech-mini-value value-terminees" style="font-size: 24px;">{{ completionRate }}%</h3>
+                    </article>
+
+                    <article class="tech-card tech-mini-card" style="padding: 12px 14px; border-radius: 12px; min-height: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                        <div class="tech-icon-circle icon-manuelles" style="width: 38px; height: 38px; font-size: 16px;">
+                            <i class="fa fa-user" aria-hidden="true"></i>
+                        </div>
+                        <p class="tech-mini-title" style="font-size: 14px;">Interventions manuelles</p>
+                        <h3 class="tech-mini-value value-manuelles" style="font-size: 24px;">{{ manualInterventionsCount }}</h3>
+                    </article>
+                </div>
+
+                <div class="card mb-30 tech-table-card" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                    <div class="card-body">
+                        <div class="card-header mb-4 px-0 d-flex justify-content-between align-items-center tech-table-header">
+                            <div>
+                                <h5 class="card-title mb-1">Liste des interventions</h5>
+                                <p class="text-muted mb-0">
+                                    Vue synthese de vos interventions {{ currentDashboardLabel.toLowerCase() }}.
+                                </p>
+                            </div>
+
+                            <a class="btn btn-primary" routerLink="/mes-interventions">Voir tous</a>
+                        </div>
+
+                        <div class="table-responsive" *ngIf="hasInterventions; else emptyTechnicianState">
+                            <table class="table table-hover text-vertical-middle mb-0 tech-table">
+                                <thead>
+                                    <tr>
+                                        <th>Num</th>
+                                        <th>Type d'intervention</th>
+                                        <th>Delai</th>
+                                        <th>Created by</th>
+                                        <th>Lieu</th>
+                                        <th>Description</th>
+                                        <th>Etat</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr *ngFor="let inter of displayedInterventions; let index = index">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>
+                                            {{ inter?.name || '-' }}
+                                            <span *ngIf="inter?.isAI" class="ai-badge">
+                                                <i class="fa fa-android" aria-hidden="true"></i>
+                                                AI
+                                            </span>
+                                        </td>
+                                        <td>{{ formatDate(inter?.delai) }}</td>
+                                        <td>{{ inter?.createdBy?.name || '-' }}</td>
+                                        <td>{{ inter?.lieu || '-' }}</td>
+                                        <td>{{ inter?.description || '-' }}</td>
+                                        <td>
+                                            <span [class]="getStatusClass(inter?.etat)">
+                                                {{ formatStatus(inter?.etat) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <ng-template #emptyTechnicianState>
+                            <div class="text-center py-5 text-muted">
+                                <i class="fa fa-inbox fs-1 mb-3 d-block"></i>
+                                <h6 class="mb-2">Aucune intervention a afficher</h6>
+                                <p class="mb-0">Vos prochaines interventions apparaitront ici avec leur etat.</p>
+                            </div>
+                        </ng-template>
                     </div>
                 </div>
             </div>
+
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-4 col-sm-6">
-            <div class="stats-card-two mb-30">
-                <div class="media align-items-center justify-content-between">
-                    <div class="ml-0">
-                        <p class="mb-10 line-height-1 fs-16">Interventions en cours</p>
-                        <h3 class="mb-0 fs-25">{{ currentStats.totalEnCours }}</h3>
-                    </div>
-                    <div class="avatar avatar-gold">
-                        <i [class]="currentDashboardIcon" aria-hidden="true"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-sm-6">
-            <div class="stats-card-two mb-30">
-                <div class="media align-items-center justify-content-between">
-                    <div class="ml-0">
-                        <p class="mb-10 line-height-1">Interventions non affectees</p>
-                        <h3 class="mb-0 fs-25">{{ currentStats.totalNotAffected }}</h3>
-                    </div>
-                    <div class="avatar avatar-purple">
-                        <i class="fa fa-spinner" aria-hidden="true"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-sm-12">
-            <div class="stats-card-two mb-30">
-                <div class="media align-items-center justify-content-between">
-                    <div class="ml-0">
-                        <p class="mb-10 line-height-1">Interventions terminees</p>
-                        <h3 class="mb-0 fs-25">{{ completionRate }}%</h3>
-                    </div>
-                    <div class="avatar avatar-green">
-                        <i class="fa fa-check-circle" aria-hidden="true"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-6 col-sm-6">
-            <div class="stats-card-two mb-30">
-                <div class="media align-items-center justify-content-between">
-                    <div class="ml-0">
-                        <p class="mb-10 line-height-1">AI Interventions</p>
-                        <h3 class="mb-0 fs-25">{{ aiInterventionsCount }}</h3>
-                    </div>
-                    <div class="avatar avatar-purple">
-                        <i class="fa fa-android" aria-hidden="true"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 col-sm-6">
-            <div class="stats-card-two mb-30">
-                <div class="media align-items-center justify-content-between">
-                    <div class="ml-0">
-                        <p class="mb-10 line-height-1">Interventions manuelles</p>
-                        <h3 class="mb-0 fs-25">{{ manualInterventionsCount }}</h3>
-                    </div>
-                    <div class="avatar avatar-gold">
-                        <i class="fa fa-user" aria-hidden="true"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-30">
-        <div class="card-body">
-            <div class="card-header mb-4 px-0 d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title mb-1">Liste des interventions</h5>
-                    <p class="text-muted mb-0">
-                        Vue synthese de vos interventions {{ currentDashboardLabel.toLowerCase() }}.
-                    </p>
-                </div>
-
-                <a class="btn btn-primary" routerLink="/mes-interventions">Voir tous</a>
-            </div>
-
-            <div class="table-responsive" *ngIf="hasInterventions; else emptyTechnicianState">
-                <table class="table table-hover text-vertical-middle mb-0">
-                    <thead class="bort-none borpt-0">
-                        <tr>
-                            <th>Num</th>
-                            <th>Type d'intervention</th>
-                            <th>Delai</th>
-                            <th>Created by</th>
-                            <th>Lieu</th>
-                            <th>Description</th>
-                            <th>Etat</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr *ngFor="let inter of displayedInterventions; let index = index">
-                            <td>{{ index + 1 }}</td>
-                            <td>
-                                {{ inter?.name || '-' }}
-                                <span *ngIf="inter?.isAI" class="ai-badge">🤖 AI</span>
-                            </td>
-                            <td>{{ formatDate(inter?.delai) }}</td>
-                            <td>{{ inter?.createdBy?.name || '-' }}</td>
-                            <td>{{ inter?.lieu || '-' }}</td>
-                            <td>{{ inter?.description || '-' }}</td>
-                            <td>
-                                <span [class]="getStatusClass(inter?.etat)">
-                                    {{ formatStatus(inter?.etat) }}
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <ng-template #emptyTechnicianState>
-                <div class="text-center py-5 text-muted">
-                    <i class="fa fa-inbox fs-1 mb-3 d-block"></i>
-                    <h6 class="mb-2">Aucune intervention a afficher</h6>
-                    <p class="mb-0">Vos prochaines interventions apparaitront ici avec leur etat.</p>
-                </div>
-            </ng-template>
-        </div>
-    </div>
+    </section>
 </ng-container>
 
     <!-- ================= HELP GUIDE (LARGE VERSION) ================= -->
@@ -545,3 +505,5 @@
         </div>
     </div>
 
+
+</div>

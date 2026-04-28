@@ -102,6 +102,7 @@ import { CreateInterventionComponent } from "./components/create-intervention/cr
 import { ListingInterventionsComponent } from "./components/listing-interventions/listing-interventions.component";
 import { ListingUsersComponent } from "./components/listing-users/listing-users.component";
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
+import { DashboardHomeComponent } from "./components/dashboard-home/dashboard-home.component";
 import { SettingsComponent } from "./components/settings/settings.component";
 import { OrdersComponent } from "./components/orders/orders.component";
 import { FormsModule } from "@angular/forms";
@@ -132,6 +133,7 @@ import { QRCodeModule } from "angularx-qrcode";
 import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
+import { LandingComponent } from "./pages/landing/landing.component";
 import { AuthInterceptor } from "./auth.interceptor";
 import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
 @NgModule({
@@ -236,6 +238,7 @@ import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.
         ListingInterventionsComponent,
         ListingUsersComponent,
         DashboardComponent,
+        DashboardHomeComponent,
         SettingsComponent,
         OrdersComponent,
         NavbarComponent,
@@ -260,6 +263,7 @@ import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.
         ReclamationsAdminComponent,
         MesDemandesComponent,
         QrCodeComponent,
+        LandingComponent,
         ReclamationPublicComponent,
         SuiviReclamationComponent,
         ConfirmLoginComponent,
@@ -314,4 +318,4 @@ import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.
     ],
     bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

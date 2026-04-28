@@ -60,6 +60,7 @@ export class UserProfileComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreview = reader.result;
+        this.userService.setProfileImage((reader.result as string) || null);
       };
       reader.readAsDataURL(file);
     }
@@ -82,6 +83,7 @@ export class UserProfileComponent implements OnInit {
     this.userService.updateProfile(formData).subscribe(
       (res: any) => {
         this.account = res?.data || this.account;
+        this.imagePreview = null;
         this.userService.setProfileImage(this.account?.image || null);
         this.successMsg = "Profil mis à jour avec succès.";
         this.isSubmitting = false;
@@ -133,3 +135,4 @@ export class UserProfileComponent implements OnInit {
     );
   }
 }
+

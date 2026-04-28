@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
 const ENABLE_OTP_LOGIN = false;
@@ -7,22 +8,35 @@ const ENABLE_OTP_LOGIN = false;
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css'],
+  encapsulation: ViewEncapsulation.Emulated,
 })
 export class LoginComponent implements OnInit {
+
   email = '';
   password = '';
-  private readonly technicianRoles = ['INFORMATICIEN', 'ELECTRICIEN', 'MECANICIEN', 'PLOMBERIE', 'TECHNICIEN'];
+
+  private readonly technicianRoles = [
+    'INFORMATICIEN',
+    'ELECTRICIEN',
+    'MECANICIEN',
+    'PLOMBERIE',
+    'TECHNICIEN'
+  ];
 
   waitingVerification = false;
   challengeId = '';
   otp = '';
+
   messageFR = '';
   errorFR = '';
   loading = false;
   showPassword = false;
+  user: any = {};
 
   constructor(
     private auth: AuthService,
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -31,22 +45,16 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  // ✅ FIXED (no more fake "Connexion refusée")
   private sanitizeLoginMessage(message?: string): string {
-    const text = String(message || '');
-    const looksLikeOtpMessage =
-      /otp|verification|verif|vérif|challenge|code|e-mail/i.test(text);
-
-    if (!ENABLE_OTP_LOGIN && looksLikeOtpMessage) {
-      return 'Connexion refusee.';
-    }
-
-    return text || 'Connexion refusee.';
+    return message || 'Connexion refusée';
   }
 
   ngOnInit(): void {
-    if (!ENABLE_OTP_LOGIN) {
-      return;
-    }
+    this.user = JSON.parse(localStorage.getItem('user') || '{}');
+    console.log("USER FROM LOCALSTORAGE =", this.user);
+
+    if (!ENABLE_OTP_LOGIN) return;
 
     this.route.queryParamMap.subscribe((params) => {
       const waiting = params.get('waiting');
@@ -81,48 +89,78 @@ export class LoginComponent implements OnInit {
     return this.technicianRoles.includes(String(role || '').toUpperCase());
   }
 
+  // 📍 GPS (optional)
+  private getGpsAddress(): Promise<string | null> {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`;
+
+          this.http.get<any>(url).subscribe(
+            (data) => resolve(data?.display_name || null),
+            () => resolve(null)
+          );
+        },
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  }
+
+  // ================= LOGIN =================
   onLogin(): void {
     this.loading = true;
     this.errorFR = '';
     this.messageFR = '';
 
-    this.auth.loginSecure(this.email, this.password).subscribe({
-      next: (res) => {
-        this.loading = false;
+    this.getGpsAddress().then((gpsLocation) => {
+      this.auth.loginSecure(this.email, this.password, gpsLocation || undefined)
+        .subscribe({
+          next: (res: any) => {
+            this.loading = false;
 
-        if (res?.challengeRequired && ENABLE_OTP_LOGIN) {
-          this.auth.clearTrustedDevice(this.email);
-          this.waitingVerification = true;
-          this.challengeId = res.challengeId;
-          this.messageFR =
-            res.message ||
-            "Verification de connexion requise. Un e-mail vous a ete envoye.";
-          return;
-        }
+            // CASE 1: trusted device (or already confirmed) => direct JWT login
+            if (res?.token) {
+              this.auth.markTrustedDevice(this.email);
 
-        if (res?.token) {
-          this.auth.markTrustedDevice(this.email);
-          const role = this.resolveRole(res?.user);
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('user', JSON.stringify(res?.user || {}));
-          localStorage.setItem("role", role);
-          this.goToHome(res?.user);
-          return;
-        }
+              const role = this.resolveRole(res?.user);
 
-        this.errorFR = this.sanitizeLoginMessage(
-          res?.message || 'Reponse inattendue du serveur.'
-        );
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorFR = this.sanitizeLoginMessage(
-          err?.error?.message || 'Erreur lors de la connexion.'
-        );
-      },
+              localStorage.setItem('token', res.token);
+              localStorage.setItem('user', JSON.stringify(res?.user || {}));
+              localStorage.setItem('role', role);
+
+              this.goToHome(res?.user);
+              return;
+            }
+
+            // CASE 2: new/unknown device => email confirmation required
+            if (res?.requiresEmailConfirmation) {
+              this.messageFR = "Verifiez votre email pour confirmer la connexion.";
+              return;
+            }
+
+            // CASE 3: server-side validation/auth error
+            this.errorFR = res?.message || "Connexion refusée";
+          },
+
+          error: (err) => {
+            this.loading = false;
+            this.errorFR =
+              err?.error?.message || "Erreur lors de la connexion.";
+          },
+        });
     });
   }
 
+  // ================= OTP =================
   onVerifyOtp(): void {
     if (!this.challengeId) {
       this.errorFR = "ChallengeId manquant.";
@@ -132,26 +170,32 @@ export class LoginComponent implements OnInit {
     this.loading = true;
     this.errorFR = '';
 
-    this.auth.verifyLoginOtp(this.challengeId, this.otp).subscribe({
-      next: (res) => {
-        this.loading = false;
+    this.auth.verifyLoginOtp(this.challengeId, this.otp)
+      .subscribe({
+        next: (res: any) => {
+          this.loading = false;
 
-        if (res?.token) {
-          this.auth.markTrustedDevice(this.email);
-          const role = this.resolveRole(res?.user);
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('user', JSON.stringify(res?.user || {}));
-          localStorage.setItem("role", role);
-          this.goToHome(res?.user);
-        } else {
-          this.errorFR = "Code incorrect ou expire.";
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.errorFR = err?.error?.message || "Erreur de verification.";
-      },
-    });
+          if (res?.token) {
+            this.auth.markTrustedDevice(this.email);
+
+            const role = this.resolveRole(res?.user);
+
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('user', JSON.stringify(res?.user || {}));
+            localStorage.setItem('role', role);
+
+            this.goToHome(res?.user);
+          } else {
+            this.errorFR = "Code incorrect ou expiré.";
+          }
+        },
+
+        error: (err) => {
+          this.loading = false;
+          this.errorFR =
+            err?.error?.message || "Erreur de verification.";
+        },
+      });
   }
 
   cancelVerification(): void {

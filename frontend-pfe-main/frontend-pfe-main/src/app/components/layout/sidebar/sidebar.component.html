@@ -1,6 +1,6 @@
-<div class="overlay" *ngIf="sidebar.isOpen" (click)="closeSidebar()"></div>
+<div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
 
-<aside class="sidebar-shell" [class.active]="sidebar.isOpen">
+<aside class="sidebar-shell">
   <nav class="sidebar-nav">
     <div class="sidebar-brand">
       <img src="assets/img/Logo.png" alt="TAV Airports" />
@@ -14,6 +14,7 @@
             class="nav-link"
             [routerLink]="item.path"
             routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
             (click)="closeSidebar()"
           >
             <span class="icon-wrapper position-relative">

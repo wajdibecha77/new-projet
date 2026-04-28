@@ -6,14 +6,21 @@ export class AuthGuard implements CanActivate {
   constructor(private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
-    const publicRoutes = ["/reclamation-public"];
+    const publicRoutes = ["/", "", "/login", "/reclamation-public"];
     const currentUrl = (state.url || "").split("?")[0];
+    const token = localStorage.getItem("token");
 
+    // Allow public routes without authentication
     if (publicRoutes.includes(currentUrl)) {
       return true;
     }
 
-    const token = localStorage.getItem("token");
-    return token ? true : this.router.parseUrl("/auth/signin");
+    // Block protected routes if not logged in
+    if (!token) {
+      this.router.navigate(["/login"]);
+      return false;
+    }
+
+    return true;
   }
 }

@@ -1,0 +1,451 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.login-page {
+  min-height: 100vh;
+  background: #edf1f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-size: 14px;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: #1e3c72;
+}
+
+.login-page .login-card {
+  width: min(1120px, 100%);
+  background: #f8fbff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 22px 48px rgba(15, 36, 80, 0.14);
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+}
+
+.login-page .login-visual {
+  position: relative;
+  min-height: 760px;
+  background-image:
+    linear-gradient(140deg, rgba(20, 58, 132, 0.72), rgba(56, 130, 255, 0.5)),
+    url("/assets/img/airport.png");
+  background-size: cover;
+  background-position: center;
+  padding: 48px 36px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.login-page .login-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.2), transparent 43%),
+    radial-gradient(circle at 16% 72%, rgba(66, 206, 255, 0.22), transparent 42%);
+  pointer-events: none;
+}
+
+.login-page .login-visual-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 58, 132, 0.08) 0%, rgba(20, 58, 132, 0.4) 100%);
+}
+
+.login-page .login-visual-content {
+  position: relative;
+  z-index: 1;
+  max-width: 320px;
+}
+
+.login-page .login-visual-content h2 {
+  margin: 0;
+  color: #132c54;
+  font-size: 56px;
+  line-height: 0.96;
+  letter-spacing: -0.4px;
+  font-weight: 700;
+}
+
+.login-page .visual-line {
+  display: inline-block;
+  width: 70px;
+  height: 4px;
+  border-radius: 8px;
+  background: #45c2ff;
+  margin: 16px 0;
+}
+
+.login-page .login-visual-content p {
+  margin: 0;
+  color: rgba(233, 243, 255, 0.96);
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.login-page .login-form-panel {
+  background: #fcfdff;
+  padding: 56px 48px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page .login-form-panel h1 {
+  margin: 0;
+  color: #1e3c72;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.login-page .subtitle {
+  margin: 8px 0 24px;
+  color: #6c7a89;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.login-page form {
+  display: block;
+}
+
+.login-page .field {
+  margin-bottom: 16px;
+}
+
+.login-page .field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #1e3c72;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.login-page .input-wrap {
+  position: relative;
+}
+
+.login-page .icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #98a7c5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.login-page .icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-page input {
+  width: 100%;
+  height: 56px;
+  border-radius: 12px;
+  border: 2px solid #d5dff1;
+  background: #fff;
+  padding: 0 48px;
+  color: #333333;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-page input::placeholder {
+  color: #a6b3ca;
+}
+
+.login-page input:focus {
+  border-color: #2d68db;
+  box-shadow: 0 0 0 4px rgba(45, 104, 219, 0.12);
+}
+
+.login-page .eye-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  color: #97a8c8;
+  cursor: pointer;
+}
+
+.login-page .eye-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-page .eye-btn:hover {
+  background: #edf3ff;
+}
+
+.login-page .meta-row {
+  margin: 8px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.login-page .remember-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c7a89;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.login-page .remember-me input {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 4px;
+  accent-color: #2a66d9;
+}
+
+.login-page .forgot-link {
+  text-decoration: none;
+  color: #2c61cf;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.login-page .forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-page .submit-btn {
+  width: 100%;
+  height: 56px;
+  border: 0;
+  border-radius: 12px;
+  background: #2c61cf;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.login-page .submit-btn:hover {
+  background: #234fae;
+  transform: translateY(-1px);
+}
+
+.login-page .submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-page .feedback {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.login-page .feedback.error {
+  color: #b42318;
+}
+
+.login-page .feedback.info {
+  color: #1b4ea9;
+}
+
+.login-page .security-row {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-page .security-row .line {
+  flex: 1;
+  height: 1px;
+  background: #d7dfef;
+}
+
+.login-page .shield {
+  color: #97a8c7;
+  display: flex;
+}
+
+.login-page .shield svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-page .security-note {
+  margin: 12px 0 16px;
+  text-align: center;
+  color: #6c7a89;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.login-page .signup-note {
+  margin: 0;
+  text-align: center;
+  color: #6c7a89;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.login-page .signup-note a {
+  color: #2c61cf;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-page .signup-note a:hover {
+  text-decoration: underline;
+}
+
+.login-page .otp-card {
+  width: min(560px, 100%);
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(15, 36, 80, 0.14);
+  padding: 28px;
+}
+
+.login-page .otp-card h2 {
+  margin: 0;
+  color: #1e3c72;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.login-page .otp-card p {
+  margin: 8px 0 16px;
+  color: #6c7a89;
+  font-size: 12px;
+}
+
+.login-page .otp-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.login-page .cancel-btn {
+  height: 46px;
+  border: 1px solid #a7b7d5;
+  background: #fff;
+  color: #395b95;
+  border-radius: 10px;
+  padding: 0 18px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 980px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-page .login-card {
+    grid-template-columns: 1fr;
+  }
+
+  .login-page .login-visual {
+    min-height: 290px;
+    padding: 30px 24px;
+  }
+
+  .login-page .login-visual-content h2 {
+    font-size: 32px;
+  }
+
+  .login-page .login-form-panel {
+    padding: 32px 22px;
+  }
+
+  .login-page .login-form-panel h1 {
+    font-size: 30px;
+  }
+
+  .login-page .subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .login-page .meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Conflict-proof typography override for login only */
+.login-page .login-form-panel h1 {
+  font-family: "Inter", "Segoe UI", sans-serif !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #1e3c72 !important;
+  line-height: 1.2 !important;
+}
+
+.login-page .subtitle,
+.login-page p {
+  font-family: "Inter", "Segoe UI", sans-serif !important;
+  color: #6c7a89 !important;
+}
+
+.login-page .subtitle {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+}
+
+.login-page .field label,
+.login-page label {
+  font-family: "Inter", "Segoe UI", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #1e3c72 !important;
+}
+
+.login-page input {
+  font-family: "Inter", "Segoe UI", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #333333 !important;
+}
+
+.login-page .submit-btn,
+.login-page button[type="submit"] {
+  font-family: "Inter", "Segoe UI", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.login-page a,
+.login-page .forgot-link,
+.login-page .signup-note a {
+  color: #2c61cf !important;
+  font-weight: 500 !important;
+}
+
+.login-page .security-note,
+.login-page .signup-note,
+.login-page .feedback {
+  font-size: 12px !important;
+}

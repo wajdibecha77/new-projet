@@ -1,6 +1,6 @@
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
-import { ReclamationsAdminComponent } from './components/reclamations-admin/reclamations-admin.component';
+import { ReclamationsAdminComponent } from "./components/reclamations-admin/reclamations-admin.component";
 import { SignupComponent } from "./template/dashboards/auth/signup/signup.component";
 import { SigninComponent } from "./template/dashboards/auth/signin/signin.component";
 import { ForgotPasswordComponent } from "./template/dashboards/auth/forgot-password/forgot-password.component";
@@ -9,6 +9,7 @@ import { ForgotPasswordResetComponent } from "./template/dashboards/auth/forgot-
 import { LoginVerifyComponent } from "./components/login-verify/login-verify.component";
 
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
+import { DashboardHomeComponent } from "./components/dashboard-home/dashboard-home.component";
 import { DashboardVisiteurComponent } from "./components/dashboard-visiteur/dashboard-visiteur.component";
 import { ListingUsersComponent } from "./components/listing-users/listing-users.component";
 import { ListingInterventionsComponent } from "./components/listing-interventions/listing-interventions.component";
@@ -30,100 +31,19 @@ import { RoleGuard } from "./guards/role.guard";
 import { ReclamationComponent } from "./components/reclamation/reclamation.component";
 import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.component";
 import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
+import { LandingComponent } from "./pages/landing/landing.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
 import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
-
+import { LoginComponent } from "./components/login/login.component";
 
 const routes: Routes = [
- 
-  { path: "", redirectTo: "/auth/signin", pathMatch: "full" },
-  { path: "login", redirectTo: "/auth/signin", pathMatch: "full" },
-  { path: "reclamation", component: ReclamationComponent, canActivate: [AuthGuard] },
-  {
-  path: "reclamations",
-  component: ReclamationsAdminComponent,
-  canActivate: [AuthGuard, RoleGuard],
-  data: { adminsOnly: true }
-},
-
-  {
-    path: "dashboard",
-    component: DashboardComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  {
-    path: "dashboard-visiteur",
-    component: DashboardVisiteurComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { nonAdminOnly: true },
-  },
-  {
-    path: "users",
-    component: ListingUsersComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  {
-    path: "interventions",
-    component: ListingInterventionsComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  {
-    path: "mes-interventions",
-    component: MesInterventionsComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { techniciansOnly: true },
-  },
-  {
-    path: "dashboard-client",
-    component: DashboardVisiteurComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { techniciansOnly: true },
-  },
-  { path: "intervention/:id", component: InterventionDetailsComponent, canActivate: [AuthGuard] },
-  {
-    path: "services",
-    component: ListingServicesComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  {
-    path: "fournisseurs",
-    component: ListingFournisseursComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  { path: "commandes", component: ListingOrdersComponent, canActivate: [AuthGuard] },
-  {
-    path: "create-user",
-    component: CreateUserComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  {
-    path: "create-user/:id",
-    component: CreateUserComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { adminsOnly: true },
-  },
-  { path: "create-intervention", component: CreateInterventionComponent, canActivate: [AuthGuard] },
-  { path: "create-service", component: CreateServiceComponent, canActivate: [AuthGuard] },
-  { path: "create-service/:id", component: CreateServiceComponent, canActivate: [AuthGuard] },
-  { path: "create-fournisseur", component: CreateFournisseurComponent, canActivate: [AuthGuard] },
-  { path: "create-fournisseur/:id", component: CreateFournisseurComponent, canActivate: [AuthGuard] },
-  { path: "create-order", component: CreateOrderComponent, canActivate: [AuthGuard] },
-  { path: "create-order/:id", component: CreateOrderComponent, canActivate: [AuthGuard] },
-  { path: "create-order-intervention/:id", component: CreateOrderInterventionComponent, canActivate: [AuthGuard] },
-  { path: "profile", component: UserProfileComponent, canActivate: [AuthGuard] },
-  { path: "notifications", component: NotificationsComponent, canActivate: [AuthGuard] },
-  { path: "mes-demandes", component: MesDemandesComponent, canActivate: [AuthGuard, RoleGuard], data: { nonAdminOnly: true } },
-  { path: "qr-code", component: QrCodeComponent, canActivate: [AuthGuard] },
+  { path: "", component: LandingComponent, pathMatch: "full" },
+  { path: "login", component: LoginComponent },
+  { path: "admin/dashboard", redirectTo: "/dashboard", pathMatch: "full" },
+  { path: "technicien/dashboard", redirectTo: "/dashboard-client", pathMatch: "full" },
   { path: "reclamation-public", component: ReclamationPublicComponent },
   { path: "suivi-reclamation", component: SuiviReclamationComponent },
-
   {
     path: "auth",
     children: [
@@ -138,8 +58,100 @@ const routes: Routes = [
       { path: "forgot-password/reset", component: ForgotPasswordResetComponent },
     ],
   },
-
-  { path: "**", redirectTo: "/auth/signin" },
+  {
+    path: "",
+    component: DashboardComponent,
+    canActivate: [AuthGuard],
+    children: [
+      { path: "reclamation", component: ReclamationComponent },
+      {
+        path: "reclamations",
+        component: ReclamationsAdminComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "dashboard",
+        component: DashboardHomeComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "dashboard-visiteur",
+        component: DashboardVisiteurComponent,
+        canActivate: [RoleGuard],
+        data: { nonAdminOnly: true },
+      },
+      {
+        path: "users",
+        component: ListingUsersComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "interventions",
+        component: ListingInterventionsComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "mes-interventions",
+        component: MesInterventionsComponent,
+        canActivate: [RoleGuard],
+        data: { techniciansOnly: true },
+      },
+      {
+        path: "dashboard-client",
+        component: DashboardVisiteurComponent,
+        canActivate: [RoleGuard],
+        data: { techniciansOnly: true },
+      },
+      { path: "intervention/:id", component: InterventionDetailsComponent },
+      {
+        path: "services",
+        component: ListingServicesComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "fournisseurs",
+        component: ListingFournisseursComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      { path: "commandes", component: ListingOrdersComponent },
+      {
+        path: "create-user",
+        component: CreateUserComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      {
+        path: "create-user/:id",
+        component: CreateUserComponent,
+        canActivate: [RoleGuard],
+        data: { adminsOnly: true },
+      },
+      { path: "create-intervention", component: CreateInterventionComponent },
+      { path: "create-service", component: CreateServiceComponent },
+      { path: "create-service/:id", component: CreateServiceComponent },
+      { path: "create-fournisseur", component: CreateFournisseurComponent },
+      { path: "create-fournisseur/:id", component: CreateFournisseurComponent },
+      { path: "create-order", component: CreateOrderComponent },
+      { path: "create-order/:id", component: CreateOrderComponent },
+      { path: "create-order-intervention/:id", component: CreateOrderInterventionComponent },
+      { path: "profile", component: UserProfileComponent },
+      { path: "notifications", component: NotificationsComponent },
+      {
+        path: "mes-demandes",
+        component: MesDemandesComponent,
+        canActivate: [RoleGuard],
+        data: { nonAdminOnly: true },
+      },
+      { path: "qr-code", component: QrCodeComponent },
+    ],
+  },
+  { path: "**", redirectTo: "" },
 ];
 
 @NgModule({

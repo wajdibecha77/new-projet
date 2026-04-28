@@ -2,8 +2,12 @@
   <div class="confirm-card">
     <h2>Verification de connexion</h2>
 
-    <p *ngIf="loading" class="info">{{ infoMessage }}</p>
-    <p *ngIf="!loading && infoMessage" class="info">{{ infoMessage }}</p>
+    <div *ngIf="loading" class="loading-box">
+      <div class="spinner"></div>
+      <p class="info">{{ infoMessage }}</p>
+    </div>
+
+    <p *ngIf="!loading && successMessage" class="success">{{ successMessage }}</p>
     <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
 
     <button *ngIf="canUseOtpFallback" class="btn-otp" (click)="goToOtpFallback()">
@@ -11,4 +15,3 @@
     </button>
   </div>
 </div>
-

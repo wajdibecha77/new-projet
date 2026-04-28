@@ -12,7 +12,7 @@
         </button>
 
         <div class="admin-title-wrap">
-          <h2>Bonjour, Admin 👋</h2>
+          <h2>Bonjour, Admin </h2>
           <p>Voici un aperçu général de la gestion des interventions.</p>
         </div>
       </div>
@@ -31,11 +31,16 @@
 
         <div class="avatar-dropdown" (click)="keepMenuOpen($event)">
           <button type="button" class="avatar-wrap avatar-btn" (click)="toggleAvatarMenu($event)">
-            {{ (account?.name || 'AD').slice(0, 2) | uppercase }}
+            <ng-container *ngIf="profileImageUrl; else adminInitials">
+              <img [src]="profileImageUrl" alt="Profile Image" class="avatar-image" />
+            </ng-container>
+            <ng-template #adminInitials>
+              {{ (account?.name || 'AD').slice(0, 2) | uppercase }}
+            </ng-template>
           </button>
 
           <div class="avatar-menu" *ngIf="avatarMenuOpen">
-            <a class="avatar-menu-item" routerLink="/user-profile" (click)="avatarMenuOpen = false">
+            <a class="avatar-menu-item" routerLink="/profile" (click)="avatarMenuOpen = false">
               <i class="fa fa-user-o" aria-hidden="true"></i>
               <span>Profile</span>
             </a>
@@ -60,12 +65,7 @@
         </button>
 
         <a class="navbar-brand d-flex align-items-center m-0" routerLink="/dashboard">
-          <img
-            src="assets/img/Logo.png"
-            alt="Logo"
-            class="large-logo"
-            height="40"
-          />
+          <img src="assets/img/Logo.png" alt="Logo" class="large-logo" height="40" />
         </a>
       </div>
 
@@ -81,41 +81,20 @@
           </li>
 
           <li class="nav-item dropdown profile-nav-item">
-            <a
-              class="nav-link dropdown-toggle d-flex align-items-center"
-              href="#"
-              role="button"
-              data-toggle="dropdown"
-            >
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-toggle="dropdown">
               <div class="menu-profile d-flex align-items-center">
-                <span class="name me-2" *ngIf="account">
-                  {{ account.name }}
-                </span>
-
-                <img
-                  src="assets/img/profile.jpg"
-                  alt="Profile Image"
-                  class="rounded-circle"
-                  width="35"
-                  height="35"
-                />
+                <span class="name me-2" *ngIf="account">{{ account.name }}</span>
+                <img [src]="profileImageUrl || 'assets/img/profile.jpg'" alt="Profile Image" class="rounded-circle" width="35" height="35" />
               </div>
             </a>
 
             <div class="dropdown-menu dropdown-menu-right">
-              <a
-                class="dropdown-item d-flex align-items-center"
-                routerLink="/user-profile"
-                routerLinkActive="active"
-              >
+              <a class="dropdown-item d-flex align-items-center" routerLink="/profile" routerLinkActive="active">
                 <i data-feather="user" class="icon me-2"></i>
                 Profile
               </a>
 
-              <a
-                class="dropdown-item d-flex align-items-center"
-                (click)="logout()"
-              >
+              <a class="dropdown-item d-flex align-items-center" (click)="logout()">
                 <i data-feather="log-out" class="icon me-2"></i>
                 Logout
               </a>

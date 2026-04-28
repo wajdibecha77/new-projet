@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+﻿import { Component, OnInit, OnDestroy, ViewEncapsulation } from "@angular/core";
 import { User } from "src/app/models/user";
 import { InterventionService } from "src/app/services/intervention.service";
 import { UserService } from "src/app/services/user.service";
@@ -8,6 +8,7 @@ import { Router } from "@angular/router";
     selector: "app-dashboard-visiteur",
     templateUrl: "./dashboard-visiteur.component.html",
     styleUrls: ["./dashboard-visiteur.component.scss"],
+    encapsulation: ViewEncapsulation.Emulated,
 })
 export class DashboardVisiteurComponent implements OnInit, OnDestroy {
     private readonly technicianRoles = ["INFORMATICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBERIE", "PLOMBIER", "TECHNICIEN"];
@@ -436,3 +437,5 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
         }
     }
 }
+
+

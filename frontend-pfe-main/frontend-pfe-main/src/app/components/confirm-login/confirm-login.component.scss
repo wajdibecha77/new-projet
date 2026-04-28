@@ -23,6 +23,11 @@ h2 {
 
 .info {
   color: #1f3a8a;
+  margin: 0;
+}
+
+.success {
+  color: #166534;
   margin-bottom: 12px;
 }
 
@@ -40,3 +45,24 @@ h2 {
   cursor: pointer;
 }
 
+.loading-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #1d4ed8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

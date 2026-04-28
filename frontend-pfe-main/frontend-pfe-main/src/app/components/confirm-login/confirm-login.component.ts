@@ -10,7 +10,8 @@ import { AuthService } from "src/app/services/auth.service";
 export class ConfirmLoginComponent implements OnInit {
   loading = true;
   errorMessage = "";
-  infoMessage = "Confirmation de votre connexion en cours...";
+  successMessage = "";
+  infoMessage = "Validation en cours...";
   canUseOtpFallback = false;
   otpEmail = "";
 
@@ -29,42 +30,49 @@ export class ConfirmLoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const token = String(this.route.snapshot.queryParamMap.get("token") || "").trim();
-    if (!token) {
-      this.loading = false;
-      this.errorMessage = "Lien de confirmation invalide.";
-      return;
-    }
-
-    this.authService.confirmLogin(token).subscribe({
-      next: (res: any) => {
+    this.route.queryParams.subscribe((params) => {
+      const token = String(params?.token || "").trim();
+      if (!token) {
         this.loading = false;
-        if (!res?.token) {
-          this.errorMessage = "Reponse invalide du serveur.";
-          return;
-        }
+        this.errorMessage = "Lien de confirmation invalide.";
+        return;
+      }
 
-        localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify(res?.user || {}));
-        const role = String(res?.user?.role || "").toUpperCase();
-        localStorage.setItem("role", role);
+      this.loading = true;
+      this.errorMessage = "";
+      this.successMessage = "";
+      this.canUseOtpFallback = false;
 
-        this.authService.markTrustedDevice(String(res?.user?.email || ""));
-        this.goToHome(role);
-      },
-      error: (err) => {
-        this.loading = false;
-        const apiError = err?.error || {};
-        if (apiError?.requiresOtp) {
-          this.canUseOtpFallback = true;
-          this.otpEmail = String(apiError?.email || "");
-          this.infoMessage = "";
-          this.errorMessage = apiError?.message || "Lien expire. OTP requis.";
-          return;
-        }
+      this.authService.confirmLogin(token).subscribe({
+        next: (res: any) => {
+          this.loading = false;
+          if (!res?.success || !res?.token) {
+            this.errorMessage = "Reponse invalide du serveur.";
+            return;
+          }
 
-        this.errorMessage = apiError?.message || "Echec de confirmation de connexion.";
-      },
+          localStorage.setItem("token", res.token);
+          localStorage.setItem("user", JSON.stringify(res?.user || {}));
+          const role = String(res?.user?.role || "").toUpperCase();
+          localStorage.setItem("role", role);
+
+          this.successMessage = "Connexion confirmee. Redirection...";
+          this.authService.markTrustedDevice(String(res?.user?.email || ""));
+          this.goToHome(role);
+        },
+        error: (err) => {
+          this.loading = false;
+          const apiError = err?.error || {};
+          if (apiError?.requiresOtp) {
+            this.canUseOtpFallback = true;
+            this.otpEmail = String(apiError?.email || "");
+            this.errorMessage = apiError?.message || "Lien expire. OTP requis.";
+            return;
+          }
+
+          this.errorMessage = apiError?.message || "Echec de confirmation de connexion.";
+        },
+      });
     });
   }
 

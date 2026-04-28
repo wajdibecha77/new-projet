@@ -62,19 +62,27 @@ export class AuthService {
     }
   }
 
+  private storeAuthPayloadIfPresent(res: any): void {
+    if (!res?.token) return;
+
+    const user = res?.user || {};
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", String(user?.role || "USER").toUpperCase());
+  }
+
   // ================= AUTH =================
 
   loginSecure(
     email: string,
     password: string,
-    coords?: { lat: number; lng: number; accuracy?: number }
+    gpsLocation?: string
   ): Observable<any> {
 
     return this.http
       .post(`${this.api}/login-secure`, {
         email: this.normalizeEmail(email),
         password,
-        coords,
+        gpsLocation: gpsLocation || undefined,
         deviceId: this.getOrCreateDeviceId(),
         deviceInfo: {
           deviceId: this.getOrCreateDeviceId(),
@@ -82,13 +90,25 @@ export class AuthService {
           trustedDevice: this.isTrustedDeviceLocally(email),
         },
       })
-      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
+      .pipe(
+        tap((res: any) => {
+          console.log("LOGIN RESPONSE =", res);
+          console.log("USER =", res?.user);
+          this.storeTokenIfPresent(res);
+          this.storeAuthPayloadIfPresent(res);
+        })
+      );
   }
 
   confirmLogin(token: string): Observable<any> {
     return this.http
       .post(`${this.api}/confirm-login`, { token })
-      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
+      .pipe(
+        tap((res: any) => {
+          this.storeTokenIfPresent(res);
+          this.storeAuthPayloadIfPresent(res);
+        })
+      );
   }
 
   verifyLoginOtp(challengeId: string, otp: string): Observable<any> {
@@ -97,7 +117,12 @@ export class AuthService {
         challengeId,
         otp,
       })
-      .pipe(tap((res: any) => this.storeTokenIfPresent(res)));
+      .pipe(
+        tap((res: any) => {
+          this.storeTokenIfPresent(res);
+          this.storeAuthPayloadIfPresent(res);
+        })
+      );
   }
 
   // ================= RESET =================
@@ -130,4 +155,3 @@ export class AuthService {
     return this.http.post(`${this.api}/signup`, data);
   }
 }
-

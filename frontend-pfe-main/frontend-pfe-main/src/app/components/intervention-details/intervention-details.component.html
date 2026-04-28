@@ -56,7 +56,7 @@
             <button
                 class="btn btn-danger ml-2 mr-2"
                 *ngIf="
-                    me.role == 'ADMIN' && intervention.etat == 'NON_AFFECTEE'
+                    me?.role == 'ADMIN' && intervention.etat == 'NON_AFFECTEE'
                 "
                 (click)="supprimerIntervention(intervention._id)"
             >
@@ -65,7 +65,7 @@
             <button
                 class="btn btn-primary"
                 data-toggle="modal"
-                *ngIf="me.role == 'ADMIN'"
+                *ngIf="me?.role == 'ADMIN'"
                 [attr.data-target]="'#ModalRes' + intervention._id"
             >
                 Affecter
@@ -105,7 +105,7 @@
                                             affectedUser &&
                                             user._id == affectedUser._id
                                     }"
-                                    *ngIf="intervention.name[0] == user.role[0]"
+                                    *ngIf="intervention.name[0] == (user?.role || '').charAt(0)"
                                     (click)="setAffectedUser(user)"
                                 >
                                     <span class="user-icon">
@@ -284,7 +284,7 @@
                     <td>{{ index + 1 }}</td>
                     <td>{{ user.name }}</td>
                     <td>{{ user.email }}</td>
-                    <td>{{ user.role }}</td>
+                    <td>{{ user?.role }}</td>
                     <td class="text-center">Raison à faire</td>
                 </tr>
             </tbody>

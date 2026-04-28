@@ -227,7 +227,7 @@
                                                             *ngIf="
                                                                 intervention
                                                                     .name[0] ==
-                                                                user.role[0]
+                                                                (user?.role || '').charAt(0)
                                                             "
                                                             (click)="
                                                                 setAffectedUser(

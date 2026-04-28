@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   height: 100vh;
-  width: 260px;
+  width: var(--sidebar-width);
   z-index: 1040;
   display: block;
 }
@@ -87,7 +87,7 @@
 
     i,
     .icon {
-      color: #ffffff;
+      color: #fff;
     }
   }
 
@@ -177,13 +177,12 @@
 
 @media (max-width: 992px) {
   :host {
-    top: 0;
     width: var(--sidebar-mobile-width);
     transform: translateX(-100%);
     transition: transform 0.28s ease;
   }
 
-  :host(.active) {
+  :host.open {
     transform: translateX(0);
   }
 

@@ -1,68 +1,120 @@
-<div class="auth-page">
-  <div class="auth-card">
+﻿<div class="login-page">
+  <div class="login-card" *ngIf="!waitingVerification; else otpBlock">
+    <section class="login-visual" aria-hidden="true">
+      <div class="login-visual-overlay"></div>
+      <div class="login-visual-content">
+        <h2>Plateforme<br />Operations<br />Aeroportuaires</h2>
+        <span class="visual-line"></span>
+        <p>Gestion intelligente des interventions et incidents</p>
+      </div>
+    </section>
 
-    <!-- LEFT -->
-    <div class="left-side">
-      <img src="assets/img/Logo.png" class="logo" />
+    <section class="login-form-panel">
+      <h1>Connexion</h1>
+      <p class="subtitle">Accedez a votre espace securise</p>
 
-      <h2 class="brand-title">
-        Plateforme Opérations Aéroportuaires
-      </h2>
-
-      <p class="brand-desc">
-        Gestion intelligente des interventions et incidents
-      </p>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="right-side">
-
-      <h1 class="title">Connexion</h1>
-      <p class="subtitle">Accédez à votre espace sécurisé</p>
-
-      <form>
-
-        <!-- EMAIL -->
+      <form (ngSubmit)="onLogin()">
         <div class="field">
-          <label>Email</label>
-          <input type="email" placeholder="exemple@email.com" />
+          <label for="email">Email</label>
+          <div class="input-wrap">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                <path d="m4 8 8 6 8-6" stroke="currentColor" stroke-width="1.8"></path>
+              </svg>
+            </span>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="exemple@email.com"
+              required
+              autocomplete="email"
+            />
+          </div>
         </div>
 
-        <!-- PASSWORD -->
         <div class="field">
-          <label>Mot de passe</label>
-          <input type="password" placeholder="**********" />
+          <label for="password">Mot De Passe</label>
+          <div class="input-wrap">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+                <path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8"></path>
+              </svg>
+            </span>
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="***********"
+              required
+              autocomplete="current-password"
+            />
+            <button type="button" class="eye-btn" (click)="togglePasswordVisibility()" aria-label="Afficher ou masquer le mot de passe">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" stroke="currentColor" stroke-width="1.8"></path>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <!-- OPTIONS -->
-        <div class="options">
-          <label>
+        <div class="meta-row">
+          <label class="remember-me">
             <input type="checkbox" />
-            Se souvenir de moi
+            <span>Se Souvenir De Moi</span>
           </label>
-
-          <a href="#">Mot de passe oublié ?</a>
+          <a routerLink="/auth/forgot-password" class="forgot-link">Mot de passe oublie ?</a>
         </div>
 
-        <!-- BUTTON -->
-        <button class="btn-primary">
-          → Se connecter
+        <button type="submit" class="submit-btn" [disabled]="loading">
+          {{ loading ? 'Connexion...' : 'Se connecter' }}
         </button>
 
+        <p class="feedback error" *ngIf="errorFR">{{ errorFR }}</p>
+        <p class="feedback info" *ngIf="messageFR">{{ messageFR }}</p>
       </form>
 
-      <div class="divider"></div>
+      <div class="security-row">
+        <span class="line"></span>
+        <span class="shield" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 3 4.5 6v5.8c0 4.7 3.1 8.9 7.5 10.2 4.4-1.3 7.5-5.5 7.5-10.2V6L12 3Z" stroke="currentColor" stroke-width="1.8"></path>
+          </svg>
+        </span>
+        <span class="line"></span>
+      </div>
 
-      <p class="secure-text">
-        Accès sécurisé réservé au personnel
-      </p>
-
-      <p class="signup-text">
+      <p class="security-note">Acces securise reserve au personnel</p>
+      <p class="signup-note">
         Vous n'avez pas de compte ?
-        <a routerLink="/signup">Créer un compte</a>
+        <a routerLink="/auth/signup">Creer un compte</a>
       </p>
-
-    </div>
-
+    </section>
   </div>
+
+  <ng-template #otpBlock>
+    <div class="otp-card">
+      <h2>Verification OTP</h2>
+      <p>Saisissez le code recu pour terminer la connexion.</p>
+
+      <div class="field">
+        <label for="otp">Code OTP</label>
+        <input id="otp" type="text" name="otp" [(ngModel)]="otp" placeholder="Entrez votre code" />
+      </div>
+
+      <div class="otp-actions">
+        <button type="button" class="submit-btn" (click)="onVerifyOtp()" [disabled]="loading">
+          {{ loading ? 'Verification...' : 'Verifier' }}
+        </button>
+        <button type="button" class="cancel-btn" (click)="cancelVerification()">Annuler</button>
+      </div>
+
+      <p class="feedback error" *ngIf="errorFR">{{ errorFR }}</p>
+      <p class="feedback info" *ngIf="messageFR">{{ messageFR }}</p>
+    </div>
+  </ng-template>
 </div>

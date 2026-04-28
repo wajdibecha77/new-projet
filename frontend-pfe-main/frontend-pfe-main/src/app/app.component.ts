@@ -51,6 +51,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /* 🔥 PUBLIC ROUTES */
   private readonly publicRoutes = [
+    "/",
+    "",
+    "/login",
     "/auth/signin",
     "/auth/signup",
     "/auth/confirm-login",
@@ -124,7 +127,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.syncAuthState();
     this.initProfileImageSync();
     this.syncEmployeeMenuFromRoute();
+    this.syncSidebarForViewport();
     this.initRouterEvents();
+  }
+
+  private isMobileViewport(): boolean {
+    return typeof window !== "undefined" && window.innerWidth <= 992;
+  }
+
+  private syncSidebarForViewport(): void {
+    // Keep sidebar visible by default on desktop layout.
+    if (!this.isMobileViewport()) {
+      this.sidebar.isOpen = true;
+    }
   }
 
   private initProfileImageSync(): void {
@@ -160,7 +175,7 @@ export class AppComponent implements OnInit, OnDestroy {
     localStorage.clear();
     this.userService.setProfileImage(null);
     this.sidebar.close();
-    this.router.navigateByUrl("/auth/signin");
+    this.router.navigateByUrl("/login");
   }
 
   /* 🔥 ROUTER EVENTS */
@@ -189,7 +204,13 @@ export class AppComponent implements OnInit, OnDestroy {
         this.syncAuthState();
         this.syncEmployeeMenuFromRoute();
 
-        this.sidebar.close();
+        // On mobile, close drawer after navigation.
+        // On desktop, keep the sidebar visible.
+        if (this.isMobileViewport()) {
+          this.sidebar.close();
+        } else {
+          this.sidebar.isOpen = true;
+        }
 
         /* 🔥 SECURITY FIX FINAL */
         if (!this.token) {
@@ -197,7 +218,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
           if (!isPublic) {
             console.warn("🔒 Redirect → login (protected route)");
-            this.router.navigateByUrl("/auth/signin");
+            this.router.navigateByUrl("/login");
             return;
           }
         }

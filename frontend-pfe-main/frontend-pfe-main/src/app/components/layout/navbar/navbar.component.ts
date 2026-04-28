@@ -20,6 +20,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     public account: User | null = null;
     public notificationsCount: number = 0;
     public avatarMenuOpen = false;
+    public profileImageUrl: string | null = null;
     private destroy$ = new Subject<void>();
 
     constructor(
@@ -37,9 +38,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
         this.isConnected = true;
 
+        this.profileImageUrl = this.userService.buildProfileImageUrl(
+            this.userService.getProfileImageSnapshot()
+        );
+        this.userService.profileImage$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((image) => {
+                this.profileImageUrl = this.userService.buildProfileImageUrl(image);
+            });
+
         this.userService.getConnectedUser().subscribe({
             next: (res: any) => {
                 this.account = res?.data || null;
+                this.userService.setProfileImage((res?.data as any)?.image || null);
             },
             error: () => {
                 this.account = null;
@@ -81,8 +92,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     logout(): void {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
+        this.userService.setProfileImage(null);
         this.isConnected = false;
-
-        window.location.href = "/auth/signin";
+        this.router.navigateByUrl("/login");
     }
 }

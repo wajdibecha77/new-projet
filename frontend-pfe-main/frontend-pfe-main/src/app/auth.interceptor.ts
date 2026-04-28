@@ -31,7 +31,10 @@ export class AuthInterceptor implements HttpInterceptor {
     const token = localStorage.getItem("token");
     const request = token
       ? req.clone({
-          headers: req.headers.set("x-auth-token", token),
+          setHeaders: {
+            Authorization: `Bearer ${token}`,
+            "x-auth-token": token,
+          },
         })
       : req;
 
@@ -48,7 +51,7 @@ export class AuthInterceptor implements HttpInterceptor {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           localStorage.removeItem("role");
-          this.router.navigate(["/auth/signin"]);
+          this.router.navigate(["/login"]);
         }
         return throwError(error);
       })

@@ -21,5 +21,6 @@ export class QrCodeComponent implements OnInit {
     this.qrCodeUrl = `${origin}/#/reclamation-public`;
 
     console.log("QR URL generated:", this.qrCodeUrl);
+    
   }
 }
