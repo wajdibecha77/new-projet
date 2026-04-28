@@ -32,6 +32,29 @@
           </a>
         </ng-container>
       </div>
+
+      <div class="ai-toggle-card">
+        <div class="ai-toggle-row">
+          <div class="ai-toggle-title-wrap">
+            <span class="ai-icon" aria-hidden="true">🤖</span>
+            <span class="ai-title">Mode IA</span>
+          </div>
+
+          <label class="ai-switch" for="ai-toggle-switch" aria-label="Activer ou désactiver le mode IA">
+            <input
+              id="ai-toggle-switch"
+              type="checkbox"
+              [(ngModel)]="aiEnabled"
+              (ngModelChange)="onAiToggleChange($event)"
+            />
+            <span class="ai-slider"></span>
+          </label>
+        </div>
+
+        <p class="ai-status" [class.enabled]="aiEnabled">
+          {{ aiEnabled ? "IA Activée" : "IA Désactivée" }}
+        </p>
+      </div>
     </div>
 
     <a class="nav-link logout-btn" (click)="logout()">

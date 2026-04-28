@@ -6,9 +6,11 @@ import {
   OnDestroy,
   OnInit,
 } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { NavigationEnd, Router } from "@angular/router";
 import { Subject, interval } from "rxjs";
 import { filter, startWith, switchMap, takeUntil } from "rxjs/operators";
+import { environment } from "src/environments/environment";
 import { NotificationService } from "src/app/services/notification.service";
 import { SidebarService } from "src/app/services/sidebar.service";
 
@@ -22,7 +24,9 @@ declare var feather: any;
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public role = localStorage.getItem("role") || "";
   public notificationsCount = 0;
+  public aiEnabled = false;
   public sidebarItems: any[] = [];
+  private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();
 
   @HostBinding("class.open")
@@ -31,6 +35,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   constructor(
+    private http: HttpClient,
     private notificationService: NotificationService,
     private router: Router,
     public sidebar: SidebarService
@@ -103,6 +108,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth < 992;
+  }
+
+  onAiToggleChange(enabled: boolean): void {
+    const previousValue = !enabled;
+
+    this.http.put(this.aiToggleApiUrl, { enabled }).subscribe({
+      error: () => {
+        this.aiEnabled = previousValue;
+      },
+    });
   }
 
   private syncSidebarForViewport(): void {
