@@ -44,8 +44,9 @@
             <input
               id="ai-toggle-switch"
               type="checkbox"
-              [(ngModel)]="aiEnabled"
+              [ngModel]="aiEnabled"
               (ngModelChange)="onAiToggleChange($event)"
+              [disabled]="aiToggleLoading"
             />
             <span class="ai-slider"></span>
           </label>

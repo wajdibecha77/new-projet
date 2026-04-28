@@ -8,8 +8,8 @@ import {
 } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { NavigationEnd, Router } from "@angular/router";
-import { Subject, interval } from "rxjs";
-import { filter, startWith, switchMap, takeUntil } from "rxjs/operators";
+import { Observable, Subject, interval } from "rxjs";
+import { filter, finalize, map, startWith, switchMap, takeUntil } from "rxjs/operators";
 import { environment } from "src/environments/environment";
 import { NotificationService } from "src/app/services/notification.service";
 import { SidebarService } from "src/app/services/sidebar.service";
@@ -25,6 +25,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public role = localStorage.getItem("role") || "";
   public notificationsCount = 0;
   public aiEnabled = false;
+  public aiToggleLoading = false;
   public sidebarItems: any[] = [];
   private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();
@@ -44,6 +45,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.buildSidebarItems();
     this.syncSidebarForViewport();
+    this.loadAiToggleState(true);
 
     this.notificationService.notificationsCount$
       .pipe(takeUntil(this.destroy$))
@@ -111,13 +113,25 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onAiToggleChange(enabled: boolean): void {
-    const previousValue = !enabled;
+    if (this.aiToggleLoading) {
+      return;
+    }
 
-    this.http.put(this.aiToggleApiUrl, { enabled }).subscribe({
-      error: () => {
-        this.aiEnabled = previousValue;
-      },
-    });
+    const previousValue = this.aiEnabled;
+    this.aiEnabled = enabled;
+    this.aiToggleLoading = true;
+
+    this.http
+      .put(this.aiToggleApiUrl, { enabled })
+      .pipe(finalize(() => (this.aiToggleLoading = false)))
+      .subscribe({
+        next: () => {
+          this.loadAiToggleState(false);
+        },
+        error: () => {
+          this.aiEnabled = previousValue;
+        },
+      });
   }
 
   private syncSidebarForViewport(): void {
@@ -177,5 +191,42 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     ];
 
     return technicianRoles.includes(String(role || "").toUpperCase());
+  }
+
+  private loadAiToggleState(fallbackToFalseOnError: boolean): void {
+    this.aiToggleLoading = true;
+
+    this.fetchAiEnabled()
+      .pipe(finalize(() => (this.aiToggleLoading = false)))
+      .subscribe({
+        next: (enabled) => {
+          this.aiEnabled = enabled;
+        },
+        error: () => {
+          if (fallbackToFalseOnError) {
+            this.aiEnabled = false;
+          }
+        },
+      });
+  }
+
+  private fetchAiEnabled(): Observable<boolean> {
+    return this.http.get<any>(this.aiToggleApiUrl).pipe(
+      map((response) => {
+        if (typeof response === "boolean") {
+          return response;
+        }
+
+        if (response && typeof response.enabled === "boolean") {
+          return response.enabled;
+        }
+
+        if (response && typeof response.data?.enabled === "boolean") {
+          return response.data.enabled;
+        }
+
+        return false;
+      })
+    );
   }
 }
