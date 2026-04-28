@@ -31,6 +31,7 @@ app.use("/interventions", require("./routes/InterventionRouter"));
 app.use("/admins", require("./routes/AdminRouter"));
 app.use("/auth", require("./routes/AuthRouter"));
 app.use("/notifications", require("./routes/NotificationRouter"));
+app.use("/config", require("./routes/ConfigRouter"));
 
 // ================= TEST ROUTES =================
 app.get("/", (req, res) => {
