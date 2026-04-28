@@ -17,6 +17,7 @@ const smtpPass = cleanAppPassword(process.env.SMTP_PASS);
 const smtpHost = cleanEnvValue(process.env.SMTP_HOST || "smtp.gmail.com");
 const smtpPort = Number(cleanEnvValue(process.env.SMTP_PORT || "587")) || 587;
 const smtpSecure = String(process.env.SMTP_SECURE || "false").trim().toLowerCase() === "true";
+const smtpFallbackEnabled = String(process.env.SMTP_FALLBACK_ENABLED || "true").trim().toLowerCase() === "true";
 
 if (!smtpUser) {
   console.warn("[EMAIL] SMTP_USER is missing in .env");
@@ -27,34 +28,73 @@ if (!smtpPass) {
 }
 
 // ================= TRANSPORTER =================
-const transporter = nodemailer.createTransport({
+const createSmtpTransporter = ({ host, port, secure }) =>
+  nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+  });
+
+const transporter = createSmtpTransporter({
   host: smtpHost,
   port: smtpPort,
   secure: smtpSecure,
-  auth: {
-    user: smtpUser,
-    pass: smtpPass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
 });
+
+const fallbackPort = smtpPort === 587 ? 465 : 587;
+const fallbackSecure = fallbackPort === 465;
+const fallbackTransporter = createSmtpTransporter({
+  host: smtpHost,
+  port: fallbackPort,
+  secure: fallbackSecure,
+});
+
+const isConnectionError = (error) => {
+  const code = String(error?.code || "").toUpperCase();
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    ["ETIMEDOUT", "ESOCKET", "ECONNECTION", "ECONNRESET", "EHOSTUNREACH", "ENOTFOUND"].includes(code) ||
+    /timed out|timeout|greeting never received|connection closed|connect/.test(message)
+  );
+};
+
+const sendMailWithFailover = async (mailOptions) => {
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    if (!smtpFallbackEnabled || !isConnectionError(error)) {
+      throw error;
+    }
+
+    console.warn(
+      `[EMAIL] Primary SMTP failed on ${smtpHost}:${smtpPort} (secure=${smtpSecure}). Retrying with ${smtpHost}:${fallbackPort} (secure=${fallbackSecure}).`
+    );
+    return fallbackTransporter.sendMail(mailOptions);
+  }
+};
 
 // ================= VERIFY CONNECTION =================
 transporter.verify((err) => {
   if (err) {
     const msg = String(err?.message || err || "");
-    console.error("SMTP ERROR:", err);
+    console.error(`SMTP ERROR (${smtpHost}:${smtpPort}, secure=${smtpSecure}):`, err);
     if (/Invalid login|BadCredentials|Username and Password not accepted/i.test(msg)) {
       console.error(
         "SMTP AUTH HELP: Verify SMTP_USER + 16-char Gmail App Password, enable 2-Step Verification, and generate a new App Password if needed."
       );
     }
   } else {
-    console.log("SMTP READY");
+    console.log(`SMTP READY (${smtpHost}:${smtpPort}, secure=${smtpSecure})`);
   }
 });
 
@@ -67,7 +107,7 @@ async function sendEmail(to, subject, html) {
     throw new Error("Recipient email is required");
   }
 
-  return transporter.sendMail({
+  return sendMailWithFailover({
     from,
     to: toEmail,
     subject,
