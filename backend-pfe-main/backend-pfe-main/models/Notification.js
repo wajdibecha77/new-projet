@@ -47,6 +47,16 @@ const NotificationSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    commentaire: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    refusType: {
+      type: String,
+      required: false,
+      enum: ["COMPETENCE", "CHARGE", "MATERIEL", "AUTRE"],
+    },
     metadata: {
       interventionType: { type: String, required: false },
       employeeName: { type: String, required: false },

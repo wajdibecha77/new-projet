@@ -15,6 +15,7 @@ route.get("/my", isauth, InterController.myInterventions);
 route.post("/add-intervention", isauth, InterController.addIntervention);
 
 route.put("/update/:id", isauth, InterController.updateIntervention);
+route.put("/:id/refuse", isauth, InterController.refuseIntervention);
 
 route.delete("/delete/:id", isauth, isAdmin, InterController.deleteIntervention);
 

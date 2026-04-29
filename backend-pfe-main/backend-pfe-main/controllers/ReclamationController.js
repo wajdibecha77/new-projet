@@ -1,4 +1,4 @@
-ï»¿const Reclamation = require("../models/Reclamation");
+const Reclamation = require("../models/Reclamation");
 const Notification = require("../models/Notification");
 const Intervention = require("../models/intervention");
 const User = require("../models/User");
@@ -70,7 +70,7 @@ const sendEmail = async (rec) => {
       <p style="font-size:14px;">Nous vous remercions pour votre confiance.</p>
     </div>
     <div style="background:#f8f9fa; padding:15px; text-align:center; font-size:12px; color:#6c757d;">
-      <p style="margin:0;">Â© Service Support Technique - Gestion des Interventions</p>
+      <p style="margin:0;">© Service Support Technique - Gestion des Interventions</p>
       <p style="margin:5px 0 0;">Ceci est un message automatique, merci de ne pas y repondre.</p>
     </div>
   </div>
@@ -196,8 +196,8 @@ exports.addReclamation = async (req, res) => {
         admins.map((admin) =>
           Notification.create({
             userId: admin._id,
-            title: "Nouvelle rÃ©clamation",
-            message: "Nouvelle rÃ©clamation envoyÃ©e",
+            title: "Nouvelle réclamation",
+            message: "Nouvelle réclamation envoyée",
             category: "RECLAMATION",
             type: "RECLAMATION",
             isRead: false,
@@ -213,8 +213,8 @@ exports.addReclamation = async (req, res) => {
     }
 
     return res.status(201).json({
-      msg: "RÃ©clamation envoyÃ©e avec succÃ¨s",
-      message: "RÃ©clamation envoyÃ©e avec succÃ¨s",
+      msg: "Réclamation envoyée avec succès",
+      message: "Réclamation envoyée avec succès",
       code: newRec.code,
       data: newRec,
     });
@@ -258,15 +258,15 @@ exports.addPublicReclamation = async (req, res) => {
       // Keep legacy fields populated so existing admin workflows continue to work.
       lieu: String(req.body.lieu || "RECLAMATION_PUBLIQUE"),
       type: normalizedType,
-      urgence: "NORMAL",
+      urgence: String(req.body.aiUrgence || "NORMAL").toUpperCase(),
       contact: email,
     });
 
     await newRec.save();
 
     return res.status(201).json({
-      msg: "RÃ©clamation envoyÃ©e avec succÃ¨s",
-      message: "RÃ©clamation envoyÃ©e avec succÃ¨s",
+      msg: "Réclamation envoyée avec succès",
+      message: "Réclamation envoyée avec succès",
       code: newRec.code,
       data: newRec,
     });
@@ -335,13 +335,13 @@ exports.acceptReclamation = async (req, res) => {
     const isAdmin = await isAdminUser(req.user?.id);
 
     if (!isAdmin) {
-      return res.status(403).json({ msg: "AccÃ¨s rÃ©servÃ© aux admins" });
+      return res.status(403).json({ msg: "Accès réservé aux admins" });
     }
 
     const rec = await Reclamation.findById(req.params.id);
 
     if (!rec) {
-      return res.status(404).json({ msg: "RÃ©clamation introuvable" });
+      return res.status(404).json({ msg: "Réclamation introuvable" });
     }
 
     console.log("ACCEPT RECLAMATION:", rec);
@@ -366,7 +366,7 @@ exports.acceptReclamation = async (req, res) => {
       }
 
       return res.status(200).json({
-        msg: "RÃ©clamation dÃ©jÃ  acceptÃ©e",
+        msg: "Réclamation déjà acceptée",
         interventionId: existingIntervention._id,
       });
     }
@@ -414,9 +414,9 @@ exports.acceptReclamation = async (req, res) => {
       try {
         await Notification.create({
           userId: rec.createdBy,
-          title: "RÃ©clamation acceptÃ©e",
+          title: "Réclamation acceptée",
           message:
-            "Votre rÃ©clamation a Ã©tÃ© acceptÃ©e. Une intervention a Ã©tÃ© crÃ©Ã©e automatiquement.",
+            "Votre réclamation a été acceptée. Une intervention a été créée automatiquement.",
           category: "RECLAMATION",
           type: "INFO",
           isRead: false,
@@ -443,7 +443,7 @@ exports.acceptReclamation = async (req, res) => {
     }
 
     return res.status(200).json({
-      msg: "RÃ©clamation acceptÃ©e et intervention crÃ©Ã©e avec succÃ¨s",
+      msg: "Réclamation acceptée et intervention créée avec succès",
       interventionId: intervention._id,
       autoAssigned: isAssigned,
       technicianId: technicien?._id || null,
@@ -459,13 +459,13 @@ exports.refuseReclamation = async (req, res) => {
     const isAdmin = await isAdminUser(req.user?.id);
 
     if (!isAdmin) {
-      return res.status(403).json({ msg: "AccÃ¨s rÃ©servÃ© aux admins" });
+      return res.status(403).json({ msg: "Accès réservé aux admins" });
     }
 
     const rec = await Reclamation.findById(req.params.id);
 
     if (!rec) {
-      return res.status(404).json({ msg: "RÃ©clamation introuvable" });
+      return res.status(404).json({ msg: "Réclamation introuvable" });
     }
 
     rec.status = "REFUSEE";
@@ -473,8 +473,8 @@ exports.refuseReclamation = async (req, res) => {
 
     await Notification.create({
       userId: rec.createdBy,
-      title: "RÃ©clamation refusÃ©e",
-      message: "Votre rÃ©clamation a Ã©tÃ© refusÃ©e",
+      title: "Réclamation refusée",
+      message: "Votre réclamation a été refusée",
       category: "RECLAMATION",
       type: "INFO",
       isRead: false,
@@ -484,12 +484,13 @@ exports.refuseReclamation = async (req, res) => {
       },
     });
 
-    return res.json({ msg: "RÃ©clamation refusÃ©e" });
+    return res.json({ msg: "Réclamation refusée" });
   } catch (err) {
     console.error("REFUSE RECLAMATION ERROR =", err);
     return res.status(500).json({ msg: "Erreur serveur" });
   }
 };
+
 
 
 

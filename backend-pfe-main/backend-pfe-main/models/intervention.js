@@ -91,6 +91,16 @@ const Intervention = new mongoose.Schema({
         default: "",
         required: false,
       },
+      refusCommentaire: {
+        type: String,
+        required: false,
+        default: "",
+      },
+      refusType: {
+        type: String,
+        required: false,
+        enum: ["COMPETENCE", "CHARGE", "MATERIEL", "AUTRE"],
+      },
 
       technicianComments: [
         {

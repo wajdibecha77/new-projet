@@ -267,6 +267,8 @@ module.exports = {
           workDetails: inter.workDetails || "",
           technicianComments: inter.technicianComments || [],
           reportedProblems: inter.reportedProblems || [],
+          refusCommentaire: inter.refusCommentaire || "",
+          refusType: inter.refusType || null,
         });
       }
 
@@ -289,6 +291,8 @@ module.exports = {
         workDetails: inter.workDetails || "",
         technicianComments: inter.technicianComments || [],
         reportedProblems: inter.reportedProblems || [],
+        refusCommentaire: inter.refusCommentaire || "",
+        refusType: inter.refusType || null,
       });
     } catch (err) {
       return res.status(400).json({
@@ -488,6 +492,94 @@ module.exports = {
       });
     } catch (err) {
       return res.status(500).json({
+        message: err.message || "error from server",
+      });
+    }
+  },
+
+  refuseIntervention: async (req, res) => {
+    try {
+      const { commentaire, refusType } = req.body || {};
+      const cleanCommentaire = String(commentaire || "").trim();
+
+      if (!cleanCommentaire) {
+        return res.status(400).json({
+          success: false,
+          message: "Le commentaire de refus est obligatoire",
+        });
+      }
+
+      const inter = await Intervention.findById(req.params.id);
+      if (!inter) {
+        return res.status(404).json({
+          success: false,
+          message: "Intervention introuvable",
+        });
+      }
+
+      const me = await User.findById(req.user?.id).select("role name");
+      if (!me) {
+        return res.status(401).json({
+          success: false,
+          message: "Utilisateur introuvable",
+        });
+      }
+
+      const requesterRole = normalizeRole(me.role);
+      if (!isTechnicianRole(requesterRole) || !sameId(inter.affectedBy, req.user.id)) {
+        return res.status(403).json({
+          success: false,
+          message: "Acces refuse",
+        });
+      }
+
+      inter.etat = "REFUSEE";
+      inter.refusCommentaire = cleanCommentaire;
+      if (refusType) {
+        inter.refusType = refusType;
+      }
+      inter.assignedTo = null;
+      inter.affectedBy = null;
+      inter.dateDebut = null;
+      await inter.save();
+
+      const admins = await User.find({ role: "ADMIN" }).select("_id");
+      const technicianName = me?.name || "Technicien";
+      const recipients = [inter.createdBy, ...admins.map((admin) => admin._id)];
+
+      await createNotificationsForUsers(recipients, {
+        category: "INTERVENTION_REFUSED",
+        title: "Refus d'intervention",
+        message: "Le technicien a refuse l'intervention",
+        type: "INTERVENTION_REFUSED",
+        technicienId: req.user.id,
+        technicienName: technicianName,
+        interventionId: inter._id,
+        commentaire: cleanCommentaire,
+        refusType: refusType || undefined,
+        createdAt: new Date(),
+        metadata: {
+          interventionType: inter?.name || "",
+          employeeName: technicianName,
+          concernedTarget: inter?.description || "",
+          interventionDateTime: new Date(),
+          lieu: inter?.lieu || "",
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Intervention refusee avec succes",
+        data: {
+          _id: inter._id,
+          etat: inter.etat,
+          refusCommentaire: inter.refusCommentaire,
+          refusType: inter.refusType || null,
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
         message: err.message || "error from server",
       });
     }
