@@ -108,14 +108,22 @@
                                     <span
                                         *ngIf="intervention.etat == 'TERMINEE'"
                                         class="badge badge_success py-1"
-                                        >Terminée</span
+                                        >Terminee</span
                                     >
                                     <span
                                         *ngIf="
                                             intervention.etat == 'NON_AFFECTEE'
                                         "
                                         class="badge badge_danger py-1"
-                                        >Non affectée</span
+                                        >Non affectee</span
+                                    >
+                                    <span
+                                        *ngIf="
+                                            intervention.etat == 'NON_AFFECTEE' &&
+                                            intervention.refusCommentaire
+                                        "
+                                        class="badge badge_warning py-1 ml-1"
+                                        >Refusee puis remise en attente</span
                                     >
                                 </td>
                                 <td class="text-center">
@@ -289,3 +297,5 @@
         </div>
     </div>
 </div>
+
+

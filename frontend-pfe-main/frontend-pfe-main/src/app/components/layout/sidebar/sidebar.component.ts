@@ -45,7 +45,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.buildSidebarItems();
     this.syncSidebarForViewport();
-    this.loadAiToggleState(true);
+    if (this.isAdmin()) {
+      this.loadAiToggleState(true);
+    }
 
     this.notificationService.notificationsCount$
       .pipe(takeUntil(this.destroy$))
@@ -144,7 +146,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private buildSidebarItems(): void {
-    if (this.role === "ADMIN") {
+    if (this.isAdmin()) {
       this.sidebarItems = [
         { path: "/dashboard", title: "Dashboard", icon: "grid" },
         { path: "/users", title: "Users", icon: "users" },
@@ -179,6 +181,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       { path: "/profile", title: "User Profile", icon: "settings" },
       { path: "/qr-code", title: "QR Code", icon: "maximize" },
     ];
+  }
+
+  isAdmin(): boolean {
+    return String(this.role || "").toUpperCase() === "ADMIN";
   }
 
   private isTechnicianRole(role: string): boolean {

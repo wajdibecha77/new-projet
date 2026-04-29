@@ -33,7 +33,7 @@
         </ng-container>
       </div>
 
-      <div class="ai-toggle-card">
+      <div class="ai-toggle-card" *ngIf="isAdmin()">
         <div class="ai-toggle-row">
           <div class="ai-toggle-title-wrap">
             <span class="ai-icon" aria-hidden="true">✈️</span>
@@ -53,7 +53,7 @@
         </div>
 
         <p class="ai-status" [class.enabled]="aiEnabled">
-          {{ aiEnabled ? "IA ActivÃ©e" : "IA DÃ©sactivÃ©e" }}
+          {{ aiEnabled ? "IA Activé" : "IA Désactivée" }}
         </p>
       </div>
     </div>
@@ -64,4 +64,3 @@
     </a>
   </nav>
 </aside>
-
