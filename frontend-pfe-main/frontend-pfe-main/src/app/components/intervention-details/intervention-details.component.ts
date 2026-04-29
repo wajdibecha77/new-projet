@@ -19,6 +19,9 @@ export class InterventionDetailsComponent implements OnInit {
     public comment = "";
     public problem = "";
     public nextStatus = "";
+    public refusCommentaire = "";
+    public refusType = "AUTRE";
+    public refuseError = "";
     constructor(
         private interventionService: InterventionService,
         private userService: UserService,
@@ -102,13 +105,29 @@ export class InterventionDetailsComponent implements OnInit {
     }
 
     interventionExit(intervention) {
+        const commentaire = String(this.refusCommentaire || "").trim();
+        if (!commentaire) {
+            this.refuseError = "Le commentaire de refus est obligatoire.";
+            return;
+        }
+
+        this.refuseError = "";
         this.interventionService
-            .updateInterventionStatus(intervention._id, {
-                fermer: 1,
+            .refuseIntervention(intervention._id, {
+                commentaire,
+                refusType: this.refusType || "AUTRE",
             })
-            .subscribe((res: any) => {
-                this.appRouter.navigate(["/dashboard-client"]);
-            });
+            .subscribe(
+                () => {
+                    this.refusCommentaire = "";
+                    this.refusType = "AUTRE";
+                    this.loadIntervention();
+                },
+                (err) => {
+                    this.refuseError =
+                        err?.error?.message || "Erreur lors du refus de l'intervention.";
+                }
+            );
     }
 
     supprimerIntervention(id) {

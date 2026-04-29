@@ -47,6 +47,10 @@ export class InterventionService {
     return this.http.put(`${this.base_Url}/interventions/update/${id}`, data);
   }
 
+  public refuseIntervention(id: string, data: { commentaire: string; refusType?: string }) {
+    return this.http.put(`${this.base_Url}/interventions/${id}/refuse`, data);
+  }
+
   public deleteIntervention(id: string) {
     return this.http.delete(`${this.base_Url}/interventions/delete/${id}`);
   }

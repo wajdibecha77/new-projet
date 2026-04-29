@@ -102,6 +102,17 @@
                         </div>
                     </div>
 
+                    <div
+                        class="refus-commentaire-box mt-3"
+                        *ngIf="notification.category === 'INTERVENTION_REFUSED' && notification?.commentaire"
+                    >
+                        <div class="refus-title">Raison du refus :</div>
+                        <div class="refus-text">{{ notification.commentaire }}</div>
+                        <div class="refus-type" *ngIf="notification?.refusType">
+                            Type: {{ notification.refusType }}
+                        </div>
+                    </div>
+
                     <div class="mt-2 text-primary">
                         <span *ngIf="notification.category === 'RECLAMATION'">Voir la réclamation →</span>
                         <span *ngIf="notification.category !== 'RECLAMATION'">Voir les détails →</span>

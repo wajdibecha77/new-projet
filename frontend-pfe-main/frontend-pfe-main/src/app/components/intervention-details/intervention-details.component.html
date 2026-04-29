@@ -15,12 +15,17 @@
                 <span
                     *ngIf="intervention.etat == 'TERMINEE'"
                     class="badge badge_success py-1"
-                    >Terminée</span
+                    >Terminee</span
                 >
                 <span
                     *ngIf="intervention.etat == 'NON_AFFECTEE'"
                     class="badge badge_danger py-1"
-                    >Non affectée</span
+                    >Non affectee</span
+                >
+                <span
+                    *ngIf="intervention.etat == 'REFUSEE'"
+                    class="badge badge_refused py-1"
+                    >Refusee</span
                 >
             </span>
             <span>
@@ -28,9 +33,9 @@
                 >{{ intervention.description }}</span
             >
             <div *ngIf="intervention.isAI" class="ai-info mt-2">
-                <span class="ai-badge">✈️ AI</span>
+                <span class="ai-badge">AI</span>
                 <span>
-                    ✈️ Cette intervention a ete generee automatiquement par l'intelligence artificielle.
+                    Cette intervention a ete generee automatiquement par l'intelligence artificielle.
                 </span>
                 <div class="mt-1">
                     <strong>Type detecte par AI:</strong> {{ intervention.type || intervention.name }}
@@ -147,7 +152,7 @@
     *ngIf="intervention.affectedBy"
 >
     <span>
-        <strong>Affecter à </strong>
+        <strong>Affecter a </strong>
         <span>
             {{ intervention.affectedBy.name }}
         </span>
@@ -168,7 +173,7 @@
         </span>
     </span>
     <span>
-        <strong>Date début : </strong>
+        <strong>Date debut : </strong>
         <span>
             {{ intervention.dateDebut }}
         </span>
@@ -180,7 +185,34 @@
             {{ intervention.dateEnd }}
         </span>
     </span>
-    <div class="d-flex justify-content-end">
+
+    <div
+        class="refuse-box mt-3"
+        *ngIf="
+            me._id == intervention.affectedBy._id &&
+            intervention.etat == 'EN_COURS'
+        "
+    >
+        <label>Raison du refus (obligatoire)</label>
+        <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="refusCommentaire"
+            placeholder="Expliquez pourquoi vous refusez cette intervention..."
+        ></textarea>
+        <div class="mt-2">
+            <label>Type de refus</label>
+            <select class="form-control" [(ngModel)]="refusType">
+                <option value="COMPETENCE">Competence</option>
+                <option value="CHARGE">Charge</option>
+                <option value="MATERIEL">Materiel</option>
+                <option value="AUTRE">Autre</option>
+            </select>
+        </div>
+        <div *ngIf="refuseError" class="refuse-error mt-2">{{ refuseError }}</div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
         <button
             class="btn btn-danger w-10 mr-3"
             *ngIf="
@@ -189,7 +221,7 @@
             "
             (click)="interventionExit(intervention)"
         >
-            Quitter l'intervention
+            Refuser
         </button>
         <button
             class="btn btn-success w-10"
@@ -208,15 +240,15 @@
     class="intervention mb-30"
     *ngIf="intervention.affectedBy && canManageAssignedIntervention()"
 >
-    <h4 class="border-bottom mb-3">Suivi employé</h4>
+    <h4 class="border-bottom mb-3">Suivi employe</h4>
 
     <div class="form-group">
-        <label>Détails du travail réalisé</label>
+        <label>Details du travail realise</label>
         <textarea
             class="form-control"
             rows="3"
             [(ngModel)]="workDetails"
-            placeholder="Décrire le travail effectué..."
+            placeholder="Decrire le travail effectue..."
         ></textarea>
     </div>
 
@@ -231,11 +263,11 @@
     </div>
 
     <div class="form-group">
-        <label>Mettre à jour l'état</label>
+        <label>Mettre a jour l'etat</label>
         <select class="form-control" [(ngModel)]="nextStatus">
             <option value="">-- Aucun changement --</option>
             <option value="EN_COURS">En cours</option>
-            <option value="TERMINEE">Terminée</option>
+            <option value="TERMINEE">Terminee</option>
         </select>
     </div>
 
@@ -254,7 +286,7 @@
 </div>
 
 <div class="intervention mb-30" *ngIf="intervention.reportedProblems?.length">
-    <h4 class="border-bottom mb-3">Problèmes signalés</h4>
+    <h4 class="border-bottom mb-3">Problemes signales</h4>
     <div *ngFor="let p of intervention.reportedProblems" class="mb-2">
         <span>{{ p.description }}</span>
     </div>
@@ -267,7 +299,7 @@
             <thead class="bort-none borpt-0">
                 <tr>
                     <th>Num</th>
-                    <th>Nom et prénom</th>
+                    <th>Nom et prenom</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th class="text-center">Litige</th>
@@ -285,7 +317,7 @@
                     <td>{{ user.name }}</td>
                     <td>{{ user.email }}</td>
                     <td>{{ user?.role }}</td>
-                    <td class="text-center">Raison à faire</td>
+                    <td class="text-center">Raison a faire</td>
                 </tr>
             </tbody>
         </table>

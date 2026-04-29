@@ -8,4 +8,6 @@ export class Intervention {
     public createdBy: string;
     public isAI?: boolean;
     public aiDetails?: string;
+    public refusCommentaire?: string;
+    public refusType?: "COMPETENCE" | "CHARGE" | "MATERIEL" | "AUTRE";
 }

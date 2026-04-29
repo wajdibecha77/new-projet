@@ -21,6 +21,25 @@
     display: inline-block;
 }
 
+.badge_refused {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.refuse-box {
+    background: #fff5f5;
+    border: 1px solid #f5c2c7;
+    border-left: 4px solid #dc3545;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.refuse-error {
+    color: #b42318;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .container-profile {
     margin-top: 50px;
 }
