@@ -269,6 +269,8 @@ module.exports = {
           reportedProblems: inter.reportedProblems || [],
           refusCommentaire: inter.refusCommentaire || "",
           refusType: inter.refusType || null,
+          lastRefusCommentaire: inter.refusCommentaire || "",
+          history: inter.history || [],
         });
       }
 
@@ -293,6 +295,8 @@ module.exports = {
         reportedProblems: inter.reportedProblems || [],
         refusCommentaire: inter.refusCommentaire || "",
         refusType: inter.refusType || null,
+        lastRefusCommentaire: inter.refusCommentaire || "",
+        history: inter.history || [],
       });
     } catch (err) {
       return res.status(400).json({
@@ -533,34 +537,40 @@ module.exports = {
         });
       }
 
-      inter.etat = "REFUSEE";
+      inter.etat = "NON_AFFECTEE";
       inter.refusCommentaire = cleanCommentaire;
       if (refusType) {
         inter.refusType = refusType;
       }
+      if (!Array.isArray(inter.history)) inter.history = [];
+      inter.history.push({
+        action: "REFUS",
+        technicien: me?.name || "Technicien",
+        commentaire: cleanCommentaire,
+        date: new Date(),
+      });
       inter.assignedTo = null;
       inter.affectedBy = null;
       inter.dateDebut = null;
       await inter.save();
 
       const admins = await User.find({ role: "ADMIN" }).select("_id");
-      const technicianName = me?.name || "Technicien";
-      const recipients = [inter.createdBy, ...admins.map((admin) => admin._id)];
+      const recipients = admins.map((admin) => admin._id);
 
       await createNotificationsForUsers(recipients, {
         category: "INTERVENTION_REFUSED",
         title: "Refus d'intervention",
-        message: "Le technicien a refuse l'intervention",
+        message: "Le technicien a refuse l'intervention. Elle est de nouveau disponible.",
         type: "INTERVENTION_REFUSED",
         technicienId: req.user.id,
-        technicienName: technicianName,
+        technicienName: me?.name || "Technicien",
         interventionId: inter._id,
         commentaire: cleanCommentaire,
         refusType: refusType || undefined,
         createdAt: new Date(),
         metadata: {
           interventionType: inter?.name || "",
-          employeeName: technicianName,
+          employeeName: me?.name || "Technicien",
           concernedTarget: inter?.description || "",
           interventionDateTime: new Date(),
           lieu: inter?.lieu || "",
@@ -575,6 +585,8 @@ module.exports = {
           etat: inter.etat,
           refusCommentaire: inter.refusCommentaire,
           refusType: inter.refusType || null,
+          technicien: null,
+          lastRefusCommentaire: inter.refusCommentaire,
         },
       });
     } catch (err) {

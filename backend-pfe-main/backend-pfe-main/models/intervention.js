@@ -101,6 +101,26 @@ const Intervention = new mongoose.Schema({
         required: false,
         enum: ["COMPETENCE", "CHARGE", "MATERIEL", "AUTRE"],
       },
+      history: [
+        {
+          action: {
+            type: String,
+            required: false,
+          },
+          technicien: {
+            type: String,
+            required: false,
+          },
+          commentaire: {
+            type: String,
+            required: false,
+          },
+          date: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
 
       technicianComments: [
         {
