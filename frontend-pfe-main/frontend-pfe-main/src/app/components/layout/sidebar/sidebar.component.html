@@ -1,4 +1,4 @@
-<div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
+﻿<div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
 
 <aside class="sidebar-shell">
   <nav class="sidebar-nav">
@@ -36,11 +36,15 @@
       <div class="ai-toggle-card">
         <div class="ai-toggle-row">
           <div class="ai-toggle-title-wrap">
-            <span class="ai-icon" aria-hidden="true">🤖</span>
+                        <span class="ai-icon" aria-hidden="true">
+              <svg class="ai-icon-plane" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M21.96 11.22a1 1 0 0 0-.8-.72l-6.3-.9-2.83-5.58a1 1 0 0 0-1.78 0L7.42 9.6l-6.3.9a1 1 0 0 0-.56 1.7l4.56 4.34-1.07 6.13a1 1 0 0 0 1.45 1.05L11 21.02l5.5 2.9a1 1 0 0 0 1.45-1.05l-1.07-6.13 4.56-4.34a1 1 0 0 0 .52-1.18Z"/>
+              </svg>
+            </span>
             <span class="ai-title">Mode IA</span>
           </div>
 
-          <label class="ai-switch" for="ai-toggle-switch" aria-label="Activer ou désactiver le mode IA">
+          <label class="ai-switch" for="ai-toggle-switch" aria-label="Activer ou dÃ©sactiver le mode IA">
             <input
               id="ai-toggle-switch"
               type="checkbox"
@@ -53,7 +57,7 @@
         </div>
 
         <p class="ai-status" [class.enabled]="aiEnabled">
-          {{ aiEnabled ? "IA Activée" : "IA Désactivée" }}
+          {{ aiEnabled ? "IA ActivÃ©e" : "IA DÃ©sactivÃ©e" }}
         </p>
       </div>
     </div>
@@ -64,3 +68,4 @@
     </a>
   </nav>
 </aside>
+

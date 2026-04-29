@@ -81,8 +81,27 @@
 }
 
 .ai-icon {
-  font-size: 16px;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-icon-plane {
+  width: 20px;
+  height: 20px;
+  fill: #ffffff;
+  display: block;
+}
+
+.ai-toggle-card:hover .ai-icon {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px -10px rgba(124, 58, 237, 0.9);
 }
 
 .ai-title {
