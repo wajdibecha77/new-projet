@@ -33,6 +33,13 @@
         </ng-container>
       </div>
 
+      <div class="chatbot-shortcut" *ngIf="isAdmin()">
+        <button type="button" class="chatbot-shortcut-btn" (click)="toggleChatbotPanel()">
+          <span class="chatbot-badge">🤖</span>
+          <span>Chatbot IA</span>
+        </button>
+      </div>
+
       <div class="ai-toggle-card" *ngIf="isAdmin()">
         <div class="ai-toggle-row">
           <div class="ai-toggle-title-wrap">
@@ -56,6 +63,7 @@
           {{ aiEnabled ? "IA Activé" : "IA Désactivée" }}
         </p>
       </div>
+
     </div>
 
     <a class="nav-link logout-btn" (click)="logout()">
@@ -64,3 +72,20 @@
     </a>
   </nav>
 </aside>
+
+<div class="chatbot-drawer" *ngIf="isAdmin()" [class.open]="chatbotOpen">
+  <div class="chatbot-drawer-header">
+    <span>🤖 Chatbot IA</span>
+    <button type="button" (click)="toggleChatbotPanel()">×</button>
+  </div>
+  <div class="chatbot-drawer-messages">
+    <div class="chatbot-msg" *ngFor="let msg of chatbotMessages" [class.user]="msg.from === 'user'">
+      {{ msg.text }}
+    </div>
+    <div class="chatbot-msg" *ngIf="chatbotLoading">typing...</div>
+  </div>
+  <div class="chatbot-drawer-input">
+    <input [(ngModel)]="chatbotInput" placeholder="Tapez votre question..." (keydown.enter)="sendChatbotMessage()" />
+    <button type="button" (click)="sendChatbotMessage()" [disabled]="chatbotLoading">➤</button>
+  </div>
+</div>

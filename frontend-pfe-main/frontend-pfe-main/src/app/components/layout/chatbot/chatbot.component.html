@@ -1,0 +1,36 @@
+<div class="chatbot-container" [class.compact]="compact">
+  <button class="chatbot-toggle" type="button" (click)="toggleChat()">
+    <span class="chatbot-icon">??</span>
+    <span class="chatbot-label" *ngIf="!compact">Chatbot IA</span>
+  </button>
+
+  <div class="chatbot-panel" [class.open]="isOpen">
+    <div class="chatbot-header">
+      <span class="bot-avatar">??</span>
+      <span class="bot-title">Chatbot IA</span>
+      <button type="button" class="chatbot-close" (click)="toggleChat()" aria-label="Fermer">×</button>
+    </div>
+
+    <div class="chatbot-messages" #messagesContainer>
+      <div
+        class="bubble"
+        *ngFor="let message of messages"
+        [class.user]="message.from === 'user'"
+        [class.bot]="message.from === 'bot'"
+        [class.typing]="message.typing"
+      >
+        {{ message.text }}
+      </div>
+    </div>
+
+    <div class="chatbot-input-row">
+      <input
+        type="text"
+        [(ngModel)]="input"
+        placeholder="Tapez votre question..."
+        (keydown.enter)="onEnter($event)"
+      />
+      <button type="button" (click)="send()" [disabled]="loading">Envoyer</button>
+    </div>
+  </div>
+</div>

@@ -13,6 +13,7 @@ import { filter, finalize, map, startWith, switchMap, takeUntil } from "rxjs/ope
 import { environment } from "src/environments/environment";
 import { NotificationService } from "src/app/services/notification.service";
 import { SidebarService } from "src/app/services/sidebar.service";
+import { ChatbotService } from "src/app/services/chatbot.service";
 
 declare var feather: any;
 
@@ -27,6 +28,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public aiEnabled = false;
   public aiToggleLoading = false;
   public sidebarItems: any[] = [];
+  public chatbotOpen = false;
+  public chatbotInput = "";
+  public chatbotLoading = false;
+  public chatbotMessages: Array<{ from: "user" | "bot"; text: string }> = [
+    { from: "bot", text: "Bonjour, je peux vous aider a trouver un technicien disponible." },
+  ];
   private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();
 
@@ -39,7 +46,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private http: HttpClient,
     private notificationService: NotificationService,
     private router: Router,
-    public sidebar: SidebarService
+    public sidebar: SidebarService,
+    private chatbotService: ChatbotService
   ) {}
 
   ngOnInit(): void {
@@ -108,6 +116,38 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     localStorage.clear();
     this.sidebar.close();
     this.router.navigateByUrl("/login");
+  }
+
+  toggleChatbotPanel(): void {
+    this.chatbotOpen = !this.chatbotOpen;
+  }
+
+  sendChatbotMessage(): void {
+    const message = String(this.chatbotInput || "").trim();
+    if (!message || this.chatbotLoading) {
+      return;
+    }
+
+    this.chatbotMessages.push({ from: "user", text: message });
+    this.chatbotInput = "";
+    this.chatbotLoading = true;
+
+    this.chatbotService.sendMessage(message).subscribe({
+      next: (response) => {
+        this.chatbotLoading = false;
+        this.chatbotMessages.push({
+          from: "bot",
+          text: String(response?.message || "Aucune reponse du chatbot."),
+        });
+      },
+      error: () => {
+        this.chatbotLoading = false;
+        this.chatbotMessages.push({
+          from: "bot",
+          text: "Erreur serveur chatbot.",
+        });
+      },
+    });
   }
 
   isMobileViewport(): boolean {

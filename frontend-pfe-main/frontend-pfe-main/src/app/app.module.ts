@@ -136,6 +136,7 @@ import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-recla
 import { LandingComponent } from "./pages/landing/landing.component";
 import { AuthInterceptor } from "./auth.interceptor";
 import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
+import { ChatbotComponent } from "./components/layout/chatbot/chatbot.component";
 @NgModule({
     declarations: [
         AppComponent,
@@ -267,6 +268,7 @@ import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.
         ReclamationPublicComponent,
         SuiviReclamationComponent,
         ConfirmLoginComponent,
+        ChatbotComponent,
     ],
     imports: [
         BrowserModule,
