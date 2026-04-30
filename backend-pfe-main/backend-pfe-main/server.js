@@ -32,6 +32,7 @@ app.use("/admins", require("./routes/AdminRouter"));
 app.use("/auth", require("./routes/AuthRouter"));
 app.use("/notifications", require("./routes/NotificationRouter"));
 app.use("/config", require("./routes/ConfigRouter"));
+app.use("/chatbot", require("./routes/ChatbotRouter"));
 
 // ================= TEST ROUTES =================
 app.get("/", (req, res) => {
