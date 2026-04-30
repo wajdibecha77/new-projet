@@ -7,7 +7,7 @@ import { environment } from "src/environments/environment";
   providedIn: "root",
 })
 export class ChatbotService {
-  private readonly apiUrl = `${environment.apiUrl}/chatbot`;
+  private readonly apiUrl = `${environment.apiUrl}/chatbot-ai`;
 
   constructor(private http: HttpClient) {}
 
@@ -24,5 +24,11 @@ export class ChatbotService {
       { message },
       { headers: this.getAuthHeaders() }
     );
+  }
+
+  getHistory(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/chatbot-history`, {
+      headers: this.getAuthHeaders(),
+    });
   }
 }
