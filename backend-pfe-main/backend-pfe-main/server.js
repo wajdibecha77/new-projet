@@ -5,6 +5,8 @@ const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
 const { sendEmail } = require("./services/email.service");
+const isauth = require("./middlewares/isauth");
+const { chatbotHistory } = require("./controllers/ChatbotController");
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use("/auth", require("./routes/AuthRouter"));
 app.use("/notifications", require("./routes/NotificationRouter"));
 app.use("/config", require("./routes/ConfigRouter"));
 app.use("/chatbot", require("./routes/ChatbotRouter"));
+app.use("/chatbot-ai", require("./routes/ChatbotRouter"));
+app.get("/chatbot-history", isauth, chatbotHistory);
 
 // ================= TEST ROUTES =================
 app.get("/", (req, res) => {
