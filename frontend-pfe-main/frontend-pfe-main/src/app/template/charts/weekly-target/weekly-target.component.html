@@ -6,8 +6,17 @@
 
         <div class="weekly-target-layout">
             <div class="weekly-target-chart-wrap">
-                <div id="weekly-target-chart" class="mh-100"></div>
-                <div class="donut-total-caption">
+                <ng-container *ngIf="hasChartData; else emptyStatusState">
+                    <div #weeklyTargetChart id="weekly-target-chart" class="mh-100"></div>
+                </ng-container>
+                <ng-template #emptyStatusState>
+                    <div class="empty-status-state">
+                        <i class="fa fa-pie-chart" aria-hidden="true"></i>
+                        <p class="empty-title">Aucune donnee disponible</p>
+                        <span class="empty-subtitle">Le graphique s'affichera des que des interventions seront creees.</span>
+                    </div>
+                </ng-template>
+                <div class="donut-total-caption" *ngIf="hasChartData">
                     <span class="count">{{ totalMonthCount }}</span>
                     <span class="label">Total</span>
                 </div>

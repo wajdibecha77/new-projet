@@ -1,4 +1,14 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    ElementRef,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    SimpleChanges,
+    ViewChild,
+} from "@angular/core";
 import ApexCharts from "apexcharts";
 
 @Component({
@@ -6,24 +16,33 @@ import ApexCharts from "apexcharts";
     templateUrl: "./weekly-target.component.html",
     styleUrls: ["./weekly-target.component.scss"],
 })
-export class WeeklyTargetComponent implements OnInit, OnChanges, OnDestroy {
+export class WeeklyTargetComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
     @Input() total = 0;
     @Input() totalByMonth = 0;
     @Input() enCours = 0;
     @Input() terminee = 0;
     @Input() nonAffectee = 0;
+    @ViewChild("weeklyTargetChart", { static: false })
+    chartElement?: ElementRef<HTMLDivElement>;
 
     private chart: ApexCharts | null = null;
+    private viewReady = false;
 
     constructor() {}
 
     ngOnInit(): void {
+        // Intentionally empty: chart render starts after view init.
+    }
+
+    ngAfterViewInit(): void {
+        this.viewReady = true;
         this.renderChart();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.total || changes.totalByMonth || changes.enCours || changes.terminee || changes.nonAffectee) {
-            this.renderChart();
+            if (!this.viewReady) return;
+            setTimeout(() => this.renderChart(), 0);
         }
     }
 
@@ -46,6 +65,10 @@ export class WeeklyTargetComponent implements OnInit, OnChanges, OnDestroy {
         return this.monthlyStatuses.reduce((sum, item) => sum + item.count, 0);
     }
 
+    get hasChartData(): boolean {
+        return this.totalMonthCount > 0;
+    }
+
     getStatusPercent(count: number): number {
         const totalMonth = this.totalMonthCount;
         if (!totalMonth) return 0;
@@ -53,11 +76,19 @@ export class WeeklyTargetComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     private renderChart(): void {
-        const target = document.querySelector("#weekly-target-chart");
-        if (!target) return;
+        if (!this.viewReady || !this.chartElement?.nativeElement) return;
 
-        const series = this.monthlyStatuses.map((s) => s.count);
-        const totalMonth = this.totalMonthCount;
+        const target = this.chartElement.nativeElement;
+        const series = this.monthlyStatuses.map((s) => Number(s.count || 0));
+        const totalMonth = series.reduce((sum, value) => sum + value, 0);
+
+        if (!totalMonth) {
+            if (this.chart) {
+                this.chart.destroy();
+                this.chart = null;
+            }
+            return;
+        }
 
         const options = {
             chart: {
