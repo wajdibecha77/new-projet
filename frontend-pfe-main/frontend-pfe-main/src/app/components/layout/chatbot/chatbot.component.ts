@@ -34,6 +34,10 @@ export class ChatbotComponent {
     setTimeout(() => this.scrollToBottom(), 120);
   }
 
+  closeChat(): void {
+    this.isOpen = false;
+  }
+
   send(): void {
     const message = this.input.trim();
     if (!message || this.loading) {

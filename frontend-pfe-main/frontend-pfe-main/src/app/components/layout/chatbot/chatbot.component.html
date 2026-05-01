@@ -1,17 +1,16 @@
-<div class="chatbot-container" [class.compact]="compact">
-  <button class="chatbot-toggle" type="button" (click)="toggleChat()">
-    <span class="chatbot-icon">??</span>
-    <span class="chatbot-label" *ngIf="!compact">Chatbot IA</span>
-  </button>
+<button class="chat-fab" type="button" (click)="toggleChat()" aria-label="Ouvrir chatbot">
+  <span class="chat-fab-icon">IA</span>
+  <span class="chat-fab-label">Chatbot IA</span>
+</button>
 
-  <div class="chatbot-panel" [class.open]="isOpen">
-    <div class="chatbot-header">
-      <span class="bot-avatar">??</span>
-      <span class="bot-title">Chatbot IA</span>
-      <button type="button" class="chatbot-close" (click)="toggleChat()" aria-label="Fermer">×</button>
+<div class="chat-overlay" [class.open]="isOpen" (click)="closeChat()">
+  <div class="chat-modal" (click)="$event.stopPropagation()">
+    <div class="chat-modal-header">
+      <span class="chat-modal-title">Chatbot IA</span>
+      <button type="button" class="chat-modal-close" (click)="closeChat()" aria-label="Fermer">x</button>
     </div>
 
-    <div class="chatbot-messages" #messagesContainer>
+    <div class="chat-modal-body chatbot-messages" #messagesContainer>
       <div
         class="bubble"
         *ngFor="let message of messages"
@@ -23,14 +22,14 @@
       </div>
     </div>
 
-    <div class="chatbot-input-row">
+    <div class="chat-modal-input">
       <input
         type="text"
         [(ngModel)]="input"
         placeholder="Tapez votre question..."
         (keydown.enter)="onEnter($event)"
       />
-      <button type="button" (click)="send()" [disabled]="loading">Envoyer</button>
+      <button type="button" (click)="send()" [disabled]="loading">&gt;</button>
     </div>
   </div>
 </div>
