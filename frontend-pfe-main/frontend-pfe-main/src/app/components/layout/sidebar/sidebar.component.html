@@ -73,19 +73,21 @@
   </nav>
 </aside>
 
-<div class="chatbot-drawer" *ngIf="isAdmin()" [class.open]="chatbotOpen">
-  <div class="chatbot-drawer-header">
-    <span>🤖 Chatbot IA</span>
-    <button type="button" (click)="toggleChatbotPanel()">×</button>
-  </div>
-  <div class="chatbot-drawer-messages">
-    <div class="chatbot-msg" *ngFor="let msg of chatbotMessages" [class.user]="msg.from === 'user'">
-      {{ msg.text }}
+<div class="chatbot-overlay" *ngIf="isAdmin()" [class.open]="chatbotOpen" (click)="chatbotOpen = false">
+  <div class="chatbot-modal" (click)="$event.stopPropagation()">
+    <div class="chatbot-drawer-header">
+      <span>Chatbot IA</span>
+      <button type="button" (click)="toggleChatbotPanel()">×</button>
     </div>
-    <div class="chatbot-msg" *ngIf="chatbotLoading">typing...</div>
-  </div>
-  <div class="chatbot-drawer-input">
-    <input [(ngModel)]="chatbotInput" placeholder="Tapez votre question..." (keydown.enter)="sendChatbotMessage()" />
-    <button type="button" (click)="sendChatbotMessage()" [disabled]="chatbotLoading">➤</button>
+    <div class="chatbot-drawer-messages">
+      <div class="chatbot-msg" *ngFor="let msg of chatbotMessages" [class.user]="msg.from === 'user'">
+        {{ msg.text }}
+      </div>
+      <div class="chatbot-msg" *ngIf="chatbotLoading">typing...</div>
+    </div>
+    <div class="chatbot-drawer-input">
+      <input [(ngModel)]="chatbotInput" placeholder="Tapez votre question..." (keydown.enter)="sendChatbotMessage()" />
+      <button type="button" (click)="sendChatbotMessage()" [disabled]="chatbotLoading">></button>
+    </div>
   </div>
 </div>
