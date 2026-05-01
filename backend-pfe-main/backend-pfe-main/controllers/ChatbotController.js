@@ -3,36 +3,36 @@ const User = require("../models/User");
 const Intervention = require("../models/intervention");
 const ChatMessage = require("../models/ChatMessage");
 
-const SUPPORTED_TYPES = ["ELECTRIQUE", "PLOMBERIE", "MECANIQUE", null];
 const SUPPORTED_INTENTS = [
-  "find_technicien",
-  "free_technicien",
-  "best_technicien",
-  "count_interventions",
-  "least_working_technicien",
-  "most_performant_technicien",
+  "best",
+  "available",
+  "list",
+  "count",
+  "count_mine",
+  "by_status",
+  "by_type",
+  "overdue",
+  "least_loaded",
+  "most_loaded",
+  "summary",
+  "clarify",
 ];
-const TECHNICIAN_ROLES = ["TECHNICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBIER", "PLOMBERIE"];
-const conversationMemory = new Map();
+
+const SUPPORTED_TYPES = ["ELECTRIQUE", "PLOMBERIE", "MECANIQUE", "INFORMATIQUE", "AUTRE", null];
+const TECHNICIAN_ROLES = ["TECHNICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBIER", "PLOMBERIE", "INFORMATICIEN"];
 
 const TYPE_TO_ROLES = {
   ELECTRIQUE: ["ELECTRICIEN", "TECHNICIEN"],
   PLOMBERIE: ["PLOMBIER", "PLOMBERIE", "TECHNICIEN"],
   MECANIQUE: ["MECANICIEN", "TECHNICIEN"],
+  INFORMATIQUE: ["INFORMATICIEN", "TECHNICIEN"],
+  AUTRE: ["TECHNICIEN"],
 };
 
-const normalizeText = (value) =>
-  String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
+const conversationMemory = new Map();
 
 const getModel = () => {
-  if (!process.env.GEMINI_API_KEY) {
-    return null;
-  }
-
+  if (!process.env.GEMINI_API_KEY) return null;
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 };
@@ -53,7 +53,6 @@ const safeJsonParse = (text) => {
     const first = cleaned.indexOf("{");
     const last = cleaned.lastIndexOf("}");
     if (first === -1 || last === -1 || last <= first) return null;
-
     try {
       return JSON.parse(cleaned.slice(first, last + 1));
     } catch (secondError) {
@@ -62,91 +61,62 @@ const safeJsonParse = (text) => {
   }
 };
 
-const detectTypeHeuristic = (message) => {
-  const text = normalizeText(message);
-  const electricKeywords = ["elect", "electric", "cable", "courant", "electrique"];
-  const plomberieKeywords = ["plomb", "fuite", "robinet", "eau"];
-  const mecaniqueKeywords = ["mecan", "moteur", "machine"];
-
-  if (electricKeywords.some((k) => text.includes(normalizeText(k)))) return "ELECTRIQUE";
-  if (plomberieKeywords.some((k) => text.includes(normalizeText(k)))) return "PLOMBERIE";
-  if (mecaniqueKeywords.some((k) => text.includes(normalizeText(k)))) return "MECANIQUE";
-  return null;
+const normalizeIntent = (value) => {
+  const intent = String(value || "").trim().toLowerCase();
+  return SUPPORTED_INTENTS.includes(intent) ? intent : "clarify";
 };
 
-const detectIntentHeuristic = (message) => {
-  const text = normalizeText(message);
-
-  if (
-    text.includes("combien") ||
-    text.includes("nombre") ||
-    text.includes("interventions")
-  ) {
-    return "count_interventions";
-  }
-
-  if (
-    text.includes("0 intervention") ||
-    text.includes("zero intervention") ||
-    text.includes("disponible") ||
-    text.includes("free")
-  ) {
-    return "free_technicien";
-  }
-
-  if (text.includes("travaille le moins") || text.includes("moins")) {
-    return "least_working_technicien";
-  }
-
-  if (text.includes("plus performant") || text.includes("meilleur") || text.includes("best")) {
-    return "best_technicien";
-  }
-
-  if (text.includes("technicien") || text.includes("technician")) {
-    return "find_technicien";
-  }
-
-  return "find_technicien";
+const normalizeType = (value) => {
+  if (value === null) return null;
+  const t = String(value || "").trim().toUpperCase();
+  return SUPPORTED_TYPES.includes(t) ? t : null;
 };
 
-const analyzeIntent = async (model, message) => {
-  const prompt = `
-Analyse la question suivante (francais, arabe standard, arabe dialectal tunisien/algerien/marocain) et retourne uniquement un JSON valide.
+const analyzeIntentWithGemini = async (model, message) => {
+  if (!model) {
+    return { intent: "clarify", type: null, reason: "GEMINI_UNAVAILABLE" };
+  }
 
-Question: "${message}"
+  const analysisPrompt = `
+Analyse cette question et retourne JSON uniquement.
+Question utilisateur: "${message}"
 
-Format STRICT:
+Format strict:
 {
-  "intent": "find_technicien | free_technicien | best_technicien | count_interventions | least_working_technicien | most_performant_technicien",
-  "type": "ELECTRIQUE | PLOMBERIE | MECANIQUE | null"
+  "intent": "best | available | list | count | count_mine | by_status | by_type | overdue | least_loaded | most_loaded | summary | clarify",
+  "type": "mecanique | plomberie | electrique | informatique | autre | null"
 }
+
+Regles:
+- best: meilleur / plus performant
+- available: technicien disponible / zero intervention en cours
+- list: liste des techniciens
+- count: total des interventions
+- count_mine: mes interventions
+- by_status: stats par etat
+- by_type: stats par type
+- overdue: interventions en retard (delai depasse et pas terminee)
+- least_loaded: technicien qui travaille le moins
+- most_loaded: technicien le plus charge
+- summary: resume global du systeme
+- Si ambigu ou hors perimetre: clarify
+- JSON uniquement, sans texte additionnel.
 `;
 
-  if (!model) {
-    return {
-      intent: detectIntentHeuristic(message),
-      type: detectTypeHeuristic(message),
-      source: "fallback",
-    };
-  }
-
   try {
-    const analysis = await model.generateContent(prompt);
+    const analysis = await model.generateContent(analysisPrompt);
     const resultText = analysis?.response?.text?.() || "";
-    const parsed = safeJsonParse(resultText) || {};
+    const parsed = safeJsonParse(resultText);
 
-    const intent = SUPPORTED_INTENTS.includes(parsed.intent)
-      ? parsed.intent
-      : detectIntentHeuristic(message);
-    const type = SUPPORTED_TYPES.includes(parsed.type) ? parsed.type : detectTypeHeuristic(message);
+    if (!parsed) return { intent: "clarify", type: null, reason: "PARSE_ERROR" };
 
-    return { intent, type, source: "gemini" };
+    const intent = normalizeIntent(parsed.intent);
+    const rawType = parsed.type === null ? null : parsed.type;
+    const type = normalizeType(rawType ? String(rawType).toUpperCase() : null);
+
+    return { intent, type, reason: "OK" };
   } catch (error) {
-    return {
-      intent: detectIntentHeuristic(message),
-      type: detectTypeHeuristic(message),
-      source: "fallback",
-    };
+    return { intent: "clarify", type: null, reason: "MODEL_ERROR" };
   }
 };
 
@@ -185,25 +155,15 @@ const getStatsByTechnician = async (technicianIds) => {
   return map;
 };
 
-const buildBackendData = async (intent, type, userId) => {
-  if (intent === "count_interventions") {
-    const mine = userId
-      ? await Intervention.countDocuments({
-          $or: [{ createdBy: userId }, { assignedTo: userId }],
-        })
-      : 0;
-    const total = await Intervention.countDocuments();
-    return { intent, type, mine, total };
-  }
+const getEnrichedTechnicians = async (type) => {
+  const technicians = await getTechniciansByType(type);
+  if (!technicians.length) return [];
 
-  const techs = await getTechniciansByType(type);
-  if (!techs.length) return { intent, type, techs: [], picked: null };
-
-  const stats = await getStatsByTechnician(techs.map((t) => t._id));
-  const enriched = techs.map((tech) => {
-    const s = stats.get(String(tech._id)) || { total: 0, done: 0, refused: 0, ongoing: 0, score: 0 };
+  const statsMap = await getStatsByTechnician(technicians.map((t) => t._id));
+  return technicians.map((tech) => {
+    const s = statsMap.get(String(tech._id)) || { total: 0, done: 0, refused: 0, ongoing: 0, score: 0 };
     return {
-      id: tech._id,
+      id: String(tech._id),
       name: tech.name,
       role: tech.role,
       total: s.total,
@@ -213,82 +173,127 @@ const buildBackendData = async (intent, type, userId) => {
       score: s.score,
     };
   });
-
-  if (intent === "free_technicien") {
-    const freeTechs = enriched.filter((t) => t.ongoing === 0);
-    return { intent, type, techs: enriched, freeTechs, picked: freeTechs[0] || null };
-  }
-
-  if (intent === "least_working_technicien") {
-    const sorted = [...enriched].sort((a, b) => a.ongoing - b.ongoing || a.total - b.total || a.name.localeCompare(b.name));
-    return { intent, type, techs: enriched, picked: sorted[0] || null };
-  }
-
-  if (intent === "best_technicien" || intent === "most_performant_technicien") {
-    const sorted = [...enriched].sort((a, b) => b.score - a.score || b.done - a.done || a.ongoing - b.ongoing);
-    return { intent, type, techs: enriched, picked: sorted[0] || null };
-  }
-
-  const byAvailability = [...enriched].sort((a, b) => a.ongoing - b.ongoing || b.score - a.score);
-  return { intent: "find_technicien", type, techs: enriched, picked: byAvailability[0] || null };
 };
 
-const buildFallbackResponse = (backendData) => {
-  const { intent, picked, freeTechs, mine, total, type } = backendData;
-
-  if (intent === "count_interventions") {
-    return `Vous avez ${mine} intervention(s) liee(s) a votre compte. Total systeme: ${total}.`;
+const executeBusinessLogic = async ({ intent, type, userId }) => {
+  if (intent === "clarify") {
+    return {
+      intent,
+      type,
+      needsClarification: true,
+      clarification: "Pouvez-vous preciser votre demande ? Exemple: meilleur technicien electrique, liste plomberie, interventions en retard.",
+    };
   }
 
-  if (!backendData.techs || backendData.techs.length === 0) {
-    return `Aucun technicien${type ? ` pour ${type.toLowerCase()}` : ""} n'a ete trouve.`;
-  }
-
-  if (intent === "free_technicien") {
-    if (!freeTechs || freeTechs.length === 0) {
-      return "Aucun technicien avec 0 intervention en cours actuellement.";
+  switch (intent) {
+    case "count": {
+      const totalInterventions = await Intervention.countDocuments();
+      return { intent, type, totalInterventions };
     }
-    return `Technicien(s) disponible(s): ${freeTechs.map((t) => t.name).join(", ")}.`;
-  }
 
-  if (!picked) {
-    return "Je n'ai pas pu determiner un technicien avec certitude.";
-  }
+    case "count_mine": {
+      const mine = userId
+        ? await Intervention.countDocuments({
+            $or: [{ createdBy: userId }, { assignedTo: userId }],
+          })
+        : 0;
+      return { intent, type, mine };
+    }
 
-  if (intent === "least_working_technicien") {
-    return `${picked.name} travaille actuellement le moins (${picked.ongoing} intervention(s) en cours).`;
-  }
+    case "by_status": {
+      const byStatus = await Intervention.aggregate([
+        { $group: { _id: "$etat", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      return { intent, type, byStatus };
+    }
 
-  if (intent === "best_technicien" || intent === "most_performant_technicien") {
-    return `${picked.name} est le plus performant selon le score (terminees - 2 x refusees) = ${picked.score}.`;
-  }
+    case "by_type": {
+      const byType = await Intervention.aggregate([
+        { $group: { _id: "$type", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      return { intent, type, byType };
+    }
 
-  return `${picked.name} semble le plus disponible (${picked.ongoing} intervention(s) en cours).`;
+    case "overdue": {
+      const now = new Date();
+      const overdueCount = await Intervention.countDocuments({
+        delai: { $lt: now },
+        etat: { $ne: "TERMINEE" },
+      });
+      const samples = await Intervention.find({
+        delai: { $lt: now },
+        etat: { $ne: "TERMINEE" },
+      })
+        .sort({ delai: 1 })
+        .limit(5)
+        .select("name type etat delai");
+
+      return { intent, type, overdueCount, samples };
+    }
+
+    case "summary": {
+      const totalInterventions = await Intervention.countDocuments();
+      const overdueCount = await Intervention.countDocuments({
+        delai: { $lt: new Date() },
+        etat: { $ne: "TERMINEE" },
+      });
+      const byStatus = await Intervention.aggregate([
+        { $group: { _id: "$etat", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      const byType = await Intervention.aggregate([
+        { $group: { _id: "$type", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      return { intent, type, totalInterventions, overdueCount, byStatus, byType };
+    }
+
+    case "list":
+    case "available":
+    case "best":
+    case "least_loaded":
+    case "most_loaded": {
+      const technicians = await getEnrichedTechnicians(type);
+      if (!technicians.length) return { intent, type, technicians: [] };
+
+      if (intent === "list") return { intent, type, technicians };
+
+      if (intent === "available") {
+        return {
+          intent,
+          type,
+          technicians,
+          available: technicians.filter((t) => t.ongoing <= 0),
+        };
+      }
+
+      if (intent === "best") {
+        const ranked = [...technicians].sort((a, b) => b.score - a.score || b.done - a.done || a.ongoing - b.ongoing);
+        return { intent, type, technicians, best: ranked[0] || null };
+      }
+
+      if (intent === "least_loaded") {
+        const ranked = [...technicians].sort((a, b) => a.ongoing - b.ongoing || a.total - b.total);
+        return { intent, type, technicians, leastLoaded: ranked[0] || null };
+      }
+
+      const ranked = [...technicians].sort((a, b) => b.ongoing - a.ongoing || b.total - a.total);
+      return { intent, type, technicians, mostLoaded: ranked[0] || null };
+    }
+
+    default:
+      return {
+        intent: "clarify",
+        type,
+        needsClarification: true,
+        clarification: "Question non couverte. Essayez: meilleur, disponible, liste, count, retard, stats.",
+      };
+  }
 };
 
-const buildFinalPrompt = ({ message, backendData, memory }) => `
-Tu es un assistant metier pour gestion d'interventions aeroportuaires.
-Reponds en francais clair. Si la question etait en arabe, tu peux inclure une courte phrase arabe.
-
-Historique recent:
-${JSON.stringify(memory, null, 2)}
-
-Question utilisateur:
-${message}
-
-Resultat backend fiable (JSON):
-${JSON.stringify(backendData, null, 2)}
-
-Contraintes:
-- Ne jamais inventer des donnees absentes du JSON.
-- Reponse professionnelle et concise.
-- Si un technicien est propose, ajoute une suggestion: "Voulez-vous affecter ce technicien ?"
-`;
-
-const buildConversationId = (req) => {
-  if (req.user?.id) return String(req.user.id);
-  return req.ip || "anonymous";
-};
+const buildConversationId = (req) => (req.user?.id ? String(req.user.id) : String(req.ip || "anonymous"));
 
 const rememberConversation = (conversationId, role, content) => {
   const history = conversationMemory.get(conversationId) || [];
@@ -298,10 +303,7 @@ const rememberConversation = (conversationId, role, content) => {
 
 const loadRecentDbHistory = async (userId) => {
   const query = userId ? { userId: String(userId) } : {};
-  const rowsDesc = await ChatMessage.find(query)
-    .sort({ createdAt: -1 })
-    .limit(4)
-    .lean();
+  const rowsDesc = await ChatMessage.find(query).sort({ createdAt: -1 }).limit(4).lean();
   const rows = [...rowsDesc].reverse();
 
   const history = [];
@@ -313,68 +315,92 @@ const loadRecentDbHistory = async (userId) => {
   return history;
 };
 
+const buildFinalPrompt = ({ message, data, memory }) => `
+Tu es un assistant intelligent de gestion d'interventions d'un aeroport.
+
+Tu dois:
+- comprendre EXACTEMENT la demande
+- utiliser les donnees fournies
+- ne jamais donner une reponse generique
+- distinguer meilleur / liste / disponible / statistiques
+
+Historique recent:
+${JSON.stringify(memory, null, 2)}
+
+Question: ${message}
+Donnees: ${JSON.stringify(data, null, 2)}
+
+Regles:
+- Reponds clairement et precisement.
+- Si question ambigue, demande une clarification courte.
+- Si question en arabe, reponds en arabe simple ou bilingue arabe/francais.
+- N'invente jamais des valeurs absentes des donnees.
+`;
+
+const buildFallbackResponse = (data) => {
+  if (data.needsClarification) return data.clarification;
+
+  if (data.intent === "count") return `Le nombre total d'interventions est ${data.totalInterventions || 0}.`;
+  if (data.intent === "count_mine") return `Vous avez ${data.mine || 0} intervention(s) liee(s) a votre compte.`;
+  if (data.intent === "by_status") return `Statistiques par etat: ${(data.byStatus || []).map((i) => `${i._id || "NON_DEFINI"}: ${i.total}`).join(", ") || "Aucune donnee"}.`;
+  if (data.intent === "by_type") return `Statistiques par type: ${(data.byType || []).map((i) => `${i._id || "AUTRE"}: ${i.total}`).join(", ") || "Aucune donnee"}.`;
+  if (data.intent === "overdue") return `Interventions en retard: ${data.overdueCount || 0}.`;
+  if (data.intent === "summary") return `Resume: total=${data.totalInterventions || 0}, retard=${data.overdueCount || 0}.`;
+
+  if (!Array.isArray(data.technicians) || !data.technicians.length) {
+    return "Aucun technicien trouve pour ce filtre.";
+  }
+
+  if (data.intent === "list") return `Liste des techniciens: ${data.technicians.map((t) => t.name).join(", ")}.`;
+  if (data.intent === "available") {
+    const available = data.available || [];
+    return available.length
+      ? `Technicien(s) disponible(s): ${available.map((t) => t.name).join(", ")}.`
+      : "Aucun technicien disponible avec 0 intervention en cours.";
+  }
+  if (data.intent === "best") return data.best ? `${data.best.name} est le meilleur technicien selon le score ${data.best.score}.` : "Aucun technicien classe.";
+  if (data.intent === "least_loaded") return data.leastLoaded ? `${data.leastLoaded.name} travaille le moins (${data.leastLoaded.ongoing} en cours).` : "Aucune donnee.";
+  if (data.intent === "most_loaded") return data.mostLoaded ? `${data.mostLoaded.name} est le plus charge (${data.mostLoaded.ongoing} en cours).` : "Aucune donnee.";
+
+  return "Pouvez-vous reformuler votre demande ?";
+};
+
 exports.chatbot = async (req, res) => {
   try {
     const message = String(req.body?.message || "").trim();
-    if (!message) {
-      return res.status(400).json({ message: "Le message est obligatoire." });
-    }
+    if (!message) return res.status(400).json({ message: "Le message est obligatoire." });
 
     const model = getModel();
-    const analysis = await analyzeIntent(model, message);
-    const backendData = await buildBackendData(analysis.intent, analysis.type, req.user?.id || null);
+    const userId = req.user?.id ? String(req.user.id) : "admin";
+
+    const analysis = await analyzeIntentWithGemini(model, message);
+    const data = await executeBusinessLogic({ intent: analysis.intent, type: analysis.type, userId });
 
     const conversationId = buildConversationId(req);
     const memory = conversationMemory.get(conversationId) || [];
-    let dbHistory = [];
-    try {
-      dbHistory = await loadRecentDbHistory(req.user?.id || null);
-    } catch (error) {
-      dbHistory = [];
-    }
+    const dbHistory = await loadRecentDbHistory(req.user?.id || null).catch(() => []);
     rememberConversation(conversationId, "user", message);
 
     let finalMessage = "";
-    let usedFallback = false;
-
     if (model) {
       try {
         const mergedMemory = [...dbHistory, ...memory].slice(-8);
-        const finalPrompt = buildFinalPrompt({ message, backendData, memory: mergedMemory });
+        const finalPrompt = buildFinalPrompt({ message, data, memory: mergedMemory });
         const final = await model.generateContent(finalPrompt);
         finalMessage = String(final?.response?.text?.() || "").trim();
       } catch (error) {
-        usedFallback = true;
+        finalMessage = "";
       }
-    } else {
-      usedFallback = true;
     }
 
-    if (!finalMessage) {
-      usedFallback = true;
-      finalMessage = buildFallbackResponse(backendData);
-    }
+    if (!finalMessage) finalMessage = buildFallbackResponse(data);
 
-    await ChatMessage.create({
-      userId: req.user?.id ? String(req.user.id) : "admin",
-      message,
-      response: finalMessage,
-    });
-
+    await ChatMessage.create({ userId, message, response: finalMessage });
     rememberConversation(conversationId, "assistant", finalMessage);
 
-    return res.status(200).json({
-      message: finalMessage,
-      intent: analysis.intent,
-      type: analysis.type,
-      fallback: usedFallback || analysis.source === "fallback",
-      data: backendData,
-    });
+    return res.status(200).json({ message: finalMessage, analysis, data });
   } catch (error) {
-    return res.status(500).json({
-      message: "Erreur serveur chatbot.",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Erreur serveur chatbot.", error: error.message });
   }
 };
 
@@ -382,17 +408,9 @@ exports.chatbotHistory = async (req, res) => {
   try {
     const userId = req.user?.id ? String(req.user.id) : null;
     const query = userId ? { userId } : {};
-
-    const history = await ChatMessage.find(query)
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
-
+    const history = await ChatMessage.find(query).sort({ createdAt: -1 }).limit(10).lean();
     return res.status(200).json({ history });
   } catch (error) {
-    return res.status(500).json({
-      message: "Erreur serveur chatbot history.",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Erreur serveur chatbot history.", error: error.message });
   }
 };
