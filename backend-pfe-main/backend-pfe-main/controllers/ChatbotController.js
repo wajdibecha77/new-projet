@@ -37,29 +37,37 @@ const getModel = () => {
   return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 };
 
-const safeJsonParse = (text) => {
-  const raw = String(text || "").trim();
-  if (!raw) return null;
+function detectIntent(message) {
+  const text = String(message || "").toLowerCase();
 
-  const cleaned = raw
-    .replace(/^```json/i, "")
-    .replace(/^```/i, "")
-    .replace(/```$/i, "")
-    .trim();
+  let intent = null;
+  let type = null;
 
-  try {
-    return JSON.parse(cleaned);
-  } catch (error) {
-    const first = cleaned.indexOf("{");
-    const last = cleaned.lastIndexOf("}");
-    if (first === -1 || last === -1 || last <= first) return null;
-    try {
-      return JSON.parse(cleaned.slice(first, last + 1));
-    } catch (secondError) {
-      return null;
-    }
+  if (text.includes("plomb")) type = "PLOMBERIE";
+  else if (text.includes("elect")) type = "ELECTRIQUE";
+  else if (text.includes("mecan")) type = "MECANIQUE";
+  else if (text.includes("info") || text.includes("informat")) type = "INFORMATIQUE";
+
+  if (text.includes("meilleur") || text.includes("ahsen") || text.includes("plus performant")) {
+    intent = "best";
+  } else if (text.includes("disponible") || text.includes("0") || text.includes("free")) {
+    intent = "available";
+  } else if (text.includes("liste") || text.includes("tous") || text.includes("list")) {
+    intent = "list";
+  } else if (text.includes("combien") || text.includes("9adeh") || text.includes("nombre")) {
+    intent = "count";
+  } else if (text.includes("retard") || text.includes("overdue")) {
+    intent = "overdue";
+  } else if (text.includes("etat") || text.includes("status")) {
+    intent = "by_status";
+  } else if (text.includes("type")) {
+    intent = "by_type";
+  } else if (text.includes("resume") || text.includes("summary")) {
+    intent = "summary";
   }
-};
+
+  return { intent, type };
+}
 
 const normalizeIntent = (value) => {
   const intent = String(value || "").trim().toLowerCase();
@@ -70,54 +78,6 @@ const normalizeType = (value) => {
   if (value === null) return null;
   const t = String(value || "").trim().toUpperCase();
   return SUPPORTED_TYPES.includes(t) ? t : null;
-};
-
-const analyzeIntentWithGemini = async (model, message) => {
-  if (!model) {
-    return { intent: "clarify", type: null, reason: "GEMINI_UNAVAILABLE" };
-  }
-
-  const analysisPrompt = `
-Analyse cette question et retourne JSON uniquement.
-Question utilisateur: "${message}"
-
-Format strict:
-{
-  "intent": "best | available | list | count | count_mine | by_status | by_type | overdue | least_loaded | most_loaded | summary | clarify",
-  "type": "mecanique | plomberie | electrique | informatique | autre | null"
-}
-
-Regles:
-- best: meilleur / plus performant
-- available: technicien disponible / zero intervention en cours
-- list: liste des techniciens
-- count: total des interventions
-- count_mine: mes interventions
-- by_status: stats par etat
-- by_type: stats par type
-- overdue: interventions en retard (delai depasse et pas terminee)
-- least_loaded: technicien qui travaille le moins
-- most_loaded: technicien le plus charge
-- summary: resume global du systeme
-- Si ambigu ou hors perimetre: clarify
-- JSON uniquement, sans texte additionnel.
-`;
-
-  try {
-    const analysis = await model.generateContent(analysisPrompt);
-    const resultText = analysis?.response?.text?.() || "";
-    const parsed = safeJsonParse(resultText);
-
-    if (!parsed) return { intent: "clarify", type: null, reason: "PARSE_ERROR" };
-
-    const intent = normalizeIntent(parsed.intent);
-    const rawType = parsed.type === null ? null : parsed.type;
-    const type = normalizeType(rawType ? String(rawType).toUpperCase() : null);
-
-    return { intent, type, reason: "OK" };
-  } catch (error) {
-    return { intent: "clarify", type: null, reason: "MODEL_ERROR" };
-  }
 };
 
 const getTechniciansByType = async (type) => {
@@ -181,7 +141,7 @@ const executeBusinessLogic = async ({ intent, type, userId }) => {
       intent,
       type,
       needsClarification: true,
-      clarification: "Pouvez-vous preciser votre demande ? Exemple: meilleur technicien electrique, liste plomberie, interventions en retard.",
+      clarification: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
     };
   }
 
@@ -239,15 +199,7 @@ const executeBusinessLogic = async ({ intent, type, userId }) => {
         delai: { $lt: new Date() },
         etat: { $ne: "TERMINEE" },
       });
-      const byStatus = await Intervention.aggregate([
-        { $group: { _id: "$etat", total: { $sum: 1 } } },
-        { $sort: { total: -1 } },
-      ]);
-      const byType = await Intervention.aggregate([
-        { $group: { _id: "$type", total: { $sum: 1 } } },
-        { $sort: { total: -1 } },
-      ]);
-      return { intent, type, totalInterventions, overdueCount, byStatus, byType };
+      return { intent, type, totalInterventions, overdueCount };
     }
 
     case "list":
@@ -288,7 +240,7 @@ const executeBusinessLogic = async ({ intent, type, userId }) => {
         intent: "clarify",
         type,
         needsClarification: true,
-        clarification: "Question non couverte. Essayez: meilleur, disponible, liste, count, retard, stats.",
+        clarification: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
       };
   }
 };
@@ -319,22 +271,15 @@ const buildFinalPrompt = ({ message, data, memory }) => `
 Tu es un assistant intelligent de gestion d'interventions d'un aeroport.
 
 Tu dois:
-- comprendre EXACTEMENT la demande
-- utiliser les donnees fournies
-- ne jamais donner une reponse generique
-- distinguer meilleur / liste / disponible / statistiques
+- utiliser uniquement les donnees fournies
+- repondre clairement et precisement
+- ne jamais inventer
 
 Historique recent:
 ${JSON.stringify(memory, null, 2)}
 
 Question: ${message}
 Donnees: ${JSON.stringify(data, null, 2)}
-
-Regles:
-- Reponds clairement et precisement.
-- Si question ambigue, demande une clarification courte.
-- Si question en arabe, reponds en arabe simple ou bilingue arabe/francais.
-- N'invente jamais des valeurs absentes des donnees.
 `;
 
 const buildFallbackResponse = (data) => {
@@ -347,9 +292,7 @@ const buildFallbackResponse = (data) => {
   if (data.intent === "overdue") return `Interventions en retard: ${data.overdueCount || 0}.`;
   if (data.intent === "summary") return `Resume: total=${data.totalInterventions || 0}, retard=${data.overdueCount || 0}.`;
 
-  if (!Array.isArray(data.technicians) || !data.technicians.length) {
-    return "Aucun technicien trouve pour ce filtre.";
-  }
+  if (!Array.isArray(data.technicians) || !data.technicians.length) return "Aucun technicien trouve pour ce filtre.";
 
   if (data.intent === "list") return `Liste des techniciens: ${data.technicians.map((t) => t.name).join(", ")}.`;
   if (data.intent === "available") {
@@ -358,11 +301,13 @@ const buildFallbackResponse = (data) => {
       ? `Technicien(s) disponible(s): ${available.map((t) => t.name).join(", ")}.`
       : "Aucun technicien disponible avec 0 intervention en cours.";
   }
-  if (data.intent === "best") return data.best ? `${data.best.name} est le meilleur technicien selon le score ${data.best.score}.` : "Aucun technicien classe.";
-  if (data.intent === "least_loaded") return data.leastLoaded ? `${data.leastLoaded.name} travaille le moins (${data.leastLoaded.ongoing} en cours).` : "Aucune donnee.";
-  if (data.intent === "most_loaded") return data.mostLoaded ? `${data.mostLoaded.name} est le plus charge (${data.mostLoaded.ongoing} en cours).` : "Aucune donnee.";
+  if (data.intent === "best") {
+    return data.best
+      ? `${data.best.name} est le meilleur technicien selon le score ${data.best.score}.`
+      : "Aucun technicien classe.";
+  }
 
-  return "Pouvez-vous reformuler votre demande ?";
+  return "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?";
 };
 
 exports.chatbot = async (req, res) => {
@@ -370,11 +315,25 @@ exports.chatbot = async (req, res) => {
     const message = String(req.body?.message || "").trim();
     if (!message) return res.status(400).json({ message: "Le message est obligatoire." });
 
+    const { intent: rawIntent, type: rawType } = detectIntent(message);
+    const intent = rawIntent ? normalizeIntent(rawIntent) : null;
+    const type = normalizeType(rawType);
+
+    console.log("MESSAGE:", message);
+    console.log("INTENT:", intent);
+    console.log("TYPE:", type);
+
+    if (!intent) {
+      return res.status(200).json({
+        reply: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
+        message: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
+      });
+    }
+
     const model = getModel();
     const userId = req.user?.id ? String(req.user.id) : "admin";
 
-    const analysis = await analyzeIntentWithGemini(model, message);
-    const data = await executeBusinessLogic({ intent: analysis.intent, type: analysis.type, userId });
+    const data = await executeBusinessLogic({ intent, type, userId });
 
     const conversationId = buildConversationId(req);
     const memory = conversationMemory.get(conversationId) || [];
@@ -382,7 +341,7 @@ exports.chatbot = async (req, res) => {
     rememberConversation(conversationId, "user", message);
 
     let finalMessage = "";
-    if (model) {
+    if (model && !data.needsClarification) {
       try {
         const mergedMemory = [...dbHistory, ...memory].slice(-8);
         const finalPrompt = buildFinalPrompt({ message, data, memory: mergedMemory });
@@ -398,7 +357,7 @@ exports.chatbot = async (req, res) => {
     await ChatMessage.create({ userId, message, response: finalMessage });
     rememberConversation(conversationId, "assistant", finalMessage);
 
-    return res.status(200).json({ message: finalMessage, analysis, data });
+    return res.status(200).json({ message: finalMessage, intent, type, data });
   } catch (error) {
     return res.status(500).json({ message: "Erreur serveur chatbot.", error: error.message });
   }
