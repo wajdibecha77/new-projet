@@ -19,13 +19,13 @@ const SUPPORTED_INTENTS = [
 ];
 
 const SUPPORTED_TYPES = ["ELECTRIQUE", "PLOMBERIE", "MECANIQUE", "INFORMATIQUE", "AUTRE", null];
-const TECHNICIAN_ROLES = ["TECHNICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBIER", "PLOMBERIE", "INFORMATICIEN"];
+const TECHNICIAN_ROLES = ["TECHNICIEN", "ELECTRICIEN", "MECANICIEN", "PLOMBIER", "PLOMBERIE", "INFORMATICIEN", "INFORMATIQUE"];
 
 const TYPE_TO_ROLES = {
   ELECTRIQUE: ["ELECTRICIEN", "TECHNICIEN"],
   PLOMBERIE: ["PLOMBIER", "PLOMBERIE", "TECHNICIEN"],
   MECANIQUE: ["MECANICIEN", "TECHNICIEN"],
-  INFORMATIQUE: ["INFORMATICIEN", "TECHNICIEN"],
+  INFORMATIQUE: ["INFORMATICIEN", "INFORMATIQUE", "TECHNICIEN"],
   AUTRE: ["TECHNICIEN"],
 };
 
@@ -46,7 +46,14 @@ function detectIntent(message) {
   if (text.includes("plomb")) type = "PLOMBERIE";
   else if (text.includes("elect")) type = "ELECTRIQUE";
   else if (text.includes("mecan")) type = "MECANIQUE";
-  else if (text.includes("info") || text.includes("informat")) type = "INFORMATIQUE";
+  else if (
+    text.includes("info") ||
+    text.includes("informat") ||
+    text.includes("it") ||
+    text.includes("reseau") ||
+    text.includes("ordinateur") ||
+    text.includes("pc")
+  ) type = "INFORMATIQUE";
 
   if (text.includes("meilleur") || text.includes("ahsen") || text.includes("plus performant")) {
     intent = "best";
