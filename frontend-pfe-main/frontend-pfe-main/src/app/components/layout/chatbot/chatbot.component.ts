@@ -69,11 +69,17 @@ export class ChatbotComponent {
   }
 
   private replaceTypingMessage(text: string): void {
+    const safeText = String(text || "").trim() || "Aucune reponse du chatbot.";
     const index = this.messages.findIndex((message) => message.typing);
     if (index !== -1) {
-      this.messages.splice(index, 1, { from: "bot", text });
+      this.messages.splice(index, 1, { from: "bot", text: safeText });
     } else {
-      this.messages.push({ from: "bot", text });
+      const lastBot = [...this.messages].reverse().find((message) => message.from === "bot");
+      if (lastBot && lastBot.text === safeText) {
+        this.scrollToBottom();
+        return;
+      }
+      this.messages.push({ from: "bot", text: safeText });
     }
     this.scrollToBottom();
   }
