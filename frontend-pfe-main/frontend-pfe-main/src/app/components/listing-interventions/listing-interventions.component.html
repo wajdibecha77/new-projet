@@ -61,7 +61,8 @@
                             <option value="">Tous</option>
                             <option value="NON_AFFECTEE">Non affectée</option>
                             <option value="REFUSEE">Refusee</option>
-                            <option value="EN_COURS">Affectée</option>
+                            <option value="ASSIGNEE">Assignée</option>
+                            <option value="EN_COURS">En cours</option>
                             <option value="TERMINEE">Terminée</option>
                         </select>
                     </div>
@@ -101,6 +102,11 @@
                                 <td>{{ intervention.lieu }}</td>
                                 <td>{{ intervention.description }}</td>
                                 <td>
+                                    <span
+                                        *ngIf="intervention.etat == 'ASSIGNEE'"
+                                        class="badge badge_warning py-1"
+                                        >Assignee</span
+                                    >
                                     <span
                                         *ngIf="intervention.etat == 'EN_COURS'"
                                         class="badge badge_warning py-1"

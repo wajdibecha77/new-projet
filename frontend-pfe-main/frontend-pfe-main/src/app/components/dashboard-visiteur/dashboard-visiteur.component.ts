@@ -93,7 +93,10 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
 
     get enCoursCount(): number {
         return this.displayedInterventions.filter(
-            (inter) => String(inter?.etat || "").toUpperCase() === "EN_COURS"
+            (inter) => {
+                const status = String(inter?.etat || "").toUpperCase();
+                return status === "EN_COURS" || status === "ASSIGNEE";
+            }
         ).length;
     }
 
@@ -168,7 +171,10 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
             totalbyInter: this.total ? "100.00" : "0.00",
             totalbyMe: this.total ? "100.00" : "0.00",
             totalEnCours: this.displayedInterventions.filter(
-                (inter) => String(inter?.etat || "").toUpperCase() === "EN_COURS"
+                (inter) => {
+                    const status = String(inter?.etat || "").toUpperCase();
+                    return status === "EN_COURS" || status === "ASSIGNEE";
+                }
             ).length,
             totalNotAffected: this.displayedInterventions.filter(
                 (inter) => String(inter?.etat || "").toUpperCase() === "NON_AFFECTEE"
@@ -181,6 +187,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
     getStatusClass(etat: string): string {
         const normalized = String(etat || "").toUpperCase();
         if (normalized === "TERMINEE") return "badge badge_success py-1 px-3";
+        if (normalized === "ASSIGNEE") return "badge badge_warning py-1 px-3";
         if (normalized === "EN_COURS") return "badge badge_warning py-1 px-3";
         if (normalized === "NON_AFFECTEE") return "badge badge_danger py-1 px-3";
         return "badge badge-secondary py-1 px-3";
@@ -189,6 +196,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
     formatStatus(etat: string): string {
         const normalized = String(etat || "").toUpperCase();
         if (normalized === "TERMINEE") return "Terminee";
+        if (normalized === "ASSIGNEE") return "Assignee";
         if (normalized === "EN_COURS") return "En cours";
         if (normalized === "NON_AFFECTEE") return "Non affectee";
         return etat || "-";
@@ -279,7 +287,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
                 ).toFixed(2);
                 if (
                     inter.affectedBy &&
-                    inter.etat == "EN_COURS"
+                    (inter.etat == "EN_COURS" || inter.etat == "ASSIGNEE")
                 ) {
                     this.dataInfo.totalEnCours += 1;
                     if (
@@ -307,7 +315,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
                 ).toFixed(2);
                 if (
                     inter.affectedBy &&
-                    inter.etat == "EN_COURS"
+                    (inter.etat == "EN_COURS" || inter.etat == "ASSIGNEE")
                 ) {
                     this.dataMeca.totalEnCours += 1;
                     if (
@@ -334,7 +342,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
                 ).toFixed(2);
                 if (
                     inter.affectedBy &&
-                    inter.etat == "EN_COURS"
+                    (inter.etat == "EN_COURS" || inter.etat == "ASSIGNEE")
                 ) {
                     this.dataElec.totalEnCours += 1;
                     if (
@@ -361,7 +369,7 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
                 ).toFixed(2);
                 if (
                     inter.affectedBy &&
-                    inter.etat == "EN_COURS"
+                    (inter.etat == "EN_COURS" || inter.etat == "ASSIGNEE")
                 ) {
                     this.dataPlom.totalEnCours += 1;
                     if (

@@ -8,6 +8,11 @@
             <span>
                 <strong>Etat : </strong
                 ><span
+                    *ngIf="intervention.etat == 'ASSIGNEE'"
+                    class="badge badge_warning py-1"
+                    >Assignee</span
+                >
+                <span
                     *ngIf="intervention.etat == 'EN_COURS'"
                     class="badge badge_warning py-1"
                     >En cours</span
@@ -191,7 +196,7 @@
         class="refuse-box mt-3"
         *ngIf="
             me._id == intervention.affectedBy._id &&
-            intervention.etat == 'EN_COURS'
+            (intervention.etat == 'ASSIGNEE' || intervention.etat == 'EN_COURS')
         "
     >
         <label>Raison du refus (obligatoire)</label>
@@ -218,7 +223,7 @@
             class="btn btn-danger w-10 mr-3"
             *ngIf="
                 me._id == intervention.affectedBy._id &&
-                intervention.etat == 'EN_COURS'
+                (intervention.etat == 'ASSIGNEE' || intervention.etat == 'EN_COURS')
             "
             (click)="interventionExit(intervention)"
         >
@@ -228,7 +233,7 @@
             class="btn btn-success w-10"
             *ngIf="
                 me._id == intervention.affectedBy._id &&
-                intervention.etat == 'EN_COURS'
+                (intervention.etat == 'ASSIGNEE' || intervention.etat == 'EN_COURS')
             "
             (click)="interventionDone(intervention)"
         >

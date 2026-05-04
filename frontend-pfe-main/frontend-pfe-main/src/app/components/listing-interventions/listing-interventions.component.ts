@@ -131,7 +131,7 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
                         this.interventions[idx] = {
                             ...this.interventions[idx],
                             affectedBy: selected,
-                            etat: "EN_COURS",
+                            etat: "ASSIGNEE",
                             dateDebut: new Date(),
                         };
                     }
