@@ -209,8 +209,13 @@
                                                     <button
                                                         type="button"
                                                         class="close"
-                                                        data-dismiss="modal"
                                                         aria-label="Close"
+                                                        (click)="
+                                                            onCancelAffectation(
+                                                                intervention._id,
+                                                                'ModalRes' + intervention._id
+                                                            )
+                                                        "
                                                     >
                                                         <span aria-hidden="true"
                                                             >&times;</span
@@ -266,15 +271,23 @@
                                                 >
                                                     <button
                                                         type="button"
-                                                        data-dismiss="modal"
                                                         aria-label="Close"
                                                         class="btn btn-danger w-100 mr-3"
+                                                        (click)="
+                                                            onCancelAffectation(
+                                                                intervention._id,
+                                                                'ModalRes' + intervention._id
+                                                            )
+                                                        "
                                                     >
                                                         Annuler
                                                     </button>
                                                     <button
                                                         type="button"
                                                         class="btn btn-primary w-100"
+                                                        [disabled]="
+                                                            isAffectationLoading(intervention._id)
+                                                        "
                                                         (click)="
                                                             affectedToUser(
                                                                 intervention,
@@ -282,7 +295,11 @@
                                                             )
                                                         "
                                                     >
-                                                        Enregistrer
+                                                        {{
+                                                            isAffectationLoading(intervention._id)
+                                                                ? 'Enregistrement...'
+                                                                : 'Enregistrer'
+                                                        }}
                                                     </button>
                                                 </div>
                                             </div>

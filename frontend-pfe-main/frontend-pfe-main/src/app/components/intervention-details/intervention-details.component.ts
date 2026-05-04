@@ -1,5 +1,7 @@
-import { Component, OnInit } from "@angular/core";
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Subject } from "rxjs";
+import { finalize, takeUntil } from "rxjs/operators";
 import { Intervention } from "src/app/models/intervention";
 import { InterventionService } from "src/app/services/intervention.service";
 import { UserService } from "src/app/services/user.service";
@@ -9,7 +11,7 @@ import { UserService } from "src/app/services/user.service";
     templateUrl: "./intervention-details.component.html",
     styleUrls: ["./intervention-details.component.scss"],
 })
-export class InterventionDetailsComponent implements OnInit {
+export class InterventionDetailsComponent implements OnInit, OnDestroy {
     public intervention: any;
     public users: any;
     public me: any;
@@ -22,26 +24,105 @@ export class InterventionDetailsComponent implements OnInit {
     public refusCommentaire = "";
     public refusType = "AUTRE";
     public refuseError = "";
+    public isAffectationLoading = false;
+    private destroy$ = new Subject<void>();
     constructor(
         private interventionService: InterventionService,
         private userService: UserService,
         private route: ActivatedRoute,
-        private appRouter: Router
+        private appRouter: Router,
+        private cdr: ChangeDetectorRef
     ) {}
 
     ngOnInit(): void {
-        this.userService.getConnectedUser().subscribe((res: any) => {
-            this.me = res.data;
-            if (this.me?.role === "ADMIN") {
-                this.userService.getAllUsers().subscribe((usersRes: any) => {
-                    this.users = usersRes.data;
-                });
-            }
-        });
-        this.route.params.subscribe((params) => {
+        this.userService
+            .getConnectedUser()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((res: any) => {
+                this.me = res.data;
+                if (this.me?.role === "ADMIN") {
+                    this.userService
+                        .getAllUsers()
+                        .pipe(takeUntil(this.destroy$))
+                        .subscribe((usersRes: any) => {
+                            this.users = usersRes.data;
+                        });
+                }
+            });
+        this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
             this.id = params["id"];
             this.loadIntervention();
         });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
+    resetAffectationState() {
+        this.affectedUser = null;
+        this.isAffectationLoading = false;
+    }
+
+    closeModal(modalId: string) {
+        const modalEl = document.getElementById(modalId);
+        if (modalEl) {
+            modalEl.classList.remove("show");
+            modalEl.setAttribute("aria-hidden", "true");
+            (modalEl as HTMLElement).style.display = "none";
+        }
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("padding-right");
+        const backdrops = document.querySelectorAll(".modal-backdrop");
+        backdrops.forEach((backdrop) => backdrop.remove());
+    }
+
+    onCancelAffectation(modalId: string) {
+        this.resetAffectationState();
+        this.closeModal(modalId);
+        this.cdr.detectChanges();
+    }
+
+    loadIntervention() {
+        this.interventionService
+            .getInterventionById(this.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((res) => {
+                this.intervention = res;
+                this.workDetails = this.intervention?.workDetails || "";
+            });
+    }
+
+    canManageAssignedIntervention() {
+        if (!this.intervention || !this.me) return false;
+        if (this.me.role === "ADMIN") return true;
+        return this.intervention?.affectedBy?._id == this.me?._id;
+    }
+
+    setAffectedUser(user) {
+        if (this.isAffectationLoading) return;
+        this.affectedUser = user;
+    }
+
+    affectedToUser(intervention) {
+        if (!this.affectedUser?._id || this.isAffectationLoading) return;
+        this.isAffectationLoading = true;
+        this.interventionService
+            .updateInterventionStatus(intervention._id, {
+                affectedBy: this.affectedUser._id,
+            })
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => {
+                    this.isAffectationLoading = false;
+                    this.cdr.detectChanges();
+                })
+            )
+            .subscribe(() => {
+                this.onCancelAffectation("ModalRes" + intervention._id);
+                this.loadIntervention();
+            });
     }
 
     private redirectToDashboard() {
@@ -56,39 +137,12 @@ export class InterventionDetailsComponent implements OnInit {
         });
     }
 
-    loadIntervention() {
-        this.interventionService.getInterventionById(this.id).subscribe((res) => {
-            this.intervention = res;
-            this.workDetails = this.intervention?.workDetails || "";
-        });
-    }
-
-    canManageAssignedIntervention() {
-        if (!this.intervention || !this.me) return false;
-        if (this.me.role === "ADMIN") return true;
-        return this.intervention?.affectedBy?._id == this.me?._id;
-    }
-
-    setAffectedUser(user) {
-        this.affectedUser = user;
-    }
-
-    affectedToUser(intervention) {
-        if (!this.affectedUser?._id) return;
-        this.interventionService
-            .updateInterventionStatus(intervention._id, {
-                affectedBy: this.affectedUser._id,
-            })
-            .subscribe((res: any) => {
-                this.loadIntervention();
-            });
-    }
-
     affectedToMe(intervention) {
         this.interventionService
             .updateInterventionStatus(intervention._id, {
                 affectedBy: this.me._id,
             })
+            .pipe(takeUntil(this.destroy$))
             .subscribe((res: any) => {
                 window.location.reload();
             });
@@ -99,6 +153,7 @@ export class InterventionDetailsComponent implements OnInit {
             .updateInterventionStatus(intervention._id, {
                 etat: "TERMINEE",
             })
+            .pipe(takeUntil(this.destroy$))
             .subscribe((res: any) => {
                 this.loadIntervention();
             });
@@ -117,6 +172,7 @@ export class InterventionDetailsComponent implements OnInit {
                 commentaire,
                 refusType: this.refusType || "AUTRE",
             })
+            .pipe(takeUntil(this.destroy$))
             .subscribe(
                 () => {
                     this.refusCommentaire = "";
@@ -131,9 +187,12 @@ export class InterventionDetailsComponent implements OnInit {
     }
 
     supprimerIntervention(id) {
-        this.interventionService.deleteIntervention(id).subscribe((res) => {
-            window.location.href = "/interventions";
-        });
+        this.interventionService
+            .deleteIntervention(id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((res) => {
+                window.location.href = "/interventions";
+            });
     }
 
     updateOrderIntervention(id) {
@@ -142,6 +201,7 @@ export class InterventionDetailsComponent implements OnInit {
         };
         this.interventionService
             .updateInterventionOrder(id, params)
+            .pipe(takeUntil(this.destroy$))
             .subscribe((res) => {
                 this.loadIntervention();
             });
@@ -160,6 +220,7 @@ export class InterventionDetailsComponent implements OnInit {
 
         this.interventionService
             .updateInterventionStatus(this.intervention._id, payload)
+            .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
                 this.comment = "";
                 this.problem = "";
