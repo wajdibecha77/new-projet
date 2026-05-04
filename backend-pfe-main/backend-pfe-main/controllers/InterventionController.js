@@ -366,7 +366,7 @@ module.exports = {
             affectedBy: affectedBy,
             affectedToUsers: inter.affectedToUsers && inter.affectedToUsers.length > 0 ? [...inter.affectedToUsers, affectedBy] : [affectedBy],
             dateDebut: Date.now(),
-            etat: "EN_COURS",
+            etat: "ASSIGNEE",
           }
         );
 
@@ -537,7 +537,7 @@ module.exports = {
         });
       }
 
-      inter.etat = "NON_AFFECTEE";
+      inter.etat = "REFUSEE";
       inter.refusCommentaire = cleanCommentaire;
       if (refusType) {
         inter.refusType = refusType;
@@ -560,7 +560,7 @@ module.exports = {
       await createNotificationsForUsers(recipients, {
         category: "INTERVENTION_REFUSED",
         title: "Refus d'intervention",
-        message: "Le technicien a refuse l'intervention. Elle est de nouveau disponible.",
+        message: "Le technicien a refuse l'intervention",
         type: "INTERVENTION_REFUSED",
         technicienId: req.user.id,
         technicienName: me?.name || "Technicien",

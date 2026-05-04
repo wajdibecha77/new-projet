@@ -123,7 +123,12 @@ const mapTrackingStatus = (reclamationStatus, interventionState) => {
   const reclamation = String(reclamationStatus || "").toUpperCase();
 
   if (intervention === "TERMINEE") return "TERMINEE";
-  if (intervention === "EN_COURS" || reclamation === "ACCEPTEE" || reclamation === "EN_COURS") return "EN_COURS";
+  if (
+    intervention === "EN_COURS" ||
+    intervention === "ASSIGNEE" ||
+    reclamation === "ACCEPTEE" ||
+    reclamation === "EN_COURS"
+  ) return "EN_COURS";
   return "EN_ATTENTE";
 };
 
@@ -394,7 +399,7 @@ exports.acceptReclamation = async (req, res) => {
       reclamationId: rec._id,
       isAI: true,
       aiDetails: "Intervention generee automatiquement par l'intelligence artificielle",
-      etat: isAssigned ? "EN_COURS" : "NON_AFFECTEE",
+      etat: isAssigned ? "ASSIGNEE" : "NON_AFFECTEE",
       assignedTo: isAssigned ? technicien._id : undefined,
       affectedBy: isAssigned ? technicien._id : undefined,
       affectedToUsers: isAssigned ? [technicien._id] : [],
