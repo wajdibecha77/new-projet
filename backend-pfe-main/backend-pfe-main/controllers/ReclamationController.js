@@ -70,7 +70,7 @@ const sendEmail = async (rec) => {
       <p style="font-size:14px;">Nous vous remercions pour votre confiance.</p>
     </div>
     <div style="background:#f8f9fa; padding:15px; text-align:center; font-size:12px; color:#6c757d;">
-      <p style="margin:0;">� Service Support Technique - Gestion des Interventions</p>
+      <p style="margin:0;"> Service Support Technique - Gestion des Interventions</p>
       <p style="margin:5px 0 0;">Ceci est un message automatique, merci de ne pas y repondre.</p>
     </div>
   </div>
