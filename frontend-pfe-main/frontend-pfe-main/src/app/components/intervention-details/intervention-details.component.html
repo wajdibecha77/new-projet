@@ -230,14 +230,12 @@
             Refuser
         </button>
         <button
-            class="btn btn-success w-10"
-            *ngIf="
-                me._id == intervention.affectedBy._id &&
-                (intervention.etat == 'ASSIGNEE' || intervention.etat == 'EN_COURS')
-            "
-            (click)="interventionDone(intervention)"
+            class="btn w-10"
+            [ngClass]="isAssignedState(intervention) ? 'btn-primary' : 'btn-success'"
+            *ngIf="shouldShowPrimaryStatusButton(intervention)"
+            (click)="onPrimaryStatusAction(intervention)"
         >
-            Terminer
+            {{ isAssignedState(intervention) ? 'Prendre en charge' : 'Terminer' }}
         </button>
     </div>
 </div>

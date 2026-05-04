@@ -159,6 +159,50 @@ export class InterventionDetailsComponent implements OnInit, OnDestroy {
             });
     }
 
+    startIntervention(id: string) {
+        if (!id) return;
+        this.interventionService
+            .updateInterventionStatus(id, {
+                etat: "EN_COURS",
+            })
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                this.loadIntervention();
+            });
+    }
+
+    finishIntervention(id: string) {
+        if (!id) return;
+        this.interventionService
+            .updateInterventionStatus(id, {
+                etat: "TERMINEE",
+            })
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                this.loadIntervention();
+            });
+    }
+
+    shouldShowPrimaryStatusButton(intervention: any): boolean {
+        if (!intervention || !this.me?._id) return false;
+        if (this.me._id != intervention?.affectedBy?._id) return false;
+        const state = String(intervention.etat || "").toUpperCase();
+        return state === "ASSIGNEE" || state === "EN_COURS";
+    }
+
+    isAssignedState(intervention: any): boolean {
+        return String(intervention?.etat || "").toUpperCase() === "ASSIGNEE";
+    }
+
+    onPrimaryStatusAction(intervention: any) {
+        if (!intervention?._id) return;
+        if (this.isAssignedState(intervention)) {
+            this.startIntervention(intervention._id);
+            return;
+        }
+        this.finishIntervention(intervention._id);
+    }
+
     interventionExit(intervention) {
         const commentaire = String(this.refusCommentaire || "").trim();
         if (!commentaire) {
