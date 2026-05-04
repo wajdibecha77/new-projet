@@ -56,12 +56,12 @@
         </button>
         <div
             class="d-flex align-items-end"
-            *ngIf="intervention.etat == 'NON_AFFECTEE'"
+            *ngIf="intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE'"
         >
             <button
                 class="btn btn-danger ml-2 mr-2"
                 *ngIf="
-                    me?.role == 'ADMIN' && intervention.etat == 'NON_AFFECTEE'
+                    me?.role == 'ADMIN' && (intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE')
                 "
                 (click)="supprimerIntervention(intervention._id)"
             >

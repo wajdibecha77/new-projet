@@ -60,6 +60,7 @@
                             </option>
                             <option value="">Tous</option>
                             <option value="NON_AFFECTEE">Non affectée</option>
+                            <option value="REFUSEE">Refusee</option>
                             <option value="EN_COURS">Affectée</option>
                             <option value="TERMINEE">Terminée</option>
                         </select>
@@ -118,8 +119,13 @@
                                         >Non affectee</span
                                     >
                                     <span
+                                        *ngIf="intervention.etat == 'REFUSEE'"
+                                        class="badge badge_danger py-1"
+                                        >Refusee</span
+                                    >
+                                    <span
                                         *ngIf="
-                                            intervention.etat == 'NON_AFFECTEE' &&
+                                            (intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE') &&
                                             intervention.refusCommentaire
                                         "
                                         class="badge badge_warning py-1 ml-1"
@@ -130,7 +136,8 @@
                                     <a
                                         class="mr-2 px-2 pointer text-primary border-right"
                                         *ngIf="
-                                            intervention.etat == 'NON_AFFECTEE'
+                                            intervention.etat == 'NON_AFFECTEE' ||
+                                            intervention.etat == 'REFUSEE'
                                         "
                                         data-toggle="modal"
                                         [attr.data-target]="
@@ -147,7 +154,8 @@
                                     <a
                                         class="mr-2 px-2 pointer text-success border-right"
                                         *ngIf="
-                                            intervention.etat != 'NON_AFFECTEE'
+                                            intervention.etat != 'NON_AFFECTEE' &&
+                                            intervention.etat != 'REFUSEE'
                                         "
                                     >
                                         <i
@@ -170,7 +178,8 @@
 
                                     <a
                                         *ngIf="
-                                            intervention.etat == 'NON_AFFECTEE'
+                                            intervention.etat == 'NON_AFFECTEE' ||
+                                            intervention.etat == 'REFUSEE'
                                         "
                                         class="text-danger"
                                         (click)="
