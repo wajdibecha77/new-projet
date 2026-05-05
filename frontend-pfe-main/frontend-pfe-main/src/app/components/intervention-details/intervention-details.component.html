@@ -61,24 +61,24 @@
         </button>
         <div
             class="d-flex align-items-end"
-            *ngIf="intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE'"
+            *ngIf="intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'ASSIGNEE'"
         >
-            <button
-                class="btn btn-danger ml-2 mr-2"
-                *ngIf="
-                    me?.role == 'ADMIN' && (intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE')
+                <button
+                    class="btn btn-danger ml-2 mr-2"
+                    *ngIf="
+                    me?.role == 'ADMIN' && intervention.etat == 'NON_AFFECTEE'
                 "
-                (click)="supprimerIntervention(intervention._id)"
-            >
-                Supprimer
-            </button>
+                    (click)="supprimerIntervention(intervention._id)"
+                >
+                    Supprimer
+                </button>
             <button
                 class="btn btn-primary"
                 data-toggle="modal"
                 *ngIf="me?.role == 'ADMIN'"
                 [attr.data-target]="'#ModalRes' + intervention._id"
             >
-                Affecter
+                {{ intervention.etat == 'ASSIGNEE' ? 'Changer technicien' : 'Affecter' }}
             </button>
 
             <div

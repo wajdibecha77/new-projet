@@ -143,7 +143,7 @@
                                         class="mr-2 px-2 pointer text-primary border-right"
                                         *ngIf="
                                             intervention.etat == 'NON_AFFECTEE' ||
-                                            intervention.etat == 'REFUSEE'
+                                            intervention.etat == 'ASSIGNEE'
                                         "
                                         data-toggle="modal"
                                         [attr.data-target]="
@@ -154,14 +154,14 @@
                                             class="fa fa-user mr-2"
                                             aria-hidden="true"
                                         ></i
-                                        >Affecter
+                                        >{{ intervention.etat == 'ASSIGNEE' ? 'Changer technicien' : 'Affecter' }}
                                     </a>
 
                                     <a
                                         class="mr-2 px-2 pointer text-success border-right"
                                         *ngIf="
-                                            intervention.etat != 'NON_AFFECTEE' &&
-                                            intervention.etat != 'REFUSEE'
+                                            intervention.etat == 'EN_COURS' ||
+                                            intervention.etat == 'TERMINEE'
                                         "
                                     >
                                         <i
