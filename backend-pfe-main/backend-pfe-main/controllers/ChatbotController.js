@@ -15,6 +15,10 @@ const SUPPORTED_INTENTS = [
   "least_loaded",
   "most_loaded",
   "summary",
+  "compare",
+  "recurring_problem",
+  "overload",
+  "analysis",
   "clarify",
 ];
 
@@ -54,15 +58,35 @@ function detectIntent(message) {
     text.includes("ordinateur") ||
     text.includes("pc")
   ) type = "INFORMATIQUE";
+  else if (text.includes("كهرب")) type = "ELECTRIQUE";
+  else if (text.includes("سبا") || text.includes("ماء")) type = "PLOMBERIE";
+  else if (text.includes("ميكا") || text.includes("محرك")) type = "MECANIQUE";
+  else if (text.includes("معلوم") || text.includes("كمبيوتر") || text.includes("حاسوب")) type = "INFORMATIQUE";
 
   if (text.includes("meilleur") || text.includes("ahsen") || text.includes("plus performant")) {
     intent = "best";
+  } else if (text.includes("أفضل") || text.includes("ahsan")) {
+    intent = "best";
   } else if (text.includes("disponible") || text.includes("0") || text.includes("free")) {
+    intent = "available";
+  } else if (text.includes("متاح") || text.includes("فاضي")) {
     intent = "available";
   } else if (text.includes("liste") || text.includes("tous") || text.includes("list")) {
     intent = "list";
+  } else if (text.includes("قائمة") || text.includes("الكل")) {
+    intent = "list";
   } else if (text.includes("combien") || text.includes("9adeh") || text.includes("nombre")) {
     intent = "count";
+  } else if (text.includes("قداش") || text.includes("كم")) {
+    intent = "count";
+  } else if (text.includes("compar") || text.includes("versus") || text.includes("مقارنة")) {
+    intent = "compare";
+  } else if (text.includes("recurrent") || text.includes("récurrent") || text.includes("يتكرر") || text.includes("متكرر")) {
+    intent = "recurring_problem";
+  } else if (text.includes("surcharge") || text.includes("chargé") || text.includes("charge") || text.includes("مضغوط")) {
+    intent = "overload";
+  } else if (text.includes("analyse") || text.includes("analyser") || text.includes("تحليل")) {
+    intent = "analysis";
   } else if (text.includes("retard") || text.includes("overdue")) {
     intent = "overdue";
   } else if (text.includes("etat") || text.includes("status")) {
@@ -206,7 +230,59 @@ const executeBusinessLogic = async ({ intent, type, userId }) => {
         delai: { $lt: new Date() },
         etat: { $ne: "TERMINEE" },
       });
-      return { intent, type, totalInterventions, overdueCount };
+      const byStatus = await Intervention.aggregate([
+        { $group: { _id: "$etat", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      return { intent, type, totalInterventions, overdueCount, byStatus };
+    }
+
+    case "analysis": {
+      const totalInterventions = await Intervention.countDocuments();
+      const overdueCount = await Intervention.countDocuments({
+        delai: { $lt: new Date() },
+        etat: { $ne: "TERMINEE" },
+      });
+      const byStatus = await Intervention.aggregate([
+        { $group: { _id: "$etat", total: { $sum: 1 } } },
+        { $sort: { total: -1 } },
+      ]);
+      const technicians = await getEnrichedTechnicians(type);
+      const overloaded = technicians.filter((t) => t.ongoing >= 4);
+      return { intent, type, totalInterventions, overdueCount, byStatus, overloaded };
+    }
+
+    case "overload": {
+      const technicians = await getEnrichedTechnicians(type);
+      const overloaded = technicians.filter((t) => t.ongoing >= 4).sort((a, b) => b.ongoing - a.ongoing);
+      const leastLoaded = [...technicians].sort((a, b) => a.ongoing - b.ongoing)[0] || null;
+      return { intent, type, technicians, overloaded, leastLoaded };
+    }
+
+    case "recurring_problem": {
+      const recurring = await Intervention.aggregate([
+        {
+          $group: {
+            _id: {
+              type: "$type",
+              lieu: "$lieu",
+              description: { $toLower: "$description" },
+            },
+            total: { $sum: 1 },
+          },
+        },
+        { $match: { total: { $gte: 2 } } },
+        { $sort: { total: -1 } },
+        { $limit: 10 },
+      ]);
+      return { intent, type, recurring };
+    }
+
+    case "compare": {
+      const technicians = await getEnrichedTechnicians(type);
+      const byPerformance = [...technicians].sort((a, b) => b.score - a.score || b.done - a.done).slice(0, 3);
+      const byLoad = [...technicians].sort((a, b) => b.ongoing - a.ongoing || b.total - a.total).slice(0, 3);
+      return { intent, type, technicians, byPerformance, byLoad };
     }
 
     case "list":
@@ -220,11 +296,21 @@ const executeBusinessLogic = async ({ intent, type, userId }) => {
       if (intent === "list") return { intent, type, technicians };
 
       if (intent === "available") {
+        const sortedByLoad = [...technicians].sort((a, b) => a.ongoing - b.ongoing || a.total - b.total);
+        const minLoad = sortedByLoad.length ? sortedByLoad[0].ongoing : 0;
+        const leastLoaded = sortedByLoad.filter((t) => t.ongoing === minLoad);
+        const selected = leastLoaded.length
+          ? leastLoaded[Math.floor(Math.random() * leastLoaded.length)]
+          : null;
+
         return {
           intent,
           type,
           technicians,
           available: technicians.filter((t) => t.ongoing <= 0),
+          minLoad,
+          leastLoaded,
+          selected,
         };
       }
 
@@ -275,46 +361,72 @@ const loadRecentDbHistory = async (userId) => {
 };
 
 const buildFinalPrompt = ({ message, data, memory }) => `
-Tu es un assistant intelligent de gestion d'interventions d'un aeroport.
+Tu es un Assistant Admin Intelligent (decision support system) pour la gestion des interventions aeroport.
 
 Tu dois:
 - utiliser uniquement les donnees fournies
+- comprendre francais, arabe dialectal, ou mixte
 - repondre clairement et precisement
 - ne jamais inventer
+- proposer une action concrete pour l'admin
 
 Historique recent:
 ${JSON.stringify(memory, null, 2)}
 
 Question: ${message}
 Donnees: ${JSON.stringify(data, null, 2)}
+
+Format obligatoire:
+1) Reponse principale
+2) Analyse (avec coches: ✔)
+3) Recommandation (commence par: 💡 Recommandation :)
 `;
 
 const buildFallbackResponse = (data) => {
   if (data.needsClarification) return data.clarification;
 
-  if (data.intent === "count") return `Le nombre total d'interventions est ${data.totalInterventions || 0}.`;
-  if (data.intent === "count_mine") return `Vous avez ${data.mine || 0} intervention(s) liee(s) a votre compte.`;
-  if (data.intent === "by_status") return `Statistiques par etat: ${(data.byStatus || []).map((i) => `${i._id || "NON_DEFINI"}: ${i.total}`).join(", ") || "Aucune donnee"}.`;
-  if (data.intent === "by_type") return `Statistiques par type: ${(data.byType || []).map((i) => `${i._id || "AUTRE"}: ${i.total}`).join(", ") || "Aucune donnee"}.`;
-  if (data.intent === "overdue") return `Interventions en retard: ${data.overdueCount || 0}.`;
-  if (data.intent === "summary") return `Resume: total=${data.totalInterventions || 0}, retard=${data.overdueCount || 0}.`;
+  if (data.intent === "count") return `Reponse principale:\nTotal interventions: ${data.totalInterventions || 0}.\n\nAnalyse:\n✔ Donnee issue du comptage global MongoDB.\n\n💡 Recommandation : Surveillez les pics et planifiez la capacite technicien.`; 
+  if (data.intent === "count_mine") return `Reponse principale:\nVous avez ${data.mine || 0} intervention(s) liee(s) a votre compte.\n\nAnalyse:\n✔ Comptage sur createdBy/assignedTo.\n\n💡 Recommandation : Prioriser vos interventions critiques.`;
+  if (data.intent === "by_status") return `Reponse principale:\nStatistiques par etat disponibles.\n\nAnalyse:\n✔ ${(data.byStatus || []).map((i) => `${i._id || "NON_DEFINI"}: ${i.total}`).join(" | ") || "Aucune donnee"}\n\n💡 Recommandation : Reduire les statuts bloquants en priorite.`;
+  if (data.intent === "by_type") return `Reponse principale:\nStatistiques par type disponibles.\n\nAnalyse:\n✔ ${(data.byType || []).map((i) => `${i._id || "AUTRE"}: ${i.total}`).join(" | ") || "Aucune donnee"}\n\n💡 Recommandation : Renforcer l'equipe sur le type dominant.`;
+  if (data.intent === "overdue") return `Reponse principale:\nInterventions en retard: ${data.overdueCount || 0}.\n\nAnalyse:\n✔ Retards calcules sur delai < maintenant et etat != TERMINEE.\n\n💡 Recommandation : Reaffecter immediatement les tickets en retard.`;
+  if (data.intent === "summary") return `Reponse principale:\nResume global du systeme pret.\n\nAnalyse:\n✔ Total: ${data.totalInterventions || 0}\n✔ Retard: ${data.overdueCount || 0}\n\n💡 Recommandation : Concentrer les ressources sur le backlog et les retards.`;
+  if (data.intent === "analysis") {
+    const overloadedCount = Array.isArray(data.overloaded) ? data.overloaded.length : 0;
+    return `Reponse principale:\nAnalyse globale effectuee.\n\nAnalyse:\n✔ Total: ${data.totalInterventions || 0}\n✔ Retard: ${data.overdueCount || 0}\n✔ Techniciens surcharges: ${overloadedCount}\n\n💡 Recommandation : Redistribuer les nouvelles taches vers les moins charges.`;
+  }
+  if (data.intent === "recurring_problem") {
+    const top = (data.recurring || [])[0];
+    return `Reponse principale:\nProblemes recurrents detectes.\n\nAnalyse:\n✔ Nombre de cas recurrents: ${(data.recurring || []).length}\n${top ? `✔ Cas principal: ${top._id?.description || "N/A"} (${top.total})` : "✔ Aucun cas >= 2 occurrences"}\n\n💡 Recommandation : Traiter la cause racine du probleme le plus frequent.`;
+  }
+  if (data.intent === "compare") {
+    const p = (data.byPerformance || []).map((t) => `${t.name}(${t.score})`).join(", ") || "Aucun";
+    const l = (data.byLoad || []).map((t) => `${t.name}(${t.ongoing})`).join(", ") || "Aucun";
+    return `Reponse principale:\nComparaison techniciens terminee.\n\nAnalyse:\n✔ Top performance: ${p}\n✔ Top charge: ${l}\n\n💡 Recommandation : Affecter les nouvelles interventions aux techniciens performants avec charge faible.`;
+  }
+  if (data.intent === "overload") {
+    const overloaded = data.overloaded || [];
+    const target = data.leastLoaded || null;
+    return `Reponse principale:\nSurcharge technicien analysee.\n\nAnalyse:\n✔ Techniciens surcharges: ${overloaded.length}\n✔ Candidat faible charge: ${target ? `${target.name} (${target.ongoing})` : "Aucun"}\n\n💡 Recommandation : Redistribuer les taches surchargees vers ${target ? target.name : "les techniciens les moins charges"}.`;
+  }
 
   if (!Array.isArray(data.technicians) || !data.technicians.length) return "Aucun technicien trouve pour ce filtre.";
 
-  if (data.intent === "list") return `Liste des techniciens: ${data.technicians.map((t) => t.name).join(", ")}.`;
+  if (data.intent === "list") return `Reponse principale:\nListe des techniciens.\n\nAnalyse:\n✔ ${data.technicians.map((t) => `${t.name} (${t.role})`).join(" | ")}\n\n💡 Recommandation : Selectionner ensuite par specialite et charge.`;
   if (data.intent === "available") {
-    const available = data.available || [];
-    return available.length
-      ? `Technicien(s) disponible(s): ${available.map((t) => t.name).join(", ")}.`
-      : "Aucun technicien disponible avec 0 intervention en cours.";
+    const selected = data.selected || null;
+    if (selected) {
+      return `Reponse principale:\n${selected.name} est le technicien le plus disponible actuellement.\n\nAnalyse:\n✔ ${selected.ongoing} intervention(s) en cours\n✔ Charge minimale sur les techniciens filtres\n\n💡 Recommandation : Affecter cette intervention a ${selected.name} pour equilibrer la charge.`;
+    }
+    return "Reponse principale:\nAucun technicien ne correspond au filtre.\n\nAnalyse:\n✔ Liste techniciens vide pour ce domaine.\n\n💡 Recommandation : Verifier la specialite demandee ou les roles des utilisateurs.";
   }
   if (data.intent === "best") {
     return data.best
-      ? `${data.best.name} est le meilleur technicien selon le score ${data.best.score}.`
-      : "Aucun technicien classe.";
+      ? `Reponse principale:\n${data.best.name} est le meilleur technicien.\n\nAnalyse:\n✔ Score: ${data.best.score}\n✔ Terminees: ${data.best.done}\n✔ Refusees: ${data.best.refused}\n✔ Charge actuelle: ${data.best.ongoing}\n\n💡 Recommandation : Vous pouvez lui affecter une intervention prioritaire.`
+      : "Reponse principale:\nAucun technicien classe.\n\nAnalyse:\n✔ Donnees insuffisantes pour calcul de performance.\n\n💡 Recommandation : Verifier les statuts TERMINEE/REFUSEE.";
   }
 
-  return "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?";
+  return "Choisissez une analyse: meilleur technicien, technicien disponible, liste techniciens, statistiques, comparaison, probleme recurrent, surcharge.";
 };
 
 exports.chatbot = async (req, res) => {
@@ -332,8 +444,8 @@ exports.chatbot = async (req, res) => {
 
     if (!intent) {
       return res.status(200).json({
-        reply: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
-        message: "Je n'ai pas compris. Voulez-vous : disponible, meilleur ou liste ?",
+        reply: "Choisissez une analyse: meilleur technicien, technicien disponible, liste techniciens, statistiques, comparaison, probleme recurrent, surcharge.",
+        message: "Choisissez une analyse: meilleur technicien, technicien disponible, liste techniciens, statistiques, comparaison, probleme recurrent, surcharge.",
       });
     }
 

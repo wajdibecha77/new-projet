@@ -359,6 +359,17 @@ module.exports = {
           });
         }
 
+        const currentState = String(inter.etat || "").toUpperCase();
+        const canAssign =
+          currentState === "NON_AFFECTEE" || currentState === "ASSIGNEE";
+
+        if (!canAssign) {
+          return res.status(400).json({
+            message:
+              "Reaffectation impossible: l'intervention est deja en cours ou terminee.",
+          });
+        }
+
         await Intervention.findByIdAndUpdate(
           { _id: req.params.id },
           {
