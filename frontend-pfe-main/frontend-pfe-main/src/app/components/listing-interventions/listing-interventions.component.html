@@ -1,127 +1,334 @@
 <div class="row">
-  <div class="col-lg-12 col-xl-12">
-    <div class="card mb-30">
-      <div class="card-body">
+    <div class="col-lg-12 col-xl-12">
+        <div class="card mb-30">
+            <div class="card-body">
+                <div class="card-header mb-4">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-title">Listing Interventions</h5>
+                        <button
+                            class="btn btn-primary"
+                            routerLink="/create-intervention"
+                        >
+                            Ajouter une intervention
+                        </button>
+                    </div>
+                </div>
+                <div class="row border-bottom mb-4">
+                    <div class="col col-lg-3 mb-4 col-sm-12 col-md-12">
+                        <input
+                            class="form-control"
+                            placeholder="Nom d'utilisateur"
+                            name="createdBy"
+                            [(ngModel)]="filter.createdBy"
+                        />
+                    </div>
+                    <div class="col col-lg-3 mb-4 col-sm-12 col-md-12">
+                        <input
+                            class="form-control"
+                            placeholder="lieu d'intervention"
+                            name="lieu"
+                            [(ngModel)]="filter.lieu"
+                        />
+                    </div>
+                    <div class="col col-lg-3 mb-4 col-sm-12 col-md-12">
+                        <select
+                            name="name"
+                            [(ngModel)]="filter.name"
+                            type="text"
+                            class="form-control"
+                        >
+                            <option value="" disabled selected>
+                                Choissisez type de l'intervention
+                            </option>
+                            <option value="">Tous</option>
+                            <option value="Electrique">Electrique</option>
+                            <option value="Mecanique">Mecanique</option>
+                            <option value="Informatique">Informatique</option>
+                            <option value="Plomberie & chaud froid">
+                                Plomberie & chaud froid
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col col-lg-3 mb-4 col-sm-12 col-md-12">
+                        <select
+                            class="form-control"
+                            name="etat"
+                            [(ngModel)]="filter.etat"
+                        >
+                            <option value="" disabled selected>
+                                Choissisez l'etat de l'intervention
+                            </option>
+                            <option value="">Tous</option>
+                            <option value="NON_AFFECTEE">Non affectée</option>
+                            <option value="REFUSEE">Refusee</option>
+                            <option value="ASSIGNEE">Assignée</option>
+                            <option value="EN_COURS">En cours</option>
+                            <option value="TERMINEE">Terminée</option>
+                        </select>
+                    </div>
+                </div>
 
-        <div class="card-header mb-4">
-          <div class="d-flex justify-content-between">
-            <h5 class="card-title">Listing Interventions</h5>
-            <button class="btn btn-primary" routerLink="/create-intervention">
-              Ajouter une intervention
-            </button>
-          </div>
+                <div class="table-responsive">
+                    <table class="table table-hover text-vertical-middle mb-0">
+                        <thead class="bort-none borpt-0">
+                            <tr>
+                                <th>Num</th>
+                                <th>Type d'intervention</th>
+                                <th>Delai</th>
+                                <th>Created by</th>
+                                <th>Lieu</th>
+                                <th>Description</th>
+                                <th>Etat</th>
+
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr
+                                *ngFor="
+                                    let intervention of interventions
+                                        | interPipe: filter;
+                                    let index = index;
+                                    trackBy: trackByInterventionId
+                                "
+                            >
+                                <td>{{ index + 1 }}</td>
+                                <td>
+                                    {{ intervention.name }}
+                                    <span *ngIf="intervention.isAI" class="ai-badge">✈️ AI</span>
+                                </td>
+                                <td>{{ intervention.delai }}</td>
+                                <td>{{ intervention.createdBy?.name || "-" }}</td>
+                                <td>{{ intervention.lieu }}</td>
+                                <td>{{ intervention.description }}</td>
+                                <td>
+                                    <span
+                                        *ngIf="intervention.etat == 'ASSIGNEE'"
+                                        class="badge badge-primary py-1"
+                                        >Assignee</span
+                                    >
+                                    <span
+                                        *ngIf="intervention.etat == 'EN_COURS'"
+                                        class="badge badge-warning text-dark py-1"
+                                        >En cours</span
+                                    >
+                                    <span
+                                        *ngIf="intervention.etat == 'TERMINEE'"
+                                        class="badge badge-success py-1"
+                                        >Terminee</span
+                                    >
+                                    <span
+                                        *ngIf="
+                                            intervention.etat == 'NON_AFFECTEE'
+                                        "
+                                        class="badge badge_danger py-1"
+                                        >Non affectee</span
+                                    >
+                                    <span
+                                        *ngIf="intervention.etat == 'REFUSEE'"
+                                        class="badge badge_danger py-1"
+                                        >Refusee</span
+                                    >
+                                    <span
+                                        *ngIf="
+                                            (intervention.etat == 'NON_AFFECTEE' || intervention.etat == 'REFUSEE') &&
+                                            intervention.refusCommentaire
+                                        "
+                                        class="badge badge_warning py-1 ml-1"
+                                        >Refusee puis remise en attente</span
+                                    >
+                                </td>
+                                <td class="text-center">
+                                    <a
+                                        class="mr-2 px-2 pointer text-primary border-right"
+                                        *ngIf="
+                                            intervention.etat == 'NON_AFFECTEE' ||
+                                            intervention.etat == 'ASSIGNEE'
+                                        "
+                                        (click)="openAffectationModal(intervention, $event)"
+                                    >
+                                        <i
+                                            class="fa fa-user mr-2"
+                                            aria-hidden="true"
+                                        ></i
+                                        >{{ intervention.etat == 'ASSIGNEE' ? 'Changer technicien' : 'Affecter' }}
+                                    </a>
+
+                                    <a
+                                        class="mr-2 px-2 pointer text-success border-right"
+                                        *ngIf="
+                                            intervention.etat == 'EN_COURS' ||
+                                            intervention.etat == 'TERMINEE'
+                                        "
+                                    >
+                                        <i
+                                            class="fa fa-check mr-2"
+                                            aria-hidden="true"
+                                        ></i
+                                        >Affecteé
+                                    </a>
+                                    <a
+                                        [routerLink]="
+                                            '/intervention/' + intervention._id
+                                        "
+                                        (click)="setIntervention(intervention)"
+                                    >
+                                        <i
+                                            class="fa fa-eye"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+
+                                    <a
+                                        *ngIf="
+                                            intervention.etat == 'NON_AFFECTEE' ||
+                                            intervention.etat == 'REFUSEE'
+                                        "
+                                        class="text-danger"
+                                        (click)="
+                                            supprimerIntervention(
+                                                intervention._id
+                                            )
+                                        "
+                                    >
+                                        <i
+                                            class="fa fa-trash ml-2"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </a>
+                                    <div
+                                        class="modal fade"
+                                        [attr.id]="
+                                            'ModalRes' + intervention._id
+                                        "
+                                        tabindex="-1"
+                                        role="dialog"
+                                        aria-labelledby="exampleModalLabel"
+                                        aria-hidden="true"
+                                    >
+                                        <div
+                                            class="modal-dialog"
+                                            role="document"
+                                            (click)="$event.stopPropagation()"
+                                        >
+                                            <div class="modal-content" (click)="$event.stopPropagation()">
+                                                <ng-container *ngIf="showModal && activeModalId == ('ModalRes' + intervention._id)">
+                                                <div class="modal-header">
+                                                    <h5
+                                                        class="modal-title"
+                                                        id="exampleModalLabel"
+                                                    >
+                                                        Affecter un utilisateur
+                                                    </h5>
+                                                    <button
+                                                        type="button"
+                                                        class="close"
+                                                        aria-label="Close"
+                                                        (click)="
+                                                            onCancelAffectation(
+                                                                intervention._id,
+                                                                'ModalRes' + intervention._id
+                                                            )
+                                                        "
+                                                    >
+                                                        <span aria-hidden="true"
+                                                            >&times;</span
+                                                        >
+                                                    </button>
+                                                </div>
+                                                <div class="responsable">
+                                                    <div
+                                                        class="text-center text-muted py-3"
+                                                        *ngIf="isLoadingUsers"
+                                                    >
+                                                        Chargement des techniciens...
+                                                    </div>
+                                                    <ng-container
+                                                        *ngFor="
+                                                            let user of activeTechnicians;
+                                                            trackBy: trackByUserId
+                                                        "
+                                                    >
+                                                            <div
+                                                                class="res-content"
+                                                                [ngClass]="{
+                                                                    'selected-user':
+                                                                    selectedUsersByIntervention[intervention._id] &&
+                                                                    user._id ==
+                                                                        selectedUsersByIntervention[intervention._id]._id
+                                                            }"
+                                                            (click)="
+                                                                setAffectedUser(
+                                                                    intervention._id,
+                                                                    user
+                                                                )
+                                                            "
+                                                        >
+                                                            <span
+                                                                class="user-icon"
+                                                            >
+                                                                <i
+                                                                    class="fa fa-user"
+                                                                ></i>
+                                                            </span>
+                                                            <span
+                                                                class="user-name"
+                                                                >{{
+                                                                    user.name
+                                                                }}</span
+                                                            >
+                                                        </div>
+                                                    </ng-container>
+                                                </div>
+
+                                                <div
+                                                    class="p-3 d-flex flex-row gap-3"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Close"
+                                                        class="btn btn-danger w-100 mr-3"
+                                                        (click)="
+                                                            onCancelAffectation(
+                                                                intervention._id,
+                                                                'ModalRes' + intervention._id
+                                                            )
+                                                        "
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-primary w-100"
+                                                        [disabled]="
+                                                            isAffectationLoading(intervention._id) || isSubmitting
+                                                        "
+                                                        (click)="
+                                                            affectedToUser(
+                                                                intervention,
+                                                                'ModalRes' + intervention._id
+                                                            )
+                                                        "
+                                                    >
+                                                        {{
+                                                            isAffectationLoading(intervention._id)
+                                                                || isSubmitting
+                                                                ? 'Enregistrement...'
+                                                                : 'Enregistrer'
+                                                        }}
+                                                    </button>
+                                                </div>
+                                                </ng-container>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        <!-- FILTER -->
-        <div class="row border-bottom mb-4">
-          <div class="col-lg-3 mb-4">
-            <input class="form-control" placeholder="Nom d'utilisateur" [(ngModel)]="filter.createdBy" />
-          </div>
-
-          <div class="col-lg-3 mb-4">
-            <input class="form-control" placeholder="lieu" [(ngModel)]="filter.lieu" />
-          </div>
-
-          <div class="col-lg-3 mb-4">
-            <select class="form-control" [(ngModel)]="filter.name">
-              <option value="">Tous</option>
-              <option value="Electrique">Electrique</option>
-              <option value="Mecanique">Mecanique</option>
-              <option value="Informatique">Informatique</option>
-              <option value="Plomberie & chaud froid">Plomberie</option>
-            </select>
-          </div>
-
-          <div class="col-lg-3 mb-4">
-            <select class="form-control" [(ngModel)]="filter.etat">
-              <option value="">Tous</option>
-              <option value="NON_AFFECTEE">Non affectée</option>
-              <option value="ASSIGNEE">Assignée</option>
-              <option value="EN_COURS">En cours</option>
-              <option value="TERMINEE">Terminée</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Type</th>
-                <th>Lieu</th>
-                <th>Etat</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr *ngFor="let intervention of interventions; let i = index; trackBy: trackByInterventionId">
-                <td>{{ i + 1 }}</td>
-                <td>{{ intervention.name }}</td>
-                <td>{{ intervention.lieu }}</td>
-
-                <!-- STATUS -->
-                <td>
-                  <span *ngIf="intervention.etat === 'ASSIGNEE'" class="badge bg-primary">Assignée</span>
-                  <span *ngIf="intervention.etat === 'EN_COURS'" class="badge bg-warning text-dark">En cours</span>
-                  <span *ngIf="intervention.etat === 'TERMINEE'" class="badge bg-success">Terminée</span>
-                  <span *ngIf="intervention.etat === 'NON_AFFECTEE'" class="badge bg-danger">Non affectée</span>
-                </td>
-
-                <!-- ACTION -->
-                <td>
-                  <button
-                    *ngIf="intervention.etat === 'NON_AFFECTEE' || intervention.etat === 'ASSIGNEE'"
-                    class="btn btn-sm btn-primary"
-                    (click)="openAffectationModal(intervention)"
-                  >
-                    {{ intervention.etat === 'ASSIGNEE' ? 'Changer technicien' : 'Affecter' }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
     </div>
-  </div>
-</div>
-
-<!-- ================= MODAL UNIQUE ================= -->
-
-<div class="custom-backdrop" *ngIf="showModal"></div>
-
-<div class="custom-modal" *ngIf="showModal">
-  <div class="modal-box">
-
-    <div class="modal-header">
-      <h5>Affecter un technicien</h5>
-      <button (click)="closeModal()">X</button>
-    </div>
-
-    <div *ngIf="isLoadingUsers" class="text-center p-3">
-      Chargement...
-    </div>
-
-    <div *ngFor="let user of activeTechnicians; trackBy: trackByUserId"
-         class="res-content"
-         [class.selected-user]="selectedUser?._id === user._id"
-         (click)="selectUser(user)">
-      {{ user.name }}
-    </div>
-
-    <div class="mt-3 d-flex gap-2">
-      <button class="btn btn-danger w-50" (click)="closeModal()">Annuler</button>
-
-      <button class="btn btn-primary w-50"
-              [disabled]="!selectedUser || isSubmitting"
-              (click)="confirmAffectation()">
-        {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer' }}
-      </button>
-    </div>
-
-  </div>
 </div>
