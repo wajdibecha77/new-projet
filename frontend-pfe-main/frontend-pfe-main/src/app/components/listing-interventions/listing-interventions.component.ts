@@ -16,6 +16,10 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     public users: User[] = [];
     public intervention;
     public selectedIntervention: any = null;
+    public showModal = false;
+    public isSubmitting = false;
+    public activeModalId: string | null = null;
+    public activeTechnicians: User[] = [];
     public selectedUsersByIntervention: { [key: string]: any } = {};
     public loadingByIntervention: { [key: string]: boolean } = {};
     public isLoadingUsers = false;
@@ -68,6 +72,10 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
         return String(user?._id || "");
     }
 
+    trackByInterventionId(_: number, intervention: any): string {
+        return String(intervention?._id || "");
+    }
+
     loadUsers(force = false) {
         if (this.usersRequestInFlight) return;
         if (this.usersLoaded && !force) return;
@@ -89,6 +97,11 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
                 (res: any) => {
                     this.users = (res?.data || []).reverse();
                     this.usersLoaded = true;
+                    if (this.selectedIntervention?._id) {
+                        this.activeTechnicians = this.getUsersForIntervention(
+                            this.selectedIntervention
+                        );
+                    }
                 },
                 () => {
                     this.usersLoaded = false;
@@ -104,12 +117,15 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
         if (!intervention?._id) return;
 
         this.selectedIntervention = intervention;
+        this.activeModalId = `ModalRes${intervention._id}`;
+        this.showModal = true;
+        this.activeTechnicians = this.getUsersForIntervention(intervention);
         this.loadUsers();
 
         // Wait one tick to avoid modal/render race conditions.
         setTimeout(() => {
             this.cdr.detectChanges();
-            this.openModal(`ModalRes${intervention._id}`);
+            this.openModal(this.activeModalId as string);
         }, 30);
     }
 
@@ -132,6 +148,10 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
 
     onCancelAffectation(interventionId: string, modalId: string) {
         this.resetAffectationState(interventionId);
+        this.showModal = false;
+        this.activeModalId = null;
+        this.activeTechnicians = [];
+        this.isSubmitting = false;
         if (this.selectedIntervention?._id === interventionId) {
             this.selectedIntervention = null;
         }
@@ -179,6 +199,7 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     affectedToUser(intervention, modalId: string) {
         if (!intervention?._id) return;
         if (this.loadingByIntervention[intervention._id]) return;
+        if (this.isSubmitting) return;
 
         const selectedUser = this.selectedUsersByIntervention[intervention?._id];
 
@@ -191,54 +212,63 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
             return;
         }
 
+        // Close modal first to avoid Angular re-render conflicts during API call.
+        this.showModal = false;
+        this.isSubmitting = true;
+        this.closeModal(modalId);
+
         this.loadingByIntervention[intervention._id] = true;
-        this.interService
-            .updateInterventionStatus(intervention._id, {
-                affectedBy: selectedUser._id,
-            })
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => {
-                    this.loadingByIntervention[intervention._id] = false;
-                    this.cdr.detectChanges();
+        setTimeout(() => {
+            this.interService
+                .updateInterventionStatus(intervention._id, {
+                    affectedBy: selectedUser._id,
                 })
-            )
-            .subscribe(
-                (res: any) => {
-                    const selected = this.selectedUsersByIntervention[intervention._id];
-                    const idx = this.interventions?.findIndex(
-                        (it) => it._id === intervention._id
-                    );
+                .pipe(
+                    takeUntil(this.destroy$),
+                    finalize(() => {
+                        this.loadingByIntervention[intervention._id] = false;
+                        this.isSubmitting = false;
+                        this.activeModalId = null;
+                        this.activeTechnicians = [];
+                        this.selectedIntervention = null;
+                        this.cdr.detectChanges();
+                    })
+                )
+                .subscribe(
+                    (res: any) => {
+                        const selected = this.selectedUsersByIntervention[intervention._id];
+                        const idx = this.interventions?.findIndex(
+                            (it) => it._id === intervention._id
+                        );
 
-                    if (idx >= 0) {
-                        this.interventions[idx] = {
-                            ...this.interventions[idx],
-                            affectedBy: selected,
-                            etat: "ASSIGNEE",
-                            dateDebut: new Date(),
-                        };
+                        if (idx >= 0) {
+                            this.interventions[idx] = {
+                                ...this.interventions[idx],
+                                affectedBy: selected,
+                                etat: "ASSIGNEE",
+                                dateDebut: new Date(),
+                            };
+                        }
+
+                        this.notifier.show({
+                            type: "success",
+                            message: "Intervention affectee avec succes.",
+                            id: "THAT_NOTIFICATION_ID",
+                        });
+                    },
+                    (err) => {
+                        const backendMessage =
+                            err?.error?.message || err?.error?.msg || "";
+                        this.notifier.show({
+                            type: "error",
+                            message: backendMessage
+                                ? backendMessage
+                                : "Echec lors de l'affectation de l'utilisateur.",
+                            id: "THAT_NOTIFICATION_ID",
+                        });
                     }
-
-                    this.notifier.show({
-                        type: "success",
-                        message: "Intervention affectee avec succes.",
-                        id: "THAT_NOTIFICATION_ID",
-                    });
-
-                    this.onCancelAffectation(intervention._id, modalId);
-                },
-                (err) => {
-                    const backendMessage =
-                        err?.error?.message || err?.error?.msg || "";
-                    this.notifier.show({
-                        type: "error",
-                        message: backendMessage
-                            ? backendMessage
-                            : "Echec lors de l'affectation de l'utilisateur.",
-                        id: "THAT_NOTIFICATION_ID",
-                    });
-                }
-            );
+                );
+        }, 30);
     }
 
     supprimerIntervention(id) {

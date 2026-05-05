@@ -89,7 +89,8 @@
                                 *ngFor="
                                     let intervention of interventions
                                         | interPipe: filter;
-                                    let index = index
+                                    let index = index;
+                                    trackBy: trackByInterventionId
                                 "
                             >
                                 <td>{{ index + 1 }}</td>
@@ -212,7 +213,7 @@
                                             (click)="$event.stopPropagation()"
                                         >
                                             <div class="modal-content" (click)="$event.stopPropagation()">
-                                                <ng-container *ngIf="selectedIntervention?._id == intervention._id">
+                                                <ng-container *ngIf="showModal && activeModalId == ('ModalRes' + intervention._id)">
                                                 <div class="modal-header">
                                                     <h5
                                                         class="modal-title"
@@ -245,7 +246,7 @@
                                                     </div>
                                                     <ng-container
                                                         *ngFor="
-                                                            let user of getUsersForIntervention(intervention);
+                                                            let user of activeTechnicians;
                                                             trackBy: trackByUserId
                                                         "
                                                     >
@@ -301,7 +302,7 @@
                                                         type="button"
                                                         class="btn btn-primary w-100"
                                                         [disabled]="
-                                                            isAffectationLoading(intervention._id)
+                                                            isAffectationLoading(intervention._id) || isSubmitting
                                                         "
                                                         (click)="
                                                             affectedToUser(
@@ -312,6 +313,7 @@
                                                     >
                                                         {{
                                                             isAffectationLoading(intervention._id)
+                                                                || isSubmitting
                                                                 ? 'Enregistrement...'
                                                                 : 'Enregistrer'
                                                         }}
