@@ -32,7 +32,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public chatbotInput = "";
   public chatbotLoading = false;
   public chatbotMessages: Array<{ from: "user" | "bot"; text: string }> = [
-    { from: "bot", text: "Bonjour, je peux vous aider a trouver un technicien disponible." },
+    { from: "bot", text: "Bonjour Je suis votre assistant intelligent de gestion des interventions.Posez-moi votre question, je vais analyser vos données et vous proposer la meilleure décision." },
   ];
   private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();

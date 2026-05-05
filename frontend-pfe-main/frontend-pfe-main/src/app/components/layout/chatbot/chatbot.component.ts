@@ -23,7 +23,7 @@ export class ChatbotComponent {
   messages: ChatMessage[] = [
     {
       from: "bot",
-      text: "Bonjour, je peux vous aider a trouver un technicien disponible.",
+      text: "Bonjour Je suis votre assistant intelligent de gestion des interventions.Posez-moi votre question, je vais analyser vos données et vous proposer la meilleure décision.",
     },
   ];
 
