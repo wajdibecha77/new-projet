@@ -208,6 +208,28 @@ tr {
   flex-direction: row;
 }
 
+:host ::ng-deep .custom-affectation-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  z-index: 1050 !important;
+  pointer-events: auto !important;
+}
+
+:host ::ng-deep .custom-affectation-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1060 !important;
+  overflow-y: auto !important;
+  pointer-events: auto !important;
+}
+
+:host ::ng-deep .custom-affectation-modal .modal-dialog {
+  z-index: 1061 !important;
+}
+
 /* ================= MOBILE FIX 🔥 ================= */
 @media (max-width: 768px) {
 

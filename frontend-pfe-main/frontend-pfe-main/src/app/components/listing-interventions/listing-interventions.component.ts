@@ -21,6 +21,7 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     public isLoadingUsers = false;
     public total = 0;
     public filter;
+    private previousBodyOverflow = "";
     private usersLoaded = false;
     private usersRequestInFlight = false;
     private destroy$ = new Subject<void>();
@@ -109,7 +110,7 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             this.cdr.detectChanges();
             this.openModal(`ModalRes${intervention._id}`);
-        }, 0);
+        }, 30);
     }
 
     getUsersForIntervention(intervention: any): User[] {
@@ -142,16 +143,19 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
         const modalEl = document.getElementById(modalId);
         if (!modalEl) return;
 
+        modalEl.classList.add("custom-affectation-modal");
         modalEl.classList.add("show");
         modalEl.setAttribute("aria-modal", "true");
         modalEl.setAttribute("role", "dialog");
         modalEl.removeAttribute("aria-hidden");
         (modalEl as HTMLElement).style.display = "block";
 
+        this.previousBodyOverflow = document.body.style.overflow || "";
+        document.body.style.overflow = "hidden";
         document.body.classList.add("modal-open");
-        if (!document.querySelector(".modal-backdrop")) {
+        if (!document.querySelector(".custom-affectation-backdrop")) {
             const backdrop = document.createElement("div");
-            backdrop.className = "modal-backdrop fade show";
+            backdrop.className = "modal-backdrop fade show custom-affectation-backdrop";
             document.body.appendChild(backdrop);
         }
     }
@@ -159,14 +163,16 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     closeModal(modalId: string) {
         const modalEl = document.getElementById(modalId);
         if (modalEl) {
+            modalEl.classList.remove("custom-affectation-modal");
             modalEl.classList.remove("show");
             modalEl.setAttribute("aria-hidden", "true");
             (modalEl as HTMLElement).style.display = "none";
         }
 
+        document.body.style.overflow = this.previousBodyOverflow;
         document.body.classList.remove("modal-open");
         document.body.style.removeProperty("padding-right");
-        const backdrops = document.querySelectorAll(".modal-backdrop");
+        const backdrops = document.querySelectorAll(".custom-affectation-backdrop");
         backdrops.forEach((backdrop) => backdrop.remove());
     }
 
@@ -245,6 +251,9 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        document.body.style.overflow = this.previousBodyOverflow;
+        const backdrops = document.querySelectorAll(".custom-affectation-backdrop");
+        backdrops.forEach((backdrop) => backdrop.remove());
         this.destroy$.next();
         this.destroy$.complete();
     }

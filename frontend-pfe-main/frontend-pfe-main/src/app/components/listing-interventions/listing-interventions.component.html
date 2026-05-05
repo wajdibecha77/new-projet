@@ -209,8 +209,9 @@
                                         <div
                                             class="modal-dialog"
                                             role="document"
+                                            (click)="$event.stopPropagation()"
                                         >
-                                            <div class="modal-content">
+                                            <div class="modal-content" (click)="$event.stopPropagation()">
                                                 <ng-container *ngIf="selectedIntervention?._id == intervention._id">
                                                 <div class="modal-header">
                                                     <h5
