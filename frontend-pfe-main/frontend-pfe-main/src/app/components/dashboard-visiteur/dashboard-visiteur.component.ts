@@ -186,9 +186,9 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
 
     getStatusClass(etat: string): string {
         const normalized = String(etat || "").toUpperCase();
-        if (normalized === "TERMINEE") return "badge badge_success py-1 px-3";
-        if (normalized === "ASSIGNEE") return "badge badge_warning py-1 px-3";
-        if (normalized === "EN_COURS") return "badge badge_warning py-1 px-3";
+        if (normalized === "TERMINEE") return "badge badge-success py-1 px-3";
+        if (normalized === "ASSIGNEE") return "badge badge-primary py-1 px-3";
+        if (normalized === "EN_COURS") return "badge badge-warning text-dark py-1 px-3";
         if (normalized === "NON_AFFECTEE") return "badge badge_danger py-1 px-3";
         return "badge badge-secondary py-1 px-3";
     }
