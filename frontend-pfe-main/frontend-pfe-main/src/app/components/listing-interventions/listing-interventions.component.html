@@ -145,10 +145,7 @@
                                             intervention.etat == 'NON_AFFECTEE' ||
                                             intervention.etat == 'ASSIGNEE'
                                         "
-                                        data-toggle="modal"
-                                        [attr.data-target]="
-                                            '#ModalRes' + intervention._id
-                                        "
+                                        (click)="openAffectationModal(intervention, $event)"
                                     >
                                         <i
                                             class="fa fa-user mr-2"
@@ -214,6 +211,7 @@
                                             role="document"
                                         >
                                             <div class="modal-content">
+                                                <ng-container *ngIf="selectedIntervention?._id == intervention._id">
                                                 <div class="modal-header">
                                                     <h5
                                                         class="modal-title"
@@ -238,10 +236,16 @@
                                                     </button>
                                                 </div>
                                                 <div class="responsable">
+                                                    <div
+                                                        class="text-center text-muted py-3"
+                                                        *ngIf="isLoadingUsers"
+                                                    >
+                                                        Chargement des techniciens...
+                                                    </div>
                                                     <ng-container
                                                         *ngFor="
-                                                            let user of users;
-                                                            let index = index
+                                                            let user of getUsersForIntervention(intervention);
+                                                            trackBy: trackByUserId
                                                         "
                                                     >
                                                             <div
@@ -252,11 +256,6 @@
                                                                     user._id ==
                                                                         selectedUsersByIntervention[intervention._id]._id
                                                             }"
-                                                            *ngIf="
-                                                                intervention
-                                                                    .name[0] ==
-                                                                (user?.role || '').charAt(0)
-                                                            "
                                                             (click)="
                                                                 setAffectedUser(
                                                                     intervention._id,
@@ -317,6 +316,7 @@
                                                         }}
                                                     </button>
                                                 </div>
+                                                </ng-container>
                                             </div>
                                         </div>
                                     </div>

@@ -13,12 +13,16 @@ import { UserService } from "src/app/services/user.service";
 })
 export class ListingInterventionsComponent implements OnInit, OnDestroy {
     public interventions: any;
-    public users: User[];
+    public users: User[] = [];
     public intervention;
+    public selectedIntervention: any = null;
     public selectedUsersByIntervention: { [key: string]: any } = {};
     public loadingByIntervention: { [key: string]: boolean } = {};
+    public isLoadingUsers = false;
     public total = 0;
     public filter;
+    private usersLoaded = false;
+    private usersRequestInFlight = false;
     private destroy$ = new Subject<void>();
     constructor(
         private interService: InterventionService,
@@ -46,12 +50,7 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.userService
-            .getAllUsers()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((res: any) => {
-                this.users = res.data.reverse();
-            });
+        this.loadUsers();
         this.getInterventions();
     }
     setIntervention(inter) {
@@ -62,6 +61,63 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
     setAffectedUser(interventionId, user) {
         if (this.loadingByIntervention[interventionId]) return;
         this.selectedUsersByIntervention[interventionId] = user;
+    }
+
+    trackByUserId(_: number, user: any): string {
+        return String(user?._id || "");
+    }
+
+    loadUsers(force = false) {
+        if (this.usersRequestInFlight) return;
+        if (this.usersLoaded && !force) return;
+
+        this.usersRequestInFlight = true;
+        this.isLoadingUsers = true;
+
+        this.userService
+            .getAllUsers()
+            .pipe(
+                takeUntil(this.destroy$),
+                finalize(() => {
+                    this.usersRequestInFlight = false;
+                    this.isLoadingUsers = false;
+                    this.cdr.detectChanges();
+                })
+            )
+            .subscribe(
+                (res: any) => {
+                    this.users = (res?.data || []).reverse();
+                    this.usersLoaded = true;
+                },
+                () => {
+                    this.usersLoaded = false;
+                }
+            );
+    }
+
+    openAffectationModal(intervention: any, event?: Event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (!intervention?._id) return;
+
+        this.selectedIntervention = intervention;
+        this.loadUsers();
+
+        // Wait one tick to avoid modal/render race conditions.
+        setTimeout(() => {
+            this.cdr.detectChanges();
+            this.openModal(`ModalRes${intervention._id}`);
+        }, 0);
+    }
+
+    getUsersForIntervention(intervention: any): User[] {
+        if (!intervention?.name || !Array.isArray(this.users)) return [];
+        const prefix = String(intervention.name).charAt(0);
+        return this.users.filter(
+            (user: any) => String(user?.role || "").charAt(0) === prefix
+        );
     }
 
     isAffectationLoading(interventionId: string): boolean {
@@ -75,8 +131,29 @@ export class ListingInterventionsComponent implements OnInit, OnDestroy {
 
     onCancelAffectation(interventionId: string, modalId: string) {
         this.resetAffectationState(interventionId);
+        if (this.selectedIntervention?._id === interventionId) {
+            this.selectedIntervention = null;
+        }
         this.closeModal(modalId);
         this.cdr.detectChanges();
+    }
+
+    openModal(modalId: string) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+
+        modalEl.classList.add("show");
+        modalEl.setAttribute("aria-modal", "true");
+        modalEl.setAttribute("role", "dialog");
+        modalEl.removeAttribute("aria-hidden");
+        (modalEl as HTMLElement).style.display = "block";
+
+        document.body.classList.add("modal-open");
+        if (!document.querySelector(".modal-backdrop")) {
+            const backdrop = document.createElement("div");
+            backdrop.className = "modal-backdrop fade show";
+            document.body.appendChild(backdrop);
+        }
     }
 
     closeModal(modalId: string) {
