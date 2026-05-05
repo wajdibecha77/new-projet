@@ -1,12 +1,12 @@
 <button class="chat-fab" type="button" (click)="toggleChat()" aria-label="Ouvrir chatbot">
   <span class="chat-fab-icon">IA</span>
-  <span class="chat-fab-label">Chatbot IA</span>
+  <span class="chat-fab-label">Assistant Admin</span>
 </button>
 
 <div class="chat-overlay" [class.open]="isOpen" (click)="closeChat()">
   <div class="chat-modal" (click)="$event.stopPropagation()">
     <div class="chat-modal-header">
-      <span class="chat-modal-title">Chatbot IA</span>
+      <span class="chat-modal-title">Assistant Admin</span>
       <button type="button" class="chat-modal-close" (click)="closeChat()" aria-label="Fermer">x</button>
     </div>
 
