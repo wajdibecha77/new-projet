@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: "http://localhost:5000",
-  publicUrl: "http://localhost:4200",
+  apiUrl: "https://new-projet-production.up.railway.app",
+  publicUrl: "https://new-projet-five.vercel.app"
 };
