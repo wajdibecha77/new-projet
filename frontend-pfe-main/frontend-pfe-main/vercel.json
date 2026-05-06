@@ -2,7 +2,7 @@
   "version": 2,
   "installCommand": "npm install --legacy-peer-deps --force --no-audit --no-fund",
   "buildCommand": "NODE_OPTIONS=--openssl-legacy-provider npx ng build --configuration production",
-  "output": "dist/frontend-pfe-main",
+  "outputDirectory": "dist/frontend-pfe-main",
   "rewrites": [
     {
       "source": "/.well-known/(.*)",
