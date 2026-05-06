@@ -1,0 +1,70 @@
+[33m5febb95[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: (afectation  )
+[33m6d63b7b[m feat: (modification de l'affectation )
+[33mf275f47[m feat: (chatboot intelligent )
+[33mca2689b[m feat: (chatboot intelligent )
+[33m471f639[m feat: (chatboot intelligent )
+[33me4c853e[m feat: (chatboot intelligent )
+[33mfd8c80f[m feat: (chatboot intelligent )
+[33m2e1a036[m feat: (chatboot intelligent)
+[33me98df9e[m feat: (chatboot intelligent)
+[33m974b63e[m feat: (chatboot intelligent )
+[33m03a79ef[m feat: (chatboot intelligent)
+[33mcece855[m feat: (chatboot intelligent)
+[33m1afe8ba[m feat: (chatboot intelligent )
+[33mfff928d[m feat: (chatboot)
+[33m6c3ed4f[m feat: (chatboot)
+[33ma1e4fa6[m feat: (effectation)
+[33m7c34ed8[m feat: (fixe button iA)
+[33mc90407c[m feat: (effectation)
+[33ma9f7a80[m feat: (commentaire)
+[33m2374ad2[m feat: (commentaire)
+[33me01da3a[m feat: (butoon IA)
+[33m855998a[m feat: (butoon IA)
+[33m3c9e18e[m feat: (butoon IA)
+[33m79a5b64[m feat: (butoon IA)
+[33m7cd210d[m feat: (button IA)
+[33me16978c[m feat: (butoon IA)
+[33m1dced60[m feat: (butoon IA)
+[33m384823a[m feat: (mail verification methode Api gmail)
+[33mbe3d618[m Fix Railway email flow: Resend primary + SMTP fallback + debug
+[33m716c06b[m Fix Railway email flow: Resend primary + SMTP fallback + debug
+[33m39efb55[m feat: (mail verification methode 2)
+[33me777387[m feat: (mail verification c)
+[33m0ab3275[m feat: (mail verification)
+[33m4ab77bd[m feat: (mail verification)
+[33m4bcff96[m feat: (mail verification)
+[33m67780cc[m feat: smart login system (email + trusted device + otp fallback)
+[33m3bff2c9[m feat: (Qr code)
+[33m9d18898[m feat: (Qr code)
+[33m8e84ca9[m feat: (Qr code)
+[33m12ed1e5[m feat: (Qr code)
+[33mce5741e[m feat: smart login system (email + trusted device + otp fallback)
+[33meb62b9d[m feat: smart login system (email + trusted device + otp fallback)
+[33m3230874[m feat: smart login system (email + trusted device + otp fallback)
+[33md4ca56c[m final oauth2 email system
+[33m6924af8[m final oauth2 email system
+[33m48ce6fb[m fix apiUrl to backend
+[33m2f78eed[m final oauth2 email system
+[33m1d71ca2[m fix apiUrl to backend
+[33m33fcc07[m final oauth2 email system
+[33mdd111f3[m final oauth2 email system
+[33m3ce8397[m fix smtp
+[33mecb34b0[m feat: smart login system (email + trusted device + otp fallback)
+[33md3474b6[m feat: smart login system (email + trusted device + otp fallback)
+[33m9b08e91[m disable OTP temporarily
+[33mca8b284[m fix onclick null error (custom.js)
+[33m83d9820[m fix vercel build النهائي
+[33m123f448[m enable hash routing fix 404
+[33m2a4ff98[m final fix vercel spa routing
+[33m525c987[m fix angular routing final
+[33m5259e59[m fix vercel routing angular
+[33mf9f3f9b[m fix auth service api
+[33m7ca8755[m fix apiUrl to backend
+[33m98d9e0c[m fix apiUrl to backend
+[33m2e18f43[m fix vercel routing final
+[33m2a92fb5[m fix vercel routing
+[33m55ca2f0[m add jwt interceptor + fix api integration
+[33m9715e15[m fix mongodb atlas connection
+[33m0140a02[m vercel fix
+[33m898b12a[m add full project
+[33m2270e0f[m first commit
