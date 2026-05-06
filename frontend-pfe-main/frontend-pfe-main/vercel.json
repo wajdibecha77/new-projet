@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/.well-known/(.*)",
-      "destination": "/.well-known/$1"
+      "destination": "/frontend-pfe-main/frontend-pfe-main/.well-known/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/frontend-pfe-main/frontend-pfe-main/index.html"
     }
   ]
 }
