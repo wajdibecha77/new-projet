@@ -1,0 +1,12 @@
+﻿[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pfe.intervention",
+      "sha256_cert_fingerprints": [
+        "E6:44:E2:2E:6B:B6:4A:E5:8A:D2:E4:89:90:EC:1C:83:76:5D:6C:46:DD:F9:B1:0F:B4:A8:01:98:9E:17:45:9C"
+      ]
+    }
+  }
+]
