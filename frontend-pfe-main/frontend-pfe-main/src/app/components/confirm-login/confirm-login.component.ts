@@ -71,7 +71,7 @@ export class ConfirmLoginComponent implements OnInit {
         this.successMessage = "Connexion confirmee. Redirection...";
         const isMobile = Capacitor.isNativePlatform();
         if (isMobile) {
-          window.location.href = "/#/dashboard";
+          window.location.href = "/dashboard";
         } else {
           this.router.navigateByUrl("/dashboard");
         }

@@ -107,7 +107,7 @@ export class LoginComponent implements OnInit {
   private redirectAfterAuthSuccess(): void {
     const isMobile = Capacitor.isNativePlatform();
     if (isMobile) {
-      window.location.href = '/#/dashboard';
+      window.location.href = '/dashboard';
     } else {
       this.router.navigateByUrl('/dashboard');
     }

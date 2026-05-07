@@ -7,8 +7,6 @@ import {
 } from "@angular/router";
 import {
   Location,
-  LocationStrategy,
-  PathLocationStrategy,
 } from "@angular/common";
 import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
@@ -23,13 +21,7 @@ declare let $: any;
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
-  providers: [
-    Location,
-    {
-      provide: LocationStrategy,
-      useClass: PathLocationStrategy,
-    },
-  ],
+  providers: [Location],
 })
 export class AppComponent implements OnInit, OnDestroy {
   constructor(
@@ -130,27 +122,6 @@ export class AppComponent implements OnInit, OnDestroy {
   this.syncEmployeeMenuFromRoute();
   this.syncSidebarForViewport();
   this.initRouterEvents();
-
-  const pathName = String(window.location.pathname || "");
-  const search = String(window.location.search || "");
-  const hash = String(window.location.hash || "");
-
-  if (!hash && pathName.includes("/confirm-login")) {
-    window.location.replace(`/#/confirm-login${search}`);
-    return;
-  }
-
-  if ((window as any).Capacitor) {
-    setTimeout(() => {
-      const currentHash = String(window.location.hash || "");
-      if (currentHash.includes("confirm-login")) {
-        const hashPath = currentHash.replace(/^#/, "");
-        if (hashPath) {
-          this.router.navigateByUrl(hashPath);
-        }
-      }
-    }, 300);
-  }
 }
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth <= 992;
