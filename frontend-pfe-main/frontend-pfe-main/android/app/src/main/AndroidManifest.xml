@@ -26,7 +26,7 @@
             </intent-filter>
 
             <!-- 🔥 DEEP LINK FINAL -->
-            <intent-filter android:autoVerify="true">
+        <intent-filter android:autoVerify="true">
     <action android:name="android.intent.action.VIEW" />
 
     <category android:name="android.intent.category.DEFAULT" />
@@ -34,8 +34,7 @@
 
     <data
         android:scheme="https"
-        android:host="new-projet-five.vercel.app"
-        android:pathPrefix="/" />
+        android:host="new-projet-five.vercel.app" />
 </intent-filter>
 
         </activity>
