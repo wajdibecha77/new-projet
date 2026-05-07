@@ -1,7 +1,8 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+﻿import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { Capacitor } from '@capacitor/core';
 
 const ENABLE_OTP_LOGIN = false;
 
@@ -45,9 +46,9 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  // ✅ FIXED (no more fake "Connexion refusée")
+  // âœ… FIXED (no more fake "Connexion refusÃ©e")
   private sanitizeLoginMessage(message?: string): string {
-    return message || 'Connexion refusée';
+    return message || 'Connexion refusÃ©e';
   }
 
   ngOnInit(): void {
@@ -94,7 +95,7 @@ export class LoginComponent implements OnInit {
         localStorage.setItem('user', JSON.stringify(res?.user || {}));
         localStorage.setItem('role', role);
 
-        this.router.navigate(['/dashboard']);
+        this.redirectAfterAuthSuccess();
       },
       error: () => {
         // Keep normal login flow if confirmation fails.
@@ -102,7 +103,15 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  private resolveRole(user?: any): string {
+
+  private redirectAfterAuthSuccess(): void {
+    const isMobile = Capacitor.isNativePlatform();
+    if (isMobile) {
+      window.location.href = '/#/dashboard';
+    } else {
+      this.router.navigateByUrl('/dashboard');
+    }
+  }  private resolveRole(user?: any): string {
     return String(user?.role || localStorage.getItem('role') || '').toUpperCase();
   }
 
@@ -110,7 +119,7 @@ export class LoginComponent implements OnInit {
     const role = this.resolveRole(user);
 
     if (role === 'ADMIN') {
-      this.router.navigate(['/dashboard']);
+      this.redirectAfterAuthSuccess();
     } else if (this.isTechnicianRole(role)) {
       this.router.navigate(['/dashboard-client']);
     } else {
@@ -122,7 +131,7 @@ export class LoginComponent implements OnInit {
     return this.technicianRoles.includes(String(role || '').toUpperCase());
   }
 
-  // 📍 GPS (optional)
+  // ðŸ“ GPS (optional)
   private getGpsAddress(): Promise<string | null> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -170,7 +179,7 @@ export class LoginComponent implements OnInit {
               localStorage.setItem('user', JSON.stringify(res?.user || {}));
               localStorage.setItem('role', role);
 
-              this.goToHome(res?.user);
+              this.redirectAfterAuthSuccess();
               return;
             }
 
@@ -181,7 +190,7 @@ export class LoginComponent implements OnInit {
             }
 
             // CASE 3: server-side validation/auth error
-            this.errorFR = res?.message || "Connexion refusée";
+            this.errorFR = res?.message || "Connexion refusÃ©e";
           },
 
           error: (err) => {
@@ -217,9 +226,9 @@ export class LoginComponent implements OnInit {
             localStorage.setItem('user', JSON.stringify(res?.user || {}));
             localStorage.setItem('role', role);
 
-            this.goToHome(res?.user);
+            this.redirectAfterAuthSuccess();
           } else {
-            this.errorFR = "Code incorrect ou expiré.";
+            this.errorFR = "Code incorrect ou expirÃ©.";
           }
         },
 
@@ -239,3 +248,4 @@ export class LoginComponent implements OnInit {
     this.errorFR = '';
   }
 }
+

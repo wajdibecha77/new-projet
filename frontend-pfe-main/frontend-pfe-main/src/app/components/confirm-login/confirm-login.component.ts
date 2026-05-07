@@ -1,6 +1,7 @@
 ﻿import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "src/app/services/auth.service";
+import { Capacitor } from "@capacitor/core";
 
 @Component({
   selector: "app-confirm-login",
@@ -68,7 +69,12 @@ export class ConfirmLoginComponent implements OnInit {
         localStorage.setItem("role", String(res?.user?.role || "").toUpperCase());
 
         this.successMessage = "Connexion confirmee. Redirection...";
-        window.location.href = "/#/dashboard";
+        const isMobile = Capacitor.isNativePlatform();
+        if (isMobile) {
+          window.location.href = "/#/dashboard";
+        } else {
+          this.router.navigateByUrl("/dashboard");
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -82,3 +88,4 @@ export class ConfirmLoginComponent implements OnInit {
     this.router.navigate(["/login"]);
   }
 }
+
