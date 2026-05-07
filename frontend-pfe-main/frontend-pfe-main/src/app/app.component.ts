@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+﻿import { Component, OnInit, OnDestroy } from "@angular/core";
 import {
   Router,
   NavigationStart,
@@ -15,8 +15,7 @@ import { filter } from "rxjs/operators";
 import { UserService } from "./services/user.service";
 import { SidebarService } from "./services/sidebar.service";
 
-// 🔥 IMPORTANT
-import { App } from "@capacitor/app";
+// ðŸ”¥ IMPORTANT
 
 declare let $: any;
 
@@ -52,12 +51,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   public account: any;
 
-  /* 🔥 PUBLIC ROUTES (FIX) */
+  /* ðŸ”¥ PUBLIC ROUTES (FIX) */
   private readonly publicRoutes = [
     "/",
     "",
     "/login",
-    "/confirm-login", // 🔥 FIX HERE
+    "/confirm-login", // ðŸ”¥ FIX HERE
     "/auth/signin",
     "/auth/signup",
     "/auth/confirm-login",
@@ -132,23 +131,21 @@ export class AppComponent implements OnInit, OnDestroy {
   this.syncSidebarForViewport();
   this.initRouterEvents();
 
-  // 🔥🔥 FIX FINAL DEEP LINK (CAPACITOR 3)
-  setTimeout(() => {
-    const url = window.location.href;
-    console.log("🔥 Current URL:", url);
+  if ((window as any).Capacitor) {
+    setTimeout(() => {
+      const url = window.location.href;
+      console.log("Current URL:", url);
 
-    // إذا الرابط فيه confirm-login
-    if (url.includes("confirm-login")) {
-      const path = url.split("#").pop();
-
-      if (path) {
-        console.log("Navigate to:", path);
-        this.router.navigateByUrl(path);
+      if (url.includes("confirm-login")) {
+        const path = url.split("#").pop();
+        if (path) {
+          console.log("Navigate to:", path);
+          this.router.navigateByUrl(path);
+        }
       }
-    }
-  }, 500);
+    }, 500);
+  }
 }
-
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth <= 992;
   }
@@ -227,12 +224,12 @@ export class AppComponent implements OnInit, OnDestroy {
           this.sidebar.isOpen = true;
         }
 
-        // 🔥 SECURITY FIX
+        // ðŸ”¥ SECURITY FIX
         const currentUrl = this.router.url || "";
 
-// 🔥 FIX: نخلي confirm-login يتعدى بدون redirect
+// ðŸ”¥ FIX: Ù†Ø®Ù„ÙŠ confirm-login ÙŠØªØ¹Ø¯Ù‰ Ø¨Ø¯ÙˆÙ† redirect
 if (currentUrl.includes("confirm-login")) {
-  console.log("🚀 bypass confirm-login (no redirect)");
+  console.log("ðŸš€ bypass confirm-login (no redirect)");
   return;
 }
 
@@ -240,7 +237,7 @@ if (!this.token) {
   const isPublic = this.isPublicRoute();
 
   if (!isPublic) {
-    console.warn("🔒 Redirect → login (protected route)");
+    console.warn("ðŸ”’ Redirect â†’ login (protected route)");
     this.router.navigateByUrl("/login");
     return;
   }
