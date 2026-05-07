@@ -34,7 +34,8 @@
 
     <data
         android:scheme="https"
-        android:host="new-projet-five.vercel.app" />
+        android:host="new-projet-five.vercel.app"
+        android:pathPrefix="/" />
 </intent-filter>
 
         </activity>

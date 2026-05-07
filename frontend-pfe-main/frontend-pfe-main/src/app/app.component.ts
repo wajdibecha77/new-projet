@@ -131,19 +131,25 @@ export class AppComponent implements OnInit, OnDestroy {
   this.syncSidebarForViewport();
   this.initRouterEvents();
 
+  const pathName = String(window.location.pathname || "");
+  const search = String(window.location.search || "");
+  const hash = String(window.location.hash || "");
+
+  if (!hash && pathName.includes("/confirm-login")) {
+    window.location.replace(`/#/confirm-login${search}`);
+    return;
+  }
+
   if ((window as any).Capacitor) {
     setTimeout(() => {
-      const url = window.location.href;
-      console.log("Current URL:", url);
-
-      if (url.includes("confirm-login")) {
-        const path = url.split("#").pop();
-        if (path) {
-          console.log("Navigate to:", path);
-          this.router.navigateByUrl(path);
+      const currentHash = String(window.location.hash || "");
+      if (currentHash.includes("confirm-login")) {
+        const hashPath = currentHash.replace(/^#/, "");
+        if (hashPath) {
+          this.router.navigateByUrl(hashPath);
         }
       }
-    }, 500);
+    }, 300);
   }
 }
   private isMobileViewport(): boolean {
