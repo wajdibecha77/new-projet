@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit, OnDestroy, NgZone } from "@angular/core";
 import {
   Router,
   NavigationStart,
@@ -12,6 +12,8 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { UserService } from "./services/user.service";
 import { SidebarService } from "./services/sidebar.service";
+import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 
 // ðŸ”¥ IMPORTANT
 
@@ -27,7 +29,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private userService: UserService,
-    public sidebar: SidebarService
+    public sidebar: SidebarService,
+    private zone: NgZone
   ) {}
 
   private routerSubscription: any;
@@ -122,7 +125,40 @@ export class AppComponent implements OnInit, OnDestroy {
   this.syncEmployeeMenuFromRoute();
   this.syncSidebarForViewport();
   this.initRouterEvents();
+  this.initDeepLinkListener();
 }
+
+  /**
+   * Deep Link handler for Capacitor Android App Links.
+   * When the app is opened via https://new-projet-five.vercel.app/confirm-login?token=XXX,
+   * Android fires an appUrlOpen event. We parse the URL and navigate Angular
+   * to the correct route so confirm-login receives the token.
+   */
+  private initDeepLinkListener(): void {
+    if (!Capacitor.isNativePlatform()) return;
+
+    CapacitorApp.addListener("appUrlOpen", (event: { url: string }) => {
+      this.zone.run(() => {
+        console.log("[DeepLink] appUrlOpen:", event.url);
+
+        try {
+          const url = new URL(event.url);
+          const path = url.pathname || "/";
+          const queryString = url.search || "";
+          const fullRoute = path + queryString;
+
+          console.log("[DeepLink] Navigating to:", fullRoute);
+          this.router.navigateByUrl(fullRoute);
+        } catch (e) {
+          console.error("[DeepLink] Parse error:", e);
+          // Fallback: try to extract path manually
+          const slug = event.url.split(".app").pop() || "/";
+          console.log("[DeepLink] Fallback navigating to:", slug);
+          this.router.navigateByUrl(slug);
+        }
+      });
+    });
+  }
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth <= 992;
   }
