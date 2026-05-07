@@ -447,8 +447,8 @@ module.exports = {
       });
 
       const appUrl = String(process.env.APP_PUBLIC_URL || "http://localhost:4200").replace(/\/+$/, "");
-      const confirmUrl = `${appUrl}/#/confirm-login?token=${encodeURIComponent(confirmToken)}`;
-      const denyUrl = `${appUrl}/#/auth/signin?securityAlert=1`;
+      const confirmUrl = `${appUrl}/confirm-login?token=${encodeURIComponent(confirmToken)}`;
+      const denyUrl = `${appUrl}/auth/signin?securityAlert=1`;
 
       const ip =
         req.headers["x-forwarded-for"]?.split(",")[0] ||
