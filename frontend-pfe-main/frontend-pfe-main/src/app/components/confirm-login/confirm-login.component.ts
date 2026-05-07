@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+﻿import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "src/app/services/auth.service";
 
@@ -13,17 +13,6 @@ export class ConfirmLoginComponent implements OnInit {
   successMessage = "";
   infoMessage = "Validation en cours...";
   canUseOtpFallback = false;
-  otpEmail = "";
-  private mobileFallbackTimer: any = null;
-  private mobileRedirectHandled = false;
-
-  private readonly technicianRoles = [
-    "INFORMATICIEN",
-    "ELECTRICIEN",
-    "MECANICIEN",
-    "PLOMBERIE",
-    "TECHNICIEN",
-  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -32,21 +21,30 @@ export class ConfirmLoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      const token = String(params?.token || "").trim();
-      if (!token) {
-        this.loading = false;
-        this.errorMessage = "Lien de confirmation invalide.";
-        return;
-      }
+    console.log("[ConfirmLogin] Page loaded");
 
-      if (this.isMobileDevice()) {
-        this.tryOpenMobileApp(token);
-        return;
-      }
+    const routeToken = String(this.route.snapshot.queryParamMap.get("token") || "").trim();
+    console.log("[ConfirmLogin] Token from ActivatedRoute:", routeToken || "(empty)");
 
-      this.confirmLogin(token);
-    });
+    let finalToken = routeToken;
+
+    if (!finalToken) {
+      const href = String(window.location.href || "");
+      console.log("[ConfirmLogin] Fallback URL:", href);
+      const match = href.match(/[?&]token=([^&#]+)/);
+      if (match && match[1]) {
+        finalToken = decodeURIComponent(match[1]).trim();
+      }
+    }
+
+    console.log("[ConfirmLogin] Final token:", finalToken || "(empty)");
+
+    if (!finalToken) {
+      this.router.navigateByUrl("/login");
+      return;
+    }
+
+    this.confirmLogin(finalToken);
   }
 
   confirmLogin(token: string): void {
@@ -58,98 +56,29 @@ export class ConfirmLoginComponent implements OnInit {
     this.authService.confirmLogin(token).subscribe({
       next: (res: any) => {
         this.loading = false;
+        console.log("[ConfirmLogin] API success:", res);
+
         if (!res?.success || !res?.token) {
-          this.errorMessage = "Reponse invalide du serveur.";
+          this.router.navigate(["/login"]);
           return;
         }
 
         localStorage.setItem("token", res.token);
         localStorage.setItem("user", JSON.stringify(res?.user || {}));
-        const role = String(res?.user?.role || "").toUpperCase();
-        localStorage.setItem("role", role);
+        localStorage.setItem("role", String(res?.user?.role || "").toUpperCase());
 
         this.successMessage = "Connexion confirmee. Redirection...";
-        this.authService.markTrustedDevice(String(res?.user?.email || ""));
-        this.goToHome(role);
+        window.location.href = "/#/dashboard";
       },
       error: (err) => {
         this.loading = false;
-        const apiError = err?.error || {};
-        if (apiError?.requiresOtp) {
-          this.canUseOtpFallback = true;
-          this.otpEmail = String(apiError?.email || "");
-          this.errorMessage = apiError?.message || "Lien expire. OTP requis.";
-          return;
-        }
-
-        this.errorMessage = apiError?.message || "Echec de confirmation de connexion.";
+        console.error("[ConfirmLogin] API error:", err);
+        this.router.navigate(["/login"]);
       },
     });
   }
 
   goToOtpFallback(): void {
-    this.router.navigate(["/auth/login-verify-otp"], {
-      queryParams: { email: this.otpEmail || "" },
-    });
-  }
-
-  private isTechnicianRole(role: string): boolean {
-    return this.technicianRoles.includes(String(role || "").toUpperCase());
-  }
-
-  private isMobileDevice(): boolean {
-    const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /android|iphone|ipad|ipod/i.test(userAgent);
-  }
-
-  private tryOpenMobileApp(token: string): void {
-    if (this.mobileRedirectHandled) {
-      return;
-    }
-    this.mobileRedirectHandled = true;
-
-    const appUrl = `myapp://confirm-login?token=${encodeURIComponent(token)}`;
-    this.infoMessage = "Ouverture de l'application mobile...";
-
-    const cancelFallback = () => {
-      if (this.mobileFallbackTimer) {
-        clearTimeout(this.mobileFallbackTimer);
-        this.mobileFallbackTimer = null;
-      }
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("pagehide", cancelFallback);
-      window.removeEventListener("blur", cancelFallback);
-    };
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        cancelFallback();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("pagehide", cancelFallback);
-    window.addEventListener("blur", cancelFallback);
-
-    this.mobileFallbackTimer = setTimeout(() => {
-      cancelFallback();
-      this.infoMessage = "Validation en cours...";
-      this.confirmLogin(token);
-    }, 2000);
-
-    window.location.href = appUrl;
-  }
-
-  private goToHome(role: string): void {
-    const normalizedRole = String(role || "").toUpperCase();
-    if (normalizedRole === "ADMIN") {
-      this.router.navigate(["/dashboard"]);
-      return;
-    }
-    if (this.isTechnicianRole(normalizedRole)) {
-      this.router.navigate(["/dashboard-client"]);
-      return;
-    }
-    this.router.navigate(["/dashboard-visiteur"]);
+    this.router.navigate(["/login"]);
   }
 }

@@ -10,6 +10,10 @@ export class AuthGuard implements CanActivate {
     const currentUrl = (state.url || "").split("?")[0];
     const token = localStorage.getItem("token");
 
+    if (state.url.includes("confirm-login")) {
+      return true;
+    }
+
     // Allow public routes without authentication
     if (publicRoutes.includes(currentUrl)) {
       return true;

@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
+
 import { ReclamationsAdminComponent } from "./components/reclamations-admin/reclamations-admin.component";
 import { SignupComponent } from "./template/dashboards/auth/signup/signup.component";
 import { SigninComponent } from "./template/dashboards/auth/signin/signin.component";
@@ -26,24 +27,35 @@ import { CreateOrderComponent } from "./components/create-order/create-order.com
 import { CreateInterventionComponent } from "./components/create-intervention/create-intervention.component";
 import { InterventionDetailsComponent } from "./components/intervention-details/intervention-details.component";
 import { CreateOrderInterventionComponent } from "./components/create-order-intervention/create-order-intervention.component";
+
 import { AuthGuard } from "./guards/auth.guard";
 import { RoleGuard } from "./guards/role.guard";
+
 import { ReclamationComponent } from "./components/reclamation/reclamation.component";
 import { MesDemandesComponent } from "./components/mes-demandes/mes-demandes.component";
+
 import { QrCodeComponent } from "./pages/qr-code/qr-code.component";
 import { LandingComponent } from "./pages/landing/landing.component";
 import { ReclamationPublicComponent } from "./pages/reclamation-public/reclamation-public.component";
 import { SuiviReclamationComponent } from "./pages/suivi-reclamation/suivi-reclamation.component";
+
 import { ConfirmLoginComponent } from "./components/confirm-login/confirm-login.component";
 import { LoginComponent } from "./components/login/login.component";
 
 const routes: Routes = [
+
+  // 🔥 IMPORTANT: route confirm-login لازم يكون في الأول
+  { path: "confirm-login", component: ConfirmLoginComponent },
+
   { path: "", component: LandingComponent, pathMatch: "full" },
   { path: "login", component: LoginComponent },
+
   { path: "admin/dashboard", redirectTo: "/dashboard", pathMatch: "full" },
   { path: "technicien/dashboard", redirectTo: "/dashboard-client", pathMatch: "full" },
+
   { path: "reclamation-public", component: ReclamationPublicComponent },
   { path: "suivi-reclamation", component: SuiviReclamationComponent },
+
   {
     path: "auth",
     children: [
@@ -58,6 +70,7 @@ const routes: Routes = [
       { path: "forgot-password/reset", component: ForgotPasswordResetComponent },
     ],
   },
+
   {
     path: "",
     component: DashboardComponent,
@@ -107,6 +120,7 @@ const routes: Routes = [
         data: { techniciansOnly: true },
       },
       { path: "intervention/:id", component: InterventionDetailsComponent },
+
       {
         path: "services",
         component: ListingServicesComponent,
@@ -119,7 +133,9 @@ const routes: Routes = [
         canActivate: [RoleGuard],
         data: { adminsOnly: true },
       },
+
       { path: "commandes", component: ListingOrdersComponent },
+
       {
         path: "create-user",
         component: CreateUserComponent,
@@ -132,26 +148,35 @@ const routes: Routes = [
         canActivate: [RoleGuard],
         data: { adminsOnly: true },
       },
+
       { path: "create-intervention", component: CreateInterventionComponent },
       { path: "create-service", component: CreateServiceComponent },
       { path: "create-service/:id", component: CreateServiceComponent },
+
       { path: "create-fournisseur", component: CreateFournisseurComponent },
       { path: "create-fournisseur/:id", component: CreateFournisseurComponent },
+
       { path: "create-order", component: CreateOrderComponent },
       { path: "create-order/:id", component: CreateOrderComponent },
+
       { path: "create-order-intervention/:id", component: CreateOrderInterventionComponent },
+
       { path: "profile", component: UserProfileComponent },
       { path: "notifications", component: NotificationsComponent },
+
       {
         path: "mes-demandes",
         component: MesDemandesComponent,
         canActivate: [RoleGuard],
         data: { nonAdminOnly: true },
       },
+
       { path: "qr-code", component: QrCodeComponent },
     ],
   },
-  { path: "**", redirectTo: "" },
+
+  // 🔥 FIX FINAL
+  { path: "**", redirectTo: "login" },
 ];
 
 @NgModule({

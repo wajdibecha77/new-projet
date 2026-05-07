@@ -53,6 +53,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.user = JSON.parse(localStorage.getItem('user') || '{}');
     console.log("USER FROM LOCALSTORAGE =", this.user);
+    this.tryConfirmLoginFromUrl();
 
     if (!ENABLE_OTP_LOGIN) return;
 
@@ -65,6 +66,38 @@ export class LoginComponent implements OnInit {
         this.challengeId = cid;
         this.messageFR =
           "En attente de verification. Un e-mail de confirmation a ete envoye.";
+      }
+    });
+  }
+
+  private tryConfirmLoginFromUrl(): void {
+    const href = String(window.location.href || '');
+    if (!href.includes('confirm-login') || !href.includes('token=')) {
+      return;
+    }
+
+    const tokenMatch = href.match(/[?&]token=([^&#]+)/);
+    const token = tokenMatch && tokenMatch[1] ? decodeURIComponent(tokenMatch[1]).trim() : '';
+    if (!token) {
+      return;
+    }
+
+    this.auth.confirmLogin(token).subscribe({
+      next: (res: any) => {
+        if (!res?.success || !res?.token) {
+          return;
+        }
+
+        const role = this.resolveRole(res?.user);
+
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res?.user || {}));
+        localStorage.setItem('role', role);
+
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        // Keep normal login flow if confirmation fails.
       }
     });
   }

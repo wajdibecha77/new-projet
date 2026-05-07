@@ -27,16 +27,16 @@
 
             <!-- 🔥 DEEP LINK FINAL -->
             <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
+    <action android:name="android.intent.action.VIEW" />
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:scheme="https"
-                    android:host="new-projet-five.vercel.app"
-                    android:pathPrefix="/confirm-login" />
-            </intent-filter>
+    <data
+        android:scheme="https"
+        android:host="new-projet-five.vercel.app"
+        android:pathPrefix="/" />
+</intent-filter>
 
         </activity>
 

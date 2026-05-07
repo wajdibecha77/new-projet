@@ -15,6 +15,9 @@ import { filter } from "rxjs/operators";
 import { UserService } from "./services/user.service";
 import { SidebarService } from "./services/sidebar.service";
 
+// 🔥 IMPORTANT
+import { App } from "@capacitor/app";
+
 declare let $: any;
 
 @Component({
@@ -49,11 +52,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   public account: any;
 
-  /* 🔥 PUBLIC ROUTES */
+  /* 🔥 PUBLIC ROUTES (FIX) */
   private readonly publicRoutes = [
     "/",
     "",
     "/login",
+    "/confirm-login", // 🔥 FIX HERE
     "/auth/signin",
     "/auth/signup",
     "/auth/confirm-login",
@@ -67,23 +71,21 @@ export class AppComponent implements OnInit, OnDestroy {
     "/home",
   ];
 
-  /* 🔥 FINAL FIX قوي */
   isPublicRoute(): boolean {
     const url = (this.router.url || "").split("?")[0];
 
-    return this.publicRoutes.some(route =>
-      url === route ||
-      url.startsWith(route + "/") ||
-      url.startsWith(route + "?")
+    return this.publicRoutes.some(
+      (route) =>
+        url === route ||
+        url.startsWith(route + "/") ||
+        url.startsWith(route + "?")
     );
   }
 
-  /* 🔥 HTML COMPAT */
   isAuthRoute(): boolean {
     return this.isPublicRoute();
   }
 
-  /* 🔥 SYNC AUTH */
   private syncAuthState() {
     this.token = localStorage.getItem("token");
     this.role = String(localStorage.getItem("role") || "").toUpperCase();
@@ -123,20 +125,35 @@ export class AppComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnInit() {
-    this.syncAuthState();
-    this.initProfileImageSync();
-    this.syncEmployeeMenuFromRoute();
-    this.syncSidebarForViewport();
-    this.initRouterEvents();
-  }
+ ngOnInit() {
+  this.syncAuthState();
+  this.initProfileImageSync();
+  this.syncEmployeeMenuFromRoute();
+  this.syncSidebarForViewport();
+  this.initRouterEvents();
+
+  // 🔥🔥 FIX FINAL DEEP LINK (CAPACITOR 3)
+  setTimeout(() => {
+    const url = window.location.href;
+    console.log("🔥 Current URL:", url);
+
+    // إذا الرابط فيه confirm-login
+    if (url.includes("confirm-login")) {
+      const path = url.split("#").pop();
+
+      if (path) {
+        console.log("Navigate to:", path);
+        this.router.navigateByUrl(path);
+      }
+    }
+  }, 500);
+}
 
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth <= 992;
   }
 
   private syncSidebarForViewport(): void {
-    // Keep sidebar visible by default on desktop layout.
     if (!this.isMobileViewport()) {
       this.sidebar.isOpen = true;
     }
@@ -144,11 +161,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private initProfileImageSync(): void {
     const currentImage = this.userService.getProfileImageSnapshot();
-    this.sidebarProfileImageUrl = this.userService.buildProfileImageUrl(currentImage);
+    this.sidebarProfileImageUrl =
+      this.userService.buildProfileImageUrl(currentImage);
 
-    this.profileImageSubscription = this.userService.profileImage$.subscribe((image) => {
-      this.sidebarProfileImageUrl = this.userService.buildProfileImageUrl(image);
-    });
+    this.profileImageSubscription =
+      this.userService.profileImage$.subscribe((image) => {
+        this.sidebarProfileImageUrl =
+          this.userService.buildProfileImageUrl(image);
+      });
   }
 
   isEmployeePathActive(path: string): boolean {
@@ -178,9 +198,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl("/login");
   }
 
-  /* 🔥 ROUTER EVENTS */
   initRouterEvents() {
-
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         $(".preloader").fadeIn("slow");
@@ -196,7 +214,6 @@ export class AppComponent implements OnInit, OnDestroy {
         )
       )
       .subscribe((event) => {
-
         $.getScript("assets/js/custom.js");
 
         $(".preloader").fadeOut("slow");
@@ -204,24 +221,30 @@ export class AppComponent implements OnInit, OnDestroy {
         this.syncAuthState();
         this.syncEmployeeMenuFromRoute();
 
-        // On mobile, close drawer after navigation.
-        // On desktop, keep the sidebar visible.
         if (this.isMobileViewport()) {
           this.sidebar.close();
         } else {
           this.sidebar.isOpen = true;
         }
 
-        /* 🔥 SECURITY FIX FINAL */
-        if (!this.token) {
-          const isPublic = this.isPublicRoute();
+        // 🔥 SECURITY FIX
+        const currentUrl = this.router.url || "";
 
-          if (!isPublic) {
-            console.warn("🔒 Redirect → login (protected route)");
-            this.router.navigateByUrl("/login");
-            return;
-          }
-        }
+// 🔥 FIX: نخلي confirm-login يتعدى بدون redirect
+if (currentUrl.includes("confirm-login")) {
+  console.log("🚀 bypass confirm-login (no redirect)");
+  return;
+}
+
+if (!this.token) {
+  const isPublic = this.isPublicRoute();
+
+  if (!isPublic) {
+    console.warn("🔒 Redirect → login (protected route)");
+    this.router.navigateByUrl("/login");
+    return;
+  }
+}
 
         if (event instanceof NavigationEnd) {
           window.scrollTo(0, 0);
