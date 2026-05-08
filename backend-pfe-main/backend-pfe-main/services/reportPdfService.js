@@ -47,14 +47,20 @@ const MONTHS_FR = [
 function generatePdf(stats, aiAnalysis) {
   return new Promise((resolve, reject) => {
     try {
-      const reportsDir = path.join(__dirname, "..", "uploads", "reports");
-      if (!fs.existsSync(reportsDir)) {
-        fs.mkdirSync(reportsDir, { recursive: true });
+      // Use /tmp on Railway (ephemeral filesystem), local uploads otherwise
+      const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+      const reportsDir = isRailway
+        ? require("os").tmpdir()
+        : require("path").join(__dirname, "..", "uploads", "reports");
+
+      if (!require("fs").existsSync(reportsDir)) {
+        require("fs").mkdirSync(reportsDir, { recursive: true });
       }
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       const filename = `rapport-tav-${timestamp}.pdf`;
-      const filepath = path.join(reportsDir, filename);
+      const filepath = require("path").join(reportsDir, filename);
+
 
       const doc = new PDFDocument({
         size: "A4",
