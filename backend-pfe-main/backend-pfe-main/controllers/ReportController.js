@@ -25,16 +25,22 @@ module.exports = {
         return res.status(403).json({ success: false, message: "Acces reserve aux administrateurs" });
       }
 
-      console.log("[Report] Generating report...");
+      console.log("[Report] Generating report... Node:", process.version, "ENV:", process.env.RAILWAY_ENVIRONMENT || "local");
 
       // 1. Gather stats
+      console.log("[Report] Step 1: Gathering stats...");
       const stats = await gatherReportStats();
+      console.log("[Report] Stats OK. Interventions:", stats.interventions.total);
 
       // 2. AI analysis
+      console.log("[Report] Step 2: AI analysis...");
       const aiResult = await analyzeWithAI(stats);
+      console.log("[Report] AI OK. Success:", aiResult.success);
 
       // 3. Generate PDF
+      console.log("[Report] Step 3: Generating PDF...");
       const pdfPath = await generatePdf(stats, aiResult);
+      console.log("[Report] PDF generated at:", pdfPath);
 
       // 4. Send file
       const filename = path.basename(pdfPath);
@@ -46,12 +52,12 @@ module.exports = {
       stream.on("error", (err) => {
         console.error("[Report] Stream error:", err);
         if (!res.headersSent) {
-          res.status(500).json({ success: false, message: "Erreur lecture du PDF" });
+          res.status(500).json({ success: false, message: "Erreur lecture du PDF: " + err.message });
         }
       });
     } catch (err) {
-      console.error("[Report] Generate error:", err);
-      res.status(500).json({ success: false, message: err.message || "Erreur generation rapport" });
+      console.error("[Report] Generate error FULL:", err);
+      res.status(500).json({ success: false, message: err.message || "Erreur generation rapport", stack: process.env.NODE_ENV !== "production" ? err.stack : undefined });
     }
   },
 
@@ -71,11 +77,19 @@ module.exports = {
         return res.status(400).json({ success: false, message: "Email destinataire requis" });
       }
 
-      console.log("[Report] Generating report for email...");
+      console.log("[Report] Generating report for email to:", recipientEmail);
 
+      console.log("[Report] Step 1: Gathering stats...");
       const stats = await gatherReportStats();
+      console.log("[Report] Stats OK.");
+
+      console.log("[Report] Step 2: AI analysis...");
       const aiResult = await analyzeWithAI(stats);
+      console.log("[Report] AI OK.");
+
+      console.log("[Report] Step 3: Generating PDF...");
       const pdfPath = await generatePdf(stats, aiResult);
+      console.log("[Report] PDF OK:", pdfPath);
 
       const dateStr = new Date().toLocaleDateString("fr-FR", {
         year: "numeric",
