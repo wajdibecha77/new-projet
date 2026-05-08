@@ -64,6 +64,7 @@ function generatePdf(stats, aiAnalysis) {
 
       const doc = new PDFDocument({
         size: "A4",
+        bufferPages: true,
         margins: { top: 40, bottom: 40, left: 40, right: 40 },
         info: {
           Title: "Rapport TAV Airports - Interventions",
