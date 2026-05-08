@@ -227,4 +227,5 @@ module.exports = {
   detectType,
   detectUrgence,
   analyzeIncidentImage,
+  askGemini,
 };

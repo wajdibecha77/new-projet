@@ -1,4 +1,4 @@
-﻿require("dotenv").config({ override: true });
+require("dotenv").config({ override: true });
 
 const express = require("express");
 const cors = require("cors");
@@ -37,6 +37,7 @@ app.use("/config", require("./routes/ConfigRouter"));
 app.use("/chatbot", require("./routes/ChatbotRouter"));
 app.use("/chatbot-ai", require("./routes/ChatbotRouter"));
 app.get("/chatbot-history", isauth, chatbotHistory);
+app.use("/reports", require("./routes/ReportRouter"));
 
 // ================= TEST ROUTES =================
 app.get("/", (req, res) => {
@@ -139,6 +140,9 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("[DB] MongoDB connected ?");
+
+    // Initialize daily report cron job
+    require("./services/reportCronService");
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`[SERVER] Running on port ${PORT} ??`);
