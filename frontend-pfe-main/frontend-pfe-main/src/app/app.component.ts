@@ -128,36 +128,59 @@ export class AppComponent implements OnInit, OnDestroy {
   this.initDeepLinkListener();
 }
 
+  private deepLinkHandled = false;
+
   /**
    * Deep Link handler for Capacitor Android App Links.
-   * When the app is opened via https://new-projet-five.vercel.app/confirm-login?token=XXX,
-   * Android fires an appUrlOpen event. We parse the URL and navigate Angular
-   * to the correct route so confirm-login receives the token.
+   * Handles both cold start (getLaunchUrl) and warm resume (appUrlOpen).
+   * Uses a flag to prevent duplicate navigations.
    */
   private initDeepLinkListener(): void {
     if (!Capacitor.isNativePlatform()) return;
 
+    // Cold start: app was launched via deep link
+    CapacitorApp.getLaunchUrl().then((result: any) => {
+      if (result && result.url) {
+        console.log("[DeepLink] Cold start URL:", result.url);
+        this.zone.run(() => this.handleDeepLinkUrl(result.url));
+      }
+    }).catch((err: any) => {
+      console.error("[DeepLink] getLaunchUrl error:", err);
+    });
+
+    // Warm resume: app was already running, user clicked a link
     CapacitorApp.addListener("appUrlOpen", (event: { url: string }) => {
       this.zone.run(() => {
         console.log("[DeepLink] appUrlOpen:", event.url);
-
-        try {
-          const url = new URL(event.url);
-          const path = url.pathname || "/";
-          const queryString = url.search || "";
-          const fullRoute = path + queryString;
-
-          console.log("[DeepLink] Navigating to:", fullRoute);
-          this.router.navigateByUrl(fullRoute);
-        } catch (e) {
-          console.error("[DeepLink] Parse error:", e);
-          // Fallback: try to extract path manually
-          const slug = event.url.split(".app").pop() || "/";
-          console.log("[DeepLink] Fallback navigating to:", slug);
-          this.router.navigateByUrl(slug);
-        }
+        this.handleDeepLinkUrl(event.url);
       });
     });
+  }
+
+  private handleDeepLinkUrl(rawUrl: string): void {
+    // Prevent duplicate navigations
+    if (this.deepLinkHandled) {
+      console.log("[DeepLink] Already handled, skipping:", rawUrl);
+      return;
+    }
+    this.deepLinkHandled = true;
+
+    // Reset flag after 5 seconds to allow future deep links
+    setTimeout(() => { this.deepLinkHandled = false; }, 5000);
+
+    try {
+      const url = new URL(rawUrl);
+      const path = url.pathname || "/";
+      const queryString = url.search || "";
+      const fullRoute = path + queryString;
+
+      console.log("[DeepLink] Navigating ONCE to:", fullRoute);
+      this.router.navigateByUrl(fullRoute);
+    } catch (e) {
+      console.error("[DeepLink] Parse error:", e);
+      const slug = rawUrl.split(".app").pop() || "/";
+      this.router.navigateByUrl(slug);
+    }
   }
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth <= 992;

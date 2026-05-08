@@ -17,8 +17,8 @@ export class QrCodeComponent implements OnInit {
         ? window.location.origin
         : "";
 
-    // ✅ FIX: add # for Angular hash routing
-    this.qrCodeUrl = `${origin}/#/reclamation-public`;
+    // ✅ FIX: no hash — app uses useHash: false
+    this.qrCodeUrl = `${origin}/reclamation-public`;
 
     console.log("QR URL generated:", this.qrCodeUrl);
     
