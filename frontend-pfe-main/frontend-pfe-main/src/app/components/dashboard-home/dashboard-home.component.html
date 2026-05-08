@@ -197,3 +197,62 @@
     </div>
   </section>
 </div>
+
+<!-- ═══════════════════════════════════════════
+     FAB Rapport PDF — Floating Action Button
+     ═══════════════════════════════════════════ -->
+<div class="fab-container" (click)="$event.stopPropagation()">
+
+  <!-- Toast notification -->
+  <div class="fab-toast" *ngIf="fabMessage"
+       [class.fab-toast-success]="fabMessageType === 'success'"
+       [class.fab-toast-error]="fabMessageType === 'error'">
+    {{ fabMessage }}
+  </div>
+
+  <!-- History modal -->
+  <div class="fab-history-modal" *ngIf="showHistoryModal">
+    <div class="fab-history-header">
+      <h5>Anciens rapports</h5>
+      <button class="fab-history-close" (click)="showHistoryModal = false">&times;</button>
+    </div>
+    <div class="fab-history-list" *ngIf="reportHistory.length > 0">
+      <div class="fab-history-item" *ngFor="let report of reportHistory">
+        <div class="fab-history-info">
+          <span class="fab-history-name">{{ report.filename }}</span>
+          <span class="fab-history-meta">{{ formatFileSize(report.size) }}</span>
+        </div>
+        <button class="fab-history-download" (click)="downloadHistoryReport(report.filename)">
+          <i class="fa fa-download"></i>
+        </button>
+      </div>
+    </div>
+    <div class="fab-history-empty" *ngIf="reportHistory.length === 0">
+      Aucun rapport disponible.
+    </div>
+  </div>
+
+  <!-- Menu items -->
+  <div class="fab-menu" [class.fab-menu-open]="fabMenuOpen">
+    <button class="fab-item" (click)="generatePdf()" [disabled]="isGenerating">
+      <span class="fab-item-icon">📄</span>
+      <span class="fab-item-label">Generer rapport PDF</span>
+    </button>
+    <button class="fab-item" (click)="sendReportEmail()" [disabled]="isGenerating">
+      <span class="fab-item-icon">📧</span>
+      <span class="fab-item-label">Envoyer par email</span>
+    </button>
+    <button class="fab-item" (click)="viewHistory()">
+      <span class="fab-item-icon">📋</span>
+      <span class="fab-item-label">Anciens rapports</span>
+    </button>
+  </div>
+
+  <!-- Main FAB button -->
+  <button class="fab-btn" [class.fab-btn-active]="fabMenuOpen" (click)="toggleFabMenu()">
+    <span class="fab-btn-icon" *ngIf="!isGenerating">
+      <i class="fa fa-file-pdf-o"></i>
+    </span>
+    <span class="fab-btn-spinner" *ngIf="isGenerating"></span>
+  </button>
+</div>

@@ -1,7 +1,8 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation } from "@angular/core";
+import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewEncapsulation } from "@angular/core";
 import ApexCharts from "apexcharts";
 import { User } from "src/app/models/user";
 import { InterventionService } from "src/app/services/intervention.service";
+import { ReportService } from "src/app/services/report.service";
 import { UserService } from "src/app/services/user.service";
 
 @Component({
@@ -33,9 +34,18 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
   private categoryChart: ApexCharts | null = null;
   private viewReady = false;
 
+  /* ── FAB Report ── */
+  public fabMenuOpen = false;
+  public isGenerating = false;
+  public reportHistory: any[] = [];
+  public showHistoryModal = false;
+  public fabMessage = "";
+  public fabMessageType: "success" | "error" | "" = "";
+
   constructor(
     private userService: UserService,
-    private interService: InterventionService
+    private interService: InterventionService,
+    private reportService: ReportService
   ) {}
 
   ngOnInit(): void {
@@ -240,5 +250,124 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
     }
 
     return null;
+  }
+
+  /* ═══════════════════════════════════════════
+   * FAB Report — Methods
+   * ═══════════════════════════════════════════ */
+
+  toggleFabMenu(): void {
+    this.fabMenuOpen = !this.fabMenuOpen;
+    if (!this.fabMenuOpen) {
+      this.showHistoryModal = false;
+    }
+  }
+
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest(".fab-container")) {
+      this.fabMenuOpen = false;
+      this.showHistoryModal = false;
+    }
+  }
+
+  generatePdf(): void {
+    if (this.isGenerating) return;
+    this.isGenerating = true;
+    this.fabMenuOpen = false;
+    this.showFabMessage("", "");
+
+    this.reportService.generateReport().subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `rapport-tav-${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.isGenerating = false;
+        this.showFabMessage("Rapport PDF genere avec succes!", "success");
+      },
+      error: (err: any) => {
+        console.error("PDF generation error:", err);
+        this.isGenerating = false;
+        this.showFabMessage("Erreur lors de la generation du rapport.", "error");
+      },
+    });
+  }
+
+  sendReportEmail(): void {
+    this.fabMenuOpen = false;
+    this.showFabMessage("", "");
+
+    const email = prompt("Entrez l'adresse email du destinataire:");
+    if (!email || !email.trim()) return;
+
+    this.isGenerating = true;
+    this.reportService.sendReportByEmail(email.trim()).subscribe({
+      next: (res: any) => {
+        this.isGenerating = false;
+        this.showFabMessage(res?.message || "Email envoye!", "success");
+      },
+      error: (err: any) => {
+        console.error("Email send error:", err);
+        this.isGenerating = false;
+        this.showFabMessage("Erreur lors de l'envoi de l'email.", "error");
+      },
+    });
+  }
+
+  viewHistory(): void {
+    this.fabMenuOpen = false;
+    this.showHistoryModal = !this.showHistoryModal;
+
+    if (this.showHistoryModal) {
+      this.reportService.getReportHistory().subscribe({
+        next: (res: any) => {
+          this.reportHistory = res?.reports || [];
+        },
+        error: () => {
+          this.reportHistory = [];
+        },
+      });
+    }
+  }
+
+  downloadHistoryReport(filename: string): void {
+    this.reportService.downloadReport(filename).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err: any) => {
+        console.error("Download error:", err);
+      },
+    });
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
+  private showFabMessage(msg: string, type: "success" | "error" | ""): void {
+    this.fabMessage = msg;
+    this.fabMessageType = type;
+    if (msg) {
+      setTimeout(() => {
+        this.fabMessage = "";
+        this.fabMessageType = "";
+      }, 5000);
+    }
   }
 }

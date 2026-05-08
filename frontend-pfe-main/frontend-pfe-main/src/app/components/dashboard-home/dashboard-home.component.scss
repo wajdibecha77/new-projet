@@ -1,4 +1,4 @@
-.admin-dashboard {
+﻿.admin-dashboard {
   position: relative;
   background: #f8fafc;
   min-height: calc(100vh - var(--header-height));
@@ -453,3 +453,5 @@
     min-height: 230px;
   }
 }
+
+/* FAB styles are in global styles.scss for position:fixed compatibility */
