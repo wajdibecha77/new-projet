@@ -823,15 +823,147 @@ const buildConfirmHtml = ({ confirmUrl, denyUrl, details }) => {
 `;
 };
 
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#082038;color:#C9D7E7;text-align:center;padding:14px 18px;font-size:13px;line-height:1.5;">
+                Cet email est automatique, merci de ne pas repondre.<br/>
+                &copy; 2026 TAV - Tous droits reserves.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`;
+};
+
 const sendLoginConfirmationEmail = async ({ to, confirmUrl, denyUrl, details }) => {
   const html = buildConfirmHtml({ confirmUrl, denyUrl, details });
   return sendEmail(to, "Confirmation de connexion", html);
+};
+
+// ================= EMAIL WITH ATTACHMENT =================
+/**
+ * Send an email with a file attachment.
+ * Supports Gmail API (builds multipart MIME) and SMTP (nodemailer attachments).
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} html - HTML body
+ * @param {string} attachmentPath - Absolute path to the file to attach
+ * @param {string} [attachmentName] - Name for the attachment (default: basename)
+ */
+const sendEmailWithAttachment = async (to, subject, html, attachmentPath, attachmentName) => {
+  const fs = require("fs");
+  const path = require("path");
+
+  const toEmail = normalizeEmail(to);
+  if (!toEmail) throw new Error("Recipient email is required");
+  if (!attachmentPath || !fs.existsSync(attachmentPath)) {
+    throw new Error("Attachment file not found: " + attachmentPath);
+  }
+
+  const filename = attachmentName || path.basename(attachmentPath);
+  const fileBuffer = fs.readFileSync(attachmentPath);
+  const fileBase64 = fileBuffer.toString("base64");
+
+  const from =
+    emailProvider === "gmail_api"
+      ? String(gmailApiFrom || gmailApiUser).trim()
+      : String(process.env.SMTP_FROM || smtpUser).trim();
+
+  // ── Gmail API: build multipart MIME with attachment ──
+  if (emailProvider === "gmail_api" && canUseGmailApi()) {
+    const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const text = stripHtml(html);
+    const htmlBase64 = Buffer.from(html, "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n").trim();
+    const textBase64 = Buffer.from(text, "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n").trim();
+    const pdfBase64Lines = fileBase64.replace(/(.{76})/g, "$1\r\n").trim();
+
+    const mimeLines = [
+      `From: ${from}`,
+      `To: ${toEmail}`,
+      `Subject: ${encodeHeaderUtf8(subject)}`,
+      "MIME-Version: 1.0",
+      `Content-Type: multipart/mixed; boundary=\"${boundary}\"",
+      "",
+      `--${boundary}`,
+      "Content-Type: text/html; charset=\"UTF-8\"",
+      "Content-Transfer-Encoding: base64",
+      "",
+      htmlBase64,
+      "",
+      `--${boundary}`,
+      "Content-Type: application/pdf",
+      "Content-Transfer-Encoding: base64",
+      `Content-Disposition: attachment; filename=\"${filename}\"",
+      "",
+      pdfBase64Lines,
+      "",
+      `--${boundary}--`,
+    ];
+
+    const rawMime = mimeLines.join("\r\n");
+    const raw = Buffer.from(rawMime, "utf8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+
+    let lastError;
+    for (let i = 0; i < gmailApiMaxRetries; i++) {
+      try {
+        const accessToken = await getGmailAccessToken();
+        const response = await axios.post(
+          "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+          { raw },
+          {
+            headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+            timeout: 15000,
+          }
+        );
+        return { messageId: response?.data?.id, accepted: [toEmail], rejected: [], provider: "gmail_api" };
+      } catch (err) {
+        lastError = err;
+        if (!isRetryableGmailError(err) || i === gmailApiMaxRetries - 1) break;
+        await sleep(getProviderRetryDelay("gmail_api", err, i));
+      }
+    }
+    // fallback to SMTP if Gmail API fails
+    console.warn("[EMAIL] Gmail API attachment failed, falling back to SMTP:", lastError?.message);
+  }
+
+  // ── SMTP fallback: nodemailer with attachments ──
+  const mailOptions = {
+    from,
+    to: toEmail,
+    subject,
+    html,
+    text: stripHtml(html),
+    attachments: [{
+      filename,
+      content: fileBuffer,
+      contentType: "application/pdf",
+    }],
+  };
+
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (smtpErr) {
+    if (smtpFallbackEnabled && isConnectionError(smtpErr)) {
+      return fallbackTransporter.sendMail(mailOptions);
+    }
+    throw smtpErr;
+  }
 };
 
 // ================= EXPORT =================
 module.exports = {
   transporter,
   sendEmail,
+  sendEmailWithAttachment,
   sendOtpEmail,
   sendLoginConfirmationEmail,
 };

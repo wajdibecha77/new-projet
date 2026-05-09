@@ -9,7 +9,7 @@ const fs = require("fs");
 const { gatherReportStats } = require("../services/reportStatsService");
 const { analyzeWithAI } = require("../services/reportAIService");
 const { generatePdf } = require("../services/reportPdfService");
-const { sendEmail } = require("../services/email.service");
+const { sendEmail, sendEmailWithAttachment } = require("../services/email.service");
 const User = require("../models/User");
 
 module.exports = {
@@ -98,25 +98,44 @@ module.exports = {
       });
 
       const htmlBody = `
-        <div style="font-family:Arial,sans-serif;padding:20px;">
-          <h2 style="color:#0B2C4D;">Rapport TAV Airports</h2>
-          <p>Bonjour ${me.name || "Admin"},</p>
-          <p>Veuillez trouver ci-joint le rapport des interventions genere le ${dateStr}.</p>
-          <p style="color:#64748B;font-size:13px;margin-top:20px;">
-            Ce rapport a ete genere automatiquement par le systeme IA TAV Airports.
-          </p>
+        <div style="font-family:Arial,sans-serif;padding:24px;background:#f8fafc;">
+          <table width="600" style="margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <tr><td style="background:#0B2C4D;padding:20px 28px;">
+              <div style="color:#fff;font-size:24px;font-weight:700;">TAV</div>
+              <div style="color:#b0c4d8;font-size:11px;letter-spacing:1px;">AIRPORTS</div>
+            </td></tr>
+            <tr><td style="height:4px;background:#E53935;"></td></tr>
+            <tr><td style="padding:28px;">
+              <p style="font-size:18px;font-weight:700;color:#0B2C4D;margin:0 0 12px;">Rapport Mensuel TAV Airports</p>
+              <p style="color:#374151;margin:0 0 8px;">Bonjour ${me.name || "Admin"},</p>
+              <p style="color:#374151;margin:0 0 16px;">Veuillez trouver en pièce jointe le rapport des interventions généré le <strong>${dateStr}</strong>.</p>
+              <div style="background:#f0f7ff;border-left:4px solid #3B82F6;padding:12px 16px;border-radius:4px;margin:16px 0;">
+                <p style="margin:0;color:#1e40af;font-size:13px;">📎 Le fichier PDF est joint à cet email.</p>
+              </div>
+              <p style="color:#6b7280;font-size:12px;margin:20px 0 0;">Ce rapport a été généré automatiquement par le système IA TAV Airports.</p>
+            </td></tr>
+            <tr><td style="background:#082038;color:#8fa3b8;text-align:center;padding:14px;font-size:11px;">
+              TAV Airports &copy; ${new Date().getFullYear()} — Document confidentiel
+            </td></tr>
+          </table>
         </div>
       `;
 
-      await sendEmail(
+      const pdfFilename = `rapport-tav-${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      await sendEmailWithAttachment(
         recipientEmail,
         `Rapport TAV Airports - ${dateStr}`,
-        htmlBody
+        htmlBody,
+        pdfPath,
+        pdfFilename
       );
+
+      console.log("[Report] Email with PDF attachment sent to:", recipientEmail);
 
       res.json({
         success: true,
-        message: `Rapport envoye a ${recipientEmail}`,
+        message: `Rapport envoyé avec pièce jointe PDF à ${recipientEmail}`,
         pdfFile: path.basename(pdfPath),
       });
     } catch (err) {
