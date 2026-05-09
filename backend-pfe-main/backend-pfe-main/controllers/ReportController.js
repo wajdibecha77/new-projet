@@ -10,6 +10,7 @@ const { gatherReportStats } = require("../services/reportStatsService");
 const { analyzeWithAI } = require("../services/reportAIService");
 const { generatePdf } = require("../services/reportPdfService");
 const { sendEmail, sendEmailWithAttachment } = require("../services/email.service");
+const { getRegisteredReports, findReportPath } = require("../services/reportRegistry");
 const User = require("../models/User");
 
 module.exports = {
@@ -155,26 +156,9 @@ module.exports = {
         return res.status(403).json({ success: false, message: "Acces reserve aux administrateurs" });
       }
 
-      const reportsDir = path.join(__dirname, "..", "uploads", "reports");
-      if (!fs.existsSync(reportsDir)) {
-        return res.json({ success: true, reports: [] });
-      }
-
-      const files = fs.readdirSync(reportsDir)
-        .filter((f) => f.endsWith(".pdf"))
-        .sort((a, b) => b.localeCompare(a))
-        .map((filename) => {
-          const filePath = path.join(reportsDir, filename);
-          const stat = fs.statSync(filePath);
-          return {
-            filename,
-            size: stat.size,
-            createdAt: stat.mtime.toISOString(),
-            downloadUrl: `/uploads/reports/${filename}`,
-          };
-        });
-
-      res.json({ success: true, reports: files });
+      // Use in-memory registry (works on Railway /tmp + local uploads)
+      const reports = getRegisteredReports();
+      res.json({ success: true, reports });
     } catch (err) {
       console.error("[Report] History error:", err);
       res.status(500).json({ success: false, message: err.message || "Erreur historique" });
@@ -193,10 +177,18 @@ module.exports = {
       }
 
       const filename = String(req.params.filename || "").replace(/[^a-zA-Z0-9._-]/g, "");
-      const filePath = path.join(__dirname, "..", "uploads", "reports", filename);
 
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ success: false, message: "Rapport introuvable" });
+      // Look in registry first (supports /tmp on Railway)
+      let filePath = findReportPath(filename);
+
+      // Fallback to local uploads directory
+      if (!filePath) {
+        const localPath = path.join(__dirname, "..", "uploads", "reports", filename);
+        if (fs.existsSync(localPath)) filePath = localPath;
+      }
+
+      if (!filePath || !fs.existsSync(filePath)) {
+        return res.status(404).json({ success: false, message: "Rapport introuvable. Regénérez le rapport." });
       }
 
       res.setHeader("Content-Type", "application/pdf");

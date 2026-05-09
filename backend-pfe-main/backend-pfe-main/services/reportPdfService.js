@@ -7,6 +7,7 @@
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const { registerReport } = require("./reportRegistry");
 
 // ── Brand colors (matching TAV email theme) ──
 const COLORS = {
@@ -102,7 +103,10 @@ function generatePdf(stats, aiAnalysis) {
 
       doc.end();
 
-      stream.on("finish", () => resolve(filepath));
+      stream.on("finish", () => {
+        registerReport(filepath);
+        resolve(filepath);
+      });
       stream.on("error", (err) => reject(err));
     } catch (err) {
       reject(err);
