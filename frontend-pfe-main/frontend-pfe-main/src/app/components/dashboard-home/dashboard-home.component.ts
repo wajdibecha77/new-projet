@@ -281,15 +281,35 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
     this.reportService.generateReport().subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `rapport-tav-${new Date().toISOString().slice(0, 10)}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        const fileName = `rapport-tav-${new Date().toISOString().slice(0, 10)}.pdf`;
+
+        if (this.isMobile()) {
+          // 📱 Sur mobile : ouvrir dans un nouvel onglet
+          // L'utilisateur peut ensuite utiliser le menu Partager/Télécharger du navigateur
+          const newTab = window.open(url, '_blank');
+          if (!newTab) {
+            // Fallback si le popup est bloqué
+            window.location.href = url;
+          }
+        } else {
+          // 💻 Sur desktop : téléchargement direct
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        // Libérer l'URL après un délai (pour laisser le temps à l'onglet de charger)
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
         this.isGenerating = false;
-        this.showFabMessage("Rapport PDF genere avec succes!", "success");
+        this.showFabMessage(
+          this.isMobile()
+            ? "PDF ouvert dans un nouvel onglet. Utilisez le menu de votre navigateur pour le sauvegarder."
+            : "Rapport PDF genere avec succes!",
+          "success"
+        );
       },
       error: (err: any) => {
         console.error("PDF generation error:", err);
@@ -340,18 +360,32 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
     this.reportService.downloadReport(filename).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+
+        if (this.isMobile()) {
+          const newTab = window.open(url, '_blank');
+          if (!newTab) {
+            window.location.href = url;
+          }
+        } else {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
       },
       error: (err: any) => {
         console.error("Download error:", err);
       },
     });
+  }
+
+  /** Détecte si l'utilisateur est sur un appareil mobile */
+  private isMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   formatFileSize(bytes: number): string {
