@@ -1,44 +1,42 @@
 /**
- * Report AI Analysis Service
- * Uses Gemini AI (via existing geminiService) to analyze intervention statistics
- * and generate intelligent insights for the PDF report.
- * This is a NEW file — does NOT modify any existing logic.
+ * Report AI Analysis Service — v2 Premium
+ * Uses Gemini AI to generate professional BI-grade insights.
+ * Enhanced prompts for enterprise-level analysis.
+ * Falls back gracefully if Gemini is unavailable.
  */
 
 const { askGemini } = require("./geminiService");
 
 /**
- * Analyze report statistics using Gemini AI and return structured insights.
- * @param {Object} stats - The stats object from reportStatsService.gatherReportStats()
- * @returns {Promise<Object>} AI analysis object
+ * Analyze monthly stats with Gemini AI.
+ * @param {Object} stats - Stats from reportStatsService
+ * @returns {Promise<Object>} AI analysis
  */
 async function analyzeWithAI(stats) {
-  const prompt = buildAnalysisPrompt(stats);
+  const prompt = buildProfessionalPrompt(stats);
 
   try {
     const raw = await askGemini(prompt);
     const parsed = extractJsonFromResponse(raw);
 
     if (parsed) {
-      return {
-        success: true,
-        analysis: parsed,
-        rawResponse: raw,
-      };
+      return { success: true, analysis: parsed, rawResponse: raw };
     }
 
-    // If JSON parsing fails, return the raw text as a summary
     return {
       success: true,
       analysis: {
-        resume: raw.slice(0, 2000),
+        resume: raw.slice(0, 1000),
         anomalies: [],
         zonesCritiques: [],
         tendances: [],
         recommandations: [],
+        maintenancePreventive: [],
+        surchargeTechniciens: "",
         performanceTechniciens: "",
         niveauUrgence: "NORMAL",
-        maintenancePreventive: [],
+        niveauRisqueGlobal: "MODÉRÉ",
+        scorePerformance: 70,
       },
       rawResponse: raw,
     };
@@ -46,52 +44,72 @@ async function analyzeWithAI(stats) {
     console.error("[ReportAI] Gemini analysis failed:", error.message);
     return {
       success: false,
-      analysis: generateFallbackAnalysis(stats),
+      analysis: buildFallbackAnalysis(stats),
       error: error.message,
     };
   }
 }
 
-function buildAnalysisPrompt(stats) {
-  const { interventions, technicians, reclamations } = stats;
+function buildProfessionalPrompt(stats) {
+  const { interventions: s, technicians: t, reclamations: r, period: p } = stats;
+
+  const dailyTop = s.dailyCounts
+    .map((c, i) => `Jour ${i + 1}: ${c}`)
+    .filter((_, i) => s.dailyCounts[i] > 0)
+    .slice(0, 15)
+    .join(", ");
+
+  const techRanking = t.ranking
+    .map((tech) => `${tech.name}: ${tech.terminee}/${tech.total} (${tech.scorePercent}%)`)
+    .join(", ");
 
   return [
-    "Tu es un analyste IA expert en gestion de maintenance aeroportuaire pour TAV Airports.",
-    "Analyse les statistiques suivantes et genere un rapport d'analyse intelligent.",
+    "Tu es un analyste Business Intelligence senior spécialisé en gestion de maintenance aéroportuaire.",
+    `Tu analyses le rapport mensuel de ${p.monthLabel} pour TAV Airports.`,
+    "Génère une analyse professionnelle, précise et orientée décision pour la direction.",
     "",
-    "=== STATISTIQUES INTERVENTIONS ===",
-    `Total interventions: ${interventions.total}`,
-    `Par type: Electrique=${interventions.byType.ELECTRIQUE}, Informatique=${interventions.byType.INFORMATIQUE}, Mecanique=${interventions.byType.MECANIQUE}, Plomberie=${interventions.byType.PLOMBERIE}, Autre=${interventions.byType.AUTRE}`,
-    `Par statut: Terminee=${interventions.byStatus.TERMINEE}, En cours=${interventions.byStatus.EN_COURS}, Non affectee=${interventions.byStatus.NON_AFFECTEE}, Assignee=${interventions.byStatus.ASSIGNEE}, Refusee=${interventions.byStatus.REFUSEE}`,
-    `Interventions urgentes: ${interventions.urgentCount}`,
-    `Taux de resolution global: ${interventions.resolutionRate}%`,
-    `Ce mois: ${interventions.thisMonth.total} interventions (terminee: ${interventions.thisMonth.terminee}, en cours: ${interventions.thisMonth.enCours})`,
-    `Evolution mensuelle: ${interventions.monthlyEvolution.join(", ")}`,
-    `Zones les plus problematiques: ${interventions.topLocations.map((l) => l.lieu + " (" + l.count + ")").join(", ") || "Aucune"}`,
+    `=== RAPPORT MENSUEL ${p.monthLabel.toUpperCase()} ===`,
+    `Période: ${p.startDate} au ${p.endDate} (${p.daysInMonth} jours, ${p.currentDay} jours écoulés)`,
     "",
-    "=== TECHNICIENS ===",
-    technicians.topTechnician
-      ? `Meilleur technicien: ${technicians.topTechnician.name} (${technicians.topTechnician.terminee} terminees sur ${technicians.topTechnician.total})`
-      : "Aucun technicien enregistre",
-    `Classement: ${technicians.ranking.map((t) => t.name + ": " + t.terminee + "/" + t.total).join(", ") || "N/A"}`,
+    "--- INTERVENTIONS ---",
+    `Total ce mois: ${s.total} interventions`,
+    `Terminées: ${s.byStatus.TERMINEE} | En cours: ${s.byStatus.EN_COURS} | Non affectées: ${s.nonAffecteeCount}`,
+    `Urgentes/Critiques: ${s.urgentCount} | Taux résolution: ${s.resolutionRate}%`,
+    `Moyenne quotidienne: ${s.avgPerDay}/jour`,
+    s.peakDay ? `Jour le plus chargé: Jour ${s.peakDay} (${s.peakDayCount} interventions)` : "",
     "",
-    "=== RECLAMATIONS ===",
-    `Total: ${reclamations.total}, En attente: ${reclamations.enAttente}, Acceptee: ${reclamations.acceptee}, Refusee: ${reclamations.refusee}`,
+    "--- CATÉGORIES ---",
+    `Électrique: ${s.byType.ELECTRIQUE} | Informatique: ${s.byType.INFORMATIQUE} | Mécanique: ${s.byType.MECANIQUE} | Plomberie: ${s.byType.PLOMBERIE} | Autre: ${s.byType.AUTRE}`,
     "",
-    "Retourne UNIQUEMENT un JSON valide avec cette structure exacte:",
+    "--- ÉVOLUTION QUOTIDIENNE (extraits) ---",
+    dailyTop || "Données insuffisantes",
+    "",
+    "--- ZONES PROBLÉMATIQUES ---",
+    s.topLocations.map((l) => `${l.lieu}: ${l.count}`).join(" | ") || "Aucune zone identifiée",
+    "",
+    "--- TECHNICIENS ---",
+    t.technicianOfMonth ? `Technicien du mois: ${t.technicianOfMonth.name} (${t.technicianOfMonth.terminee} terminées, score ${t.technicianOfMonth.scorePercent}%)` : "Aucun technicien assigné",
+    `Classement: ${techRanking || "N/A"}`,
+    "",
+    "--- RÉCLAMATIONS ---",
+    `Total ce mois: ${r.total} | En attente: ${r.enAttente} | Acceptées: ${r.acceptee} | Refusées: ${r.refusee}`,
+    "",
+    "Retourne UNIQUEMENT un objet JSON valide (sans markdown) avec cette structure:",
     "{",
-    '  "resume": "Resume professionnel en 3-4 phrases",',
-    '  "anomalies": ["anomalie 1", "anomalie 2"],',
-    '  "zonesCritiques": ["zone 1 avec explication", "zone 2"],',
-    '  "tendances": ["tendance 1", "tendance 2"],',
-    '  "recommandations": ["recommandation 1", "recommandation 2", "recommandation 3"],',
-    '  "performanceTechniciens": "Analyse courte des performances",',
-    '  "niveauUrgence": "CRITIQUE | ELEVE | MODERE | NORMAL",',
-    '  "maintenancePreventive": ["suggestion 1", "suggestion 2"]',
+    '  "resume": "Résumé exécutif professionnel de 3-4 phrases pour la direction",',
+    '  "anomalies": ["anomalie critique 1 avec impact", "anomalie 2"],',
+    '  "zonesCritiques": ["zone 1: description et risque", "zone 2"],',
+    '  "tendances": ["tendance observée 1", "tendance 2"],',
+    '  "recommandations": ["action prioritaire 1", "action 2", "action 3"],',
+    '  "maintenancePreventive": ["maintenance 1 recommandée", "maintenance 2"],',
+    '  "surchargeTechniciens": "Évaluation de la charge de travail des techniciens",',
+    '  "performanceTechniciens": "Analyse performance équipe ce mois",',
+    '  "niveauUrgence": "CRITIQUE|ELEVE|MODERE|NORMAL",',
+    '  "niveauRisqueGlobal": "ÉLEVÉ|MODÉRÉ|FAIBLE",',
+    '  "scorePerformance": 0-100',
     "}",
     "",
-    "Sois precis, professionnel et actionnable. Ecris en francais.",
-    "Ne retourne aucun texte hors JSON.",
+    "Sois précis, professionnel, en français. Ne retourne aucun texte hors du JSON.",
   ].join("\n");
 }
 
@@ -99,51 +117,58 @@ function extractJsonFromResponse(text) {
   const raw = String(text || "").trim();
   if (!raw) return null;
 
-  const first = raw.indexOf("{");
-  const last = raw.lastIndexOf("}");
-  if (first === -1 || last === -1 || last <= first) return null;
+  // Try to extract JSON block
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
 
   try {
-    return JSON.parse(raw.slice(first, last + 1));
+    return JSON.parse(jsonMatch[0]);
   } catch {
-    return null;
+    // Try cleaning common issues
+    try {
+      const cleaned = jsonMatch[0]
+        .replace(/,(\s*[}\]])/g, "$1") // trailing commas
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " "); // control chars
+      return JSON.parse(cleaned);
+    } catch {
+      return null;
+    }
   }
 }
 
-function generateFallbackAnalysis(stats) {
-  const { interventions, technicians } = stats;
-  const resume = `Le systeme compte ${interventions.total} interventions dont ${interventions.byStatus.TERMINEE} terminees (taux de resolution: ${interventions.resolutionRate}%). ${interventions.urgentCount} interventions sont classees urgentes ou critiques.`;
+function buildFallbackAnalysis(stats) {
+  const { interventions: s, technicians: t, reclamations: r, period: p } = stats;
 
+  const dominantType = Object.entries(s.byType).sort((a, b) => b[1] - a[1])[0];
   const recommandations = [];
-  if (interventions.nonAffecteeCount > 0) {
-    recommandations.push(
-      `${interventions.nonAffecteeCount} interventions non affectees necessitent une attention immediate.`
-    );
-  }
-  if (interventions.resolutionRate < 50) {
-    recommandations.push(
-      "Le taux de resolution est inferieur a 50%. Une revision des processus est recommandee."
-    );
-  }
-  if (interventions.urgentCount > 5) {
-    recommandations.push(
-      "Le nombre d'interventions urgentes est eleve. Priorisez les affectations."
-    );
-  }
+
+  if (s.nonAffecteeCount > 0)
+    recommandations.push(`${s.nonAffecteeCount} interventions non affectées — affecter immédiatement.`);
+  if (s.resolutionRate < 60)
+    recommandations.push("Taux de résolution insuffisant — réviser le processus d'affectation.");
+  if (s.urgentCount > 3)
+    recommandations.push(`${s.urgentCount} interventions urgentes — prioriser les ressources.`);
+  if (r.enAttente > 2)
+    recommandations.push(`${r.enAttente} réclamations en attente — traitement urgent requis.`);
+  if (recommandations.length === 0)
+    recommandations.push("Maintenir le niveau de performance actuel.");
 
   return {
-    resume,
-    anomalies: [],
-    zonesCritiques: interventions.topLocations.map(
-      (l) => `${l.lieu}: ${l.count} interventions`
-    ),
-    tendances: [],
+    resume: `Pour ${p.monthLabel}, ${s.total} interventions ont été enregistrées avec un taux de résolution de ${s.resolutionRate}%. ${s.urgentCount} cas urgents ont nécessité une attention prioritaire. La catégorie dominante est ${dominantType ? dominantType[0] : "non identifiée"} avec ${dominantType ? dominantType[1] : 0} interventions.`,
+    anomalies: s.nonAffecteeCount > 5 ? [`${s.nonAffecteeCount} interventions non affectées — surcharge opérationnelle possible.`] : [],
+    zonesCritiques: s.topLocations.slice(0, 3).map((l) => `${l.lieu}: ${l.count} intervention(s)`),
+    tendances: [`Moyenne de ${s.avgPerDay} interventions par jour ce mois.`],
     recommandations,
-    performanceTechniciens: technicians.topTechnician
-      ? `Meilleur technicien: ${technicians.topTechnician.name} avec ${technicians.topTechnician.terminee} interventions terminees.`
-      : "Aucun technicien enregistre.",
-    niveauUrgence: interventions.urgentCount > 10 ? "ELEVE" : "MODERE",
-    maintenancePreventive: [],
+    maintenancePreventive: ["Vérification préventive des équipements les plus sollicités."],
+    surchargeTechniciens: t.ranking.length > 0
+      ? `${t.ranking.length} techniciens actifs ce mois. ${t.technicianOfMonth ? t.technicianOfMonth.name + " est le plus performant." : ""}`
+      : "Aucun technicien assigné ce mois.",
+    performanceTechniciens: t.technicianOfMonth
+      ? `${t.technicianOfMonth.name} — ${t.technicianOfMonth.terminee} interventions terminées sur ${t.technicianOfMonth.total} (${t.technicianOfMonth.scorePercent}%).`
+      : "Données de performance insuffisantes.",
+    niveauUrgence: s.urgentCount > 10 ? "ELEVE" : s.urgentCount > 3 ? "MODERE" : "NORMAL",
+    niveauRisqueGlobal: s.resolutionRate < 50 ? "ÉLEVÉ" : s.resolutionRate < 75 ? "MODÉRÉ" : "FAIBLE",
+    scorePerformance: s.resolutionRate,
   };
 }
 
