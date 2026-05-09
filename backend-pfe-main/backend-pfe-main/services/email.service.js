@@ -823,23 +823,6 @@ const buildConfirmHtml = ({ confirmUrl, denyUrl, details }) => {
 `;
 };
 
-              </td>
-            </tr>
-            <tr>
-              <td style="background:#082038;color:#C9D7E7;text-align:center;padding:14px 18px;font-size:13px;line-height:1.5;">
-                Cet email est automatique, merci de ne pas repondre.<br/>
-                &copy; 2026 TAV - Tous droits reserves.
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-`;
-};
-
 const sendLoginConfirmationEmail = async ({ to, confirmUrl, denyUrl, details }) => {
   const html = buildConfirmHtml({ confirmUrl, denyUrl, details });
   return sendEmail(to, "Confirmation de connexion", html);
@@ -887,7 +870,7 @@ const sendEmailWithAttachment = async (to, subject, html, attachmentPath, attach
       `To: ${toEmail}`,
       `Subject: ${encodeHeaderUtf8(subject)}`,
       "MIME-Version: 1.0",
-      `Content-Type: multipart/mixed; boundary=\"${boundary}\"",
+      `Content-Type: multipart/mixed; boundary="${boundary}"`,
       "",
       `--${boundary}`,
       "Content-Type: text/html; charset=\"UTF-8\"",
@@ -898,7 +881,7 @@ const sendEmailWithAttachment = async (to, subject, html, attachmentPath, attach
       `--${boundary}`,
       "Content-Type: application/pdf",
       "Content-Transfer-Encoding: base64",
-      `Content-Disposition: attachment; filename=\"${filename}\"",
+      `Content-Disposition: attachment; filename="${filename}"`,
       "",
       pdfBase64Lines,
       "",
