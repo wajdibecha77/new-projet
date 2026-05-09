@@ -6,12 +6,39 @@
 
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const { gatherReportStats } = require("../services/reportStatsService");
 const { analyzeWithAI } = require("../services/reportAIService");
 const { generatePdf } = require("../services/reportPdfService");
 const { sendEmail, sendEmailWithAttachment } = require("../services/email.service");
-const { getRegisteredReports, findReportPath } = require("../services/reportRegistry");
 const User = require("../models/User");
+
+// ── In-memory report registry (persists for the lifetime of the server process) ──
+const reportRegistry = [];
+
+/**
+ * Get the reports directory (Railway /tmp or local uploads/reports)
+ */
+function getReportsDir() {
+  const isRailway = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+  return isRailway ? os.tmpdir() : path.join(__dirname, "..", "uploads", "reports");
+}
+
+/**
+ * Register a generated PDF into the in-memory registry.
+ */
+function registerReport(filePath) {
+  const filename = path.basename(filePath);
+  const stat = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
+  reportRegistry.unshift({
+    filename,
+    fullPath: filePath,
+    size: stat ? stat.size : 0,
+    createdAt: new Date().toISOString(),
+  });
+  // Keep only last 20 reports
+  if (reportRegistry.length > 20) reportRegistry.splice(20);
+}
 
 module.exports = {
   /**
@@ -42,6 +69,7 @@ module.exports = {
       console.log("[Report] Step 3: Generating PDF...");
       const pdfPath = await generatePdf(stats, aiResult);
       console.log("[Report] PDF generated at:", pdfPath);
+      registerReport(pdfPath);
 
       // 4. Send file
       const filename = path.basename(pdfPath);
@@ -91,6 +119,8 @@ module.exports = {
       console.log("[Report] Step 3: Generating PDF...");
       const pdfPath = await generatePdf(stats, aiResult);
       console.log("[Report] PDF OK:", pdfPath);
+      registerReport(pdfPath);
+
 
       const dateStr = new Date().toLocaleDateString("fr-FR", {
         year: "numeric",
@@ -147,7 +177,7 @@ module.exports = {
 
   /**
    * GET /reports/history
-   * List all previously generated reports.
+   * List all previously generated reports (from in-memory registry).
    */
   getReportHistory: async (req, res) => {
     try {
@@ -156,8 +186,16 @@ module.exports = {
         return res.status(403).json({ success: false, message: "Acces reserve aux administrateurs" });
       }
 
-      // Use in-memory registry (works on Railway /tmp + local uploads)
-      const reports = getRegisteredReports();
+      // Return reports from in-memory registry (valid for current server session)
+      const reports = reportRegistry
+        .filter((r) => fs.existsSync(r.fullPath)) // only existing files
+        .map((r) => ({
+          filename: r.filename,
+          size: r.size,
+          createdAt: r.createdAt,
+          downloadUrl: `/reports/download/${r.filename}`,
+        }));
+
       res.json({ success: true, reports });
     } catch (err) {
       console.error("[Report] History error:", err);
@@ -167,7 +205,7 @@ module.exports = {
 
   /**
    * GET /reports/download/:filename
-   * Download a specific report file.
+   * Download a specific report file (searches in registry and fallback dirs).
    */
   downloadReport: async (req, res) => {
     try {
@@ -178,17 +216,21 @@ module.exports = {
 
       const filename = String(req.params.filename || "").replace(/[^a-zA-Z0-9._-]/g, "");
 
-      // Look in registry first (supports /tmp on Railway)
-      let filePath = findReportPath(filename);
+      // Search in registry first
+      const registered = reportRegistry.find((r) => r.filename === filename);
+      let filePath = registered?.fullPath;
 
-      // Fallback to local uploads directory
-      if (!filePath) {
-        const localPath = path.join(__dirname, "..", "uploads", "reports", filename);
-        if (fs.existsSync(localPath)) filePath = localPath;
+      // Fallback: search in common directories
+      if (!filePath || !fs.existsSync(filePath)) {
+        const candidates = [
+          path.join(os.tmpdir(), filename),
+          path.join(__dirname, "..", "uploads", "reports", filename),
+        ];
+        filePath = candidates.find((p) => fs.existsSync(p)) || null;
       }
 
       if (!filePath || !fs.existsSync(filePath)) {
-        return res.status(404).json({ success: false, message: "Rapport introuvable. Regénérez le rapport." });
+        return res.status(404).json({ success: false, message: "Rapport introuvable ou expiré" });
       }
 
       res.setHeader("Content-Type", "application/pdf");
