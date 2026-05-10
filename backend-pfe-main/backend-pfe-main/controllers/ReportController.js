@@ -16,6 +16,33 @@ const User = require("../models/User");
 // ── In-memory report registry (persists for the lifetime of the server process) ──
 const reportRegistry = [];
 
+// ── One-time download token store for mobile-friendly PDF downloads ──
+// Mobile browsers cannot reliably navigate blob URLs across tabs.
+// Instead, the frontend requests a short-lived token (authenticated),
+// then opens  GET /reports/download-token/:token  which needs no JWT header.
+const downloadTokenStore = new Map(); // token → { filePath, filename, expires }
+const TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+// Purge expired tokens every 5 minutes to avoid memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [tok, data] of downloadTokenStore.entries()) {
+    if (data.expires < now) downloadTokenStore.delete(tok);
+  }
+}, 5 * 60 * 1000);
+
+/** Create a one-time download token for a given PDF file path. */
+function createDownloadToken(filePath) {
+  const crypto = require("crypto");
+  const token = crypto.randomBytes(32).toString("hex");
+  downloadTokenStore.set(token, {
+    filePath,
+    filename: path.basename(filePath),
+    expires: Date.now() + TOKEN_TTL_MS,
+  });
+  return token;
+}
+
 /**
  * Get the reports directory (Railway /tmp or local uploads/reports)
  */
@@ -87,6 +114,133 @@ module.exports = {
     } catch (err) {
       console.error("[Report] Generate error FULL:", err);
       res.status(500).json({ success: false, message: err.message || "Erreur generation rapport", stack: process.env.NODE_ENV !== "production" ? err.stack : undefined });
+    }
+  },
+
+  /**
+   * POST /reports/generate-token
+   * Generate a PDF report and return a short-lived one-time download token.
+   * Used by mobile clients that cannot reliably handle blob URLs.
+   */
+  generateDownloadToken: async (req, res) => {
+    try {
+      const me = await User.findById(req.user?.id).select("role");
+      if (!me || String(me.role).toUpperCase() !== "ADMIN") {
+        return res.status(403).json({ success: false, message: "Acces reserve aux administrateurs" });
+      }
+
+      console.log("[Report] Generating PDF for token download...");
+      const stats = await gatherReportStats();
+      const aiResult = await analyzeWithAI(stats);
+      const pdfPath = await generatePdf(stats, aiResult);
+      registerReport(pdfPath);
+
+      const token = createDownloadToken(pdfPath);
+      console.log("[Report] Download token created:", token.slice(0, 8) + "...");
+
+      res.json({
+        success: true,
+        token,
+        filename: path.basename(pdfPath),
+        expiresInSeconds: TOKEN_TTL_MS / 1000,
+      });
+    } catch (err) {
+      console.error("[Report] Generate token error:", err);
+      res.status(500).json({ success: false, message: err.message || "Erreur generation rapport" });
+    }
+  },
+
+  /**
+   * POST /reports/history-token
+   * Body: { filename: string }
+   * Create a one-time download token for an already-generated report in the registry.
+   * Used by mobile clients when downloading from the history modal.
+   */
+  createHistoryDownloadToken: async (req, res) => {
+    try {
+      const me = await User.findById(req.user?.id).select("role");
+      if (!me || String(me.role).toUpperCase() !== "ADMIN") {
+        return res.status(403).json({ success: false, message: "Acces reserve aux administrateurs" });
+      }
+
+      const filename = String(req.body?.filename || "").replace(/[^a-zA-Z0-9._-]/g, "");
+      if (!filename) {
+        return res.status(400).json({ success: false, message: "Nom de fichier requis" });
+      }
+
+      // Search in registry first, then fallback directories
+      const registered = reportRegistry.find((r) => r.filename === filename);
+      let filePath = registered?.fullPath;
+
+      if (!filePath || !fs.existsSync(filePath)) {
+        const candidates = [
+          path.join(os.tmpdir(), filename),
+          path.join(__dirname, "..", "uploads", "reports", filename),
+        ];
+        filePath = candidates.find((p) => fs.existsSync(p)) || null;
+      }
+
+      if (!filePath || !fs.existsSync(filePath)) {
+        return res.status(404).json({ success: false, message: "Rapport introuvable ou expiré" });
+      }
+
+      const token = createDownloadToken(filePath);
+      res.json({ success: true, token, filename, expiresInSeconds: TOKEN_TTL_MS / 1000 });
+    } catch (err) {
+      console.error("[Report] History token error:", err);
+      res.status(500).json({ success: false, message: err.message || "Erreur creation token" });
+    }
+  },
+
+  /**
+   * GET /reports/download-token/:token
+   * NO authentication required — the token IS the credential.
+   * Token is one-time: deleted immediately after first use.
+   * Allows mobile browsers to open a plain URL and receive the PDF file.
+   */
+  downloadByToken: async (req, res) => {
+    try {
+      const token = String(req.params.token || "").replace(/[^a-f0-9]/gi, "");
+
+      if (!token) {
+        return res.status(400).json({ success: false, message: "Token manquant" });
+      }
+
+      const data = downloadTokenStore.get(token);
+
+      if (!data) {
+        return res.status(404).json({ success: false, message: "Token invalide" });
+      }
+
+      if (data.expires < Date.now()) {
+        downloadTokenStore.delete(token);
+        return res.status(410).json({ success: false, message: "Lien de telechargement expire" });
+      }
+
+      if (!fs.existsSync(data.filePath)) {
+        downloadTokenStore.delete(token);
+        return res.status(404).json({ success: false, message: "Fichier PDF introuvable" });
+      }
+
+      // Consume the token (one-time use)
+      downloadTokenStore.delete(token);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${data.filename}"`);
+      res.setHeader("Cache-Control", "no-store, no-cache");
+      res.setHeader("Pragma", "no-cache");
+
+      const stream = fs.createReadStream(data.filePath);
+      stream.pipe(res);
+      stream.on("error", (err) => {
+        console.error("[Report] Token download stream error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: "Erreur lecture PDF" });
+        }
+      });
+    } catch (err) {
+      console.error("[Report] Download by token error:", err);
+      res.status(500).json({ success: false, message: err.message || "Erreur telechargement" });
     }
   },
 
