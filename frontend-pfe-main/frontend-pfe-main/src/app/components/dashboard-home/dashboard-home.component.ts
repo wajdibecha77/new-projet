@@ -277,22 +277,27 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
     this.isGenerating = true;
     this.fabMenuOpen = false;
     this.showFabMessage("", "");
-
+    const isMobile = this.isMobile();
+    let pendingTab: Window | null = null;
+    // Open a tab synchronously on user click to avoid mobile popup blocking.
+    if (isMobile) {
+      pendingTab = window.open("", "_blank");
+      if (pendingTab) {
+        pendingTab.document.write("<p style='font-family:Arial,sans-serif;padding:16px'>Chargement du PDF...</p>");
+      }
+    }
     this.reportService.generateReport().subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const fileName = `rapport-tav-${new Date().toISOString().slice(0, 10)}.pdf`;
-
-        if (this.isMobile()) {
-          // 📱 Sur mobile : ouvrir dans un nouvel onglet
-          // L'utilisateur peut ensuite utiliser le menu Partager/Télécharger du navigateur
-          const newTab = window.open(url, '_blank');
-          if (!newTab) {
-            // Fallback si le popup est bloqué
+        if (isMobile) {
+          if (pendingTab) {
+            pendingTab.location.href = url;
+          } else {
+            // Fallback if popup was blocked
             window.location.href = url;
           }
         } else {
-          // 💻 Sur desktop : téléchargement direct
           const a = document.createElement("a");
           a.href = url;
           a.download = fileName;
@@ -300,12 +305,11 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
           a.click();
           document.body.removeChild(a);
         }
-
-        // Libérer l'URL après un délai (pour laisser le temps à l'onglet de charger)
-        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        // Keep blob URL alive longer on mobile to avoid premature revocation.
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
         this.isGenerating = false;
         this.showFabMessage(
-          this.isMobile()
+          isMobile
             ? "PDF ouvert dans un nouvel onglet. Utilisez le menu de votre navigateur pour le sauvegarder."
             : "Rapport PDF genere avec succes!",
           "success"
@@ -313,12 +317,14 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
       },
       error: (err: any) => {
         console.error("PDF generation error:", err);
+        if (pendingTab) {
+          pendingTab.close();
+        }
         this.isGenerating = false;
         this.showFabMessage("Erreur lors de la generation du rapport.", "error");
       },
     });
   }
-
   sendReportEmail(): void {
     this.fabMenuOpen = false;
     this.showFabMessage("", "");
@@ -357,13 +363,22 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   downloadHistoryReport(filename: string): void {
+    const isMobile = this.isMobile();
+    let pendingTab: Window | null = null;
+    // Open tab immediately from click to bypass popup blockers on mobile.
+    if (isMobile) {
+      pendingTab = window.open("", "_blank");
+      if (pendingTab) {
+        pendingTab.document.write("<p style='font-family:Arial,sans-serif;padding:16px'>Chargement du PDF...</p>");
+      }
+    }
     this.reportService.downloadReport(filename).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-
-        if (this.isMobile()) {
-          const newTab = window.open(url, '_blank');
-          if (!newTab) {
+        if (isMobile) {
+          if (pendingTab) {
+            pendingTab.location.href = url;
+          } else {
             window.location.href = url;
           }
         } else {
@@ -374,15 +389,16 @@ export class DashboardHomeComponent implements OnInit, AfterViewInit, OnDestroy 
           a.click();
           document.body.removeChild(a);
         }
-
-        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
       },
       error: (err: any) => {
         console.error("Download error:", err);
+        if (pendingTab) {
+          pendingTab.close();
+        }
       },
     });
   }
-
   /** Détecte si l'utilisateur est sur un appareil mobile */
   private isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
