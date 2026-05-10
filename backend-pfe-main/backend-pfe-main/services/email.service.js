@@ -34,11 +34,11 @@ const gmailApiRetryBaseMs = Number(cleanEnvValue(process.env.GMAIL_API_RETRY_BAS
 const isRailwayRuntime = Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
 const emailProvider = cleanEnvValue(
   process.env.EMAIL_PROVIDER ||
-    (
-      isRailwayRuntime && gmailApiClientId && gmailApiClientSecret && gmailApiRefreshToken
-        ? "gmail_api"
-        : (isRailwayRuntime && resendApiKey ? "resend" : "auto")
-    )
+  (
+    isRailwayRuntime && gmailApiClientId && gmailApiClientSecret && gmailApiRefreshToken
+      ? "gmail_api"
+      : (isRailwayRuntime && resendApiKey ? "resend" : "auto")
+  )
 ).toLowerCase();
 
 if (!smtpUser) {
@@ -452,8 +452,8 @@ async function sendEmail(to, subject, html) {
     emailProvider === "gmail_api"
       ? (String(gmailApiFrom || gmailApiUser).trim() || gmailApiUser)
       : (emailProvider === "resend"
-          ? (String(resendFrom || process.env.SMTP_FROM || smtpUser).trim() || smtpUser)
-          : (String(process.env.SMTP_FROM || smtpUser).trim() || smtpUser));
+        ? (String(resendFrom || process.env.SMTP_FROM || smtpUser).trim() || smtpUser)
+        : (String(process.env.SMTP_FROM || smtpUser).trim() || smtpUser));
   const toEmail = normalizeEmail(to);
 
   if (!toEmail) {
