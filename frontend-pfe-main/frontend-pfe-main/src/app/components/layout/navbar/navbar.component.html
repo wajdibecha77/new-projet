@@ -125,9 +125,29 @@
           </span>
         </a>
         
-        <div class="d-flex align-items-center cursor-pointer" routerLink="/profile" style="cursor: pointer;">
-          <span class="text-muted fw-bold me-1" style="font-size: 0.95rem;">{{ account?.name || 'mohsen' }}</span>
-          <i class="fa fa-angle-down text-muted"></i>
+        <div class="employee-avatar-dropdown" (click)="keepMenuOpen($event)">
+          <button type="button" class="employee-avatar-btn" (click)="toggleAvatarMenu($event)">
+            <span class="employee-name">{{ account?.name || 'mezen' }}</span>
+            <div class="employee-avatar-circle">
+              <ng-container *ngIf="profileImageUrl; else defaultEmpAvatar">
+                <img [src]="profileImageUrl" alt="Profile" />
+              </ng-container>
+              <ng-template #defaultEmpAvatar>
+                <img src="assets/img/profile.jpg" alt="Profile" />
+              </ng-template>
+            </div>
+          </button>
+
+          <div class="employee-dropdown-menu" *ngIf="avatarMenuOpen">
+            <a class="employee-dropdown-item active-profile" routerLink="/profile" (click)="avatarMenuOpen = false">
+              <i class="fa fa-user-o" aria-hidden="true"></i>
+              <span>Profile</span>
+            </a>
+            <button type="button" class="employee-dropdown-item logout" (click)="logout()">
+              <i class="fa fa-sign-out" aria-hidden="true"></i>
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

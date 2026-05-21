@@ -354,3 +354,115 @@
     display: none;
   }
 }
+
+/* Employee Avatar Dropdown Styles */
+.employee-avatar-dropdown {
+  position: relative;
+}
+
+.employee-avatar-btn {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px; /* pill shape */
+  padding: 6px 6px 6px 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease;
+}
+
+.employee-avatar-btn:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.employee-name {
+  font-weight: 600;
+  color: #1e293b;
+  margin-right: 12px;
+  font-size: 15px;
+  text-transform: capitalize;
+}
+
+.employee-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #a3a3a3; /* gray background for placeholder */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #000;
+  font-size: 8px; /* for 80x80 text */
+  font-weight: 700;
+}
+
+.employee-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 180px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  z-index: 1200;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.employee-dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  text-decoration: none;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.employee-dropdown-item i {
+  margin-right: 12px;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.employee-dropdown-item:hover {
+  background: #f8fafc;
+}
+
+.employee-dropdown-item.active-profile {
+  background: #f1f5f9; /* subtle blue/gray */
+}
+
+/* Add the blue triangle accent on the bottom right of the active item */
+.employee-dropdown-item.active-profile::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 16px 16px;
+  border-color: transparent transparent #1e3a8a transparent; /* dark blue triangle */
+  border-bottom-right-radius: 12px;
+}
+
+.employee-dropdown-item.active-profile i {
+  color: #0f172a;
+}
