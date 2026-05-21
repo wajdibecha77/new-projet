@@ -1,6 +1,7 @@
-﻿<div class="landing landing-page" id="top">
-  <header class="topbar">
-    <a class="brand" routerLink="/">
+<div class="landing landing-page" id="top">
+  <!-- Dynamic topbar class based on scroll -->
+  <header class="topbar" [class.scrolled]="isScrolled">
+    <a class="brand animate-on-scroll fade-in-down" routerLink="/">
       <span class="brand-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none">
           <path
@@ -11,28 +12,30 @@
       <span>Airport Monastir </span>
     </a>
 
-    <nav class="topnav">
+    <nav class="topnav animate-on-scroll fade-in-down stagger-1">
       <a href="#top">Accueil</a>
       <a href="#about">A propos</a>
       <a href="#features">Fonctionnalites</a>
       <a href="#contact">Contact</a>
     </nav>
 
-    <div class="topbar-actions">
+    <div class="topbar-actions animate-on-scroll fade-in-down stagger-2">
       <a class="btn btn-outline" routerLink="/login">Se connecter</a>
       <a class="btn btn-primary" routerLink="/reclamation-public">Envoyer une reclamation</a>
     </div>
   </header>
 
+  <!-- Hero with glow background -->
   <section class="hero" id="about">
+    <div class="hero-glow-bg"></div>
     <div class="hero-left">
-      <h1>Plateforme intelligente de gestion des interventions aeroportuaires</h1>
-      <p>
+      <h1 class="animate-on-scroll fade-in-up">Plateforme intelligente de gestion des interventions aeroportuaires</h1>
+      <p class="animate-on-scroll fade-in-up stagger-1">
         Simplifiez la gestion des operations, suivez les interventions en temps reel
         et ameliorez la satisfaction des passagers.
       </p>
 
-      <div class="hero-actions">
+      <div class="hero-actions animate-on-scroll fade-in-up stagger-2">
         <a class="btn btn-light" routerLink="/login">
           <i class="fa fa-user" aria-hidden="true"></i>
           <span>Se connecter</span>
@@ -44,8 +47,8 @@
       </div>
     </div>
 
-    <div class="hero-right" aria-hidden="true">
-      <div class="hero-image">
+    <div class="hero-right animate-on-scroll reveal-right stagger-3" aria-hidden="true">
+      <div class="hero-image glass-card">
         <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1800&q=80"
           alt="Aeroport moderne" loading="lazy" />
         <div class="hero-image-overlay"></div>
@@ -54,23 +57,23 @@
   </section>
 
   <section class="features" id="features">
-    <p class="features-kicker">Nos fonctionnalites</p>
-    <h2>Une solution complete pour des operations optimisees</h2>
+    <p class="features-kicker animate-on-scroll fade-in-up">Nos fonctionnalites</p>
+    <h2 class="animate-on-scroll fade-in-up stagger-1">Une solution complete pour des operations optimisees</h2>
 
     <div class="feature-grid">
-      <article class="feature-card">
+      <article class="feature-card glass-card animate-on-scroll fade-in-up stagger-1">
         <div class="feature-icon"><i class="fa fa-clipboard" aria-hidden="true"></i></div>
         <h3>Gestion des interventions</h3>
         <p>Creez, assignez et suivez les interventions en toute simplicite.</p>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card glass-card animate-on-scroll fade-in-up stagger-2">
         <div class="feature-icon"><i class="fa fa-clock-o" aria-hidden="true"></i></div>
         <h3>Suivi en temps reel</h3>
         <p>Suivez l'etat des interventions et recevez des notifications instantanees.</p>
       </article>
 
-      <article class="feature-card">
+      <article class="feature-card glass-card animate-on-scroll fade-in-up stagger-3">
         <div class="feature-icon"><i class="fa fa-headphones" aria-hidden="true"></i></div>
         <h3>Reclamations passagers</h3>
         <p>Permettez aux passagers de soumettre leurs reclamations facilement.</p>
@@ -79,7 +82,7 @@
   </section>
 
   <footer class="footer" id="contact">
-    <div class="footer-col footer-brand">
+    <div class="footer-col footer-brand animate-on-scroll fade-in-up">
       <a class="brand" routerLink="/">
         <span class="brand-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
@@ -93,21 +96,21 @@
       <p>© 2026 Tav Airport Manastir . Tous droits reserves.</p>
     </div>
 
-    <div class="footer-col">
+    <div class="footer-col animate-on-scroll fade-in-up stagger-1">
       <h4>Liens utiles</h4>
       <a href="#top">Accueil</a>
       <a href="#about">A propos</a>
       <a href="#contact">Contact</a>
     </div>
 
-    <div class="footer-col">
+    <div class="footer-col animate-on-scroll fade-in-up stagger-2">
       <h4>Contact</h4>
       <a href="mailto:contact@airport-ops.com"><i class="fa fa-envelope-o" aria-hidden="true"></i>
         contact@airport-ops.com</a>
       <a href="tel:+21612345678"><i class="fa fa-phone" aria-hidden="true"></i> +216 73520000</a>
     </div>
 
-    <div class="footer-col">
+    <div class="footer-col animate-on-scroll fade-in-up stagger-3">
       <h4>Suivez-nous</h4>
       <div class="socials">
         <a href="#" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
