@@ -1,7 +1,7 @@
-<div class="dashboard-layout" [class.mobile-sidebar-open]="sidebar.isOpen">
+<div class="dashboard-layout" [class.mobile-sidebar-open]="sidebar.isOpen" [class.employee-layout]="isEmployeeDashboard()">
   <app-sidebar></app-sidebar>
 
-  <div class="dashboard-main">
+  <div class="dashboard-main" [class.employee-main]="isEmployeeDashboard()">
     <app-navbar></app-navbar>
 
     <main class="dashboard-scroll" (click)="closeMobileSidebar()">

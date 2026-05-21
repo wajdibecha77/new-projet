@@ -70,25 +70,6 @@
                 </div>
             </article>
 
-            <article class="employee-stat-card progress">
-                <div class="employee-stat-icon">
-                    <span class="ai-emoji" aria-hidden="true">✈️</span>
-                </div>
-                <div>
-                    <h3>{{ aiInterventionsCount }}</h3>
-                    <p>AI Interventions</p>
-                </div>
-            </article>
-
-            <article class="employee-stat-card total">
-                <div class="employee-stat-icon">
-                    <i class="fa fa-user" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <h3>{{ manualInterventionsCount }}</h3>
-                    <p>Interventions manuelles</p>
-                </div>
-            </article>
         </div>
 
         <ng-container *ngIf="showForm; else employeeInterventionsList">

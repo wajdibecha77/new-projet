@@ -1,4 +1,4 @@
-﻿import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { User } from "src/app/models/user";
 import { UserService } from "src/app/services/user.service";
@@ -75,9 +75,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     isAdminDashboardHeader(): boolean {
-        const role = String(this.account?.role || "").toUpperCase();
+        const role = String(this.account?.role || localStorage.getItem('role') || "").toUpperCase();
         const isAuthPage = this.router.url.startsWith("/auth");
         return role === "ADMIN" && !isAuthPage;
+    }
+
+    isEmployeeDashboard(): boolean {
+        const role = String(this.account?.role || localStorage.getItem('role') || "").toUpperCase();
+        return role === "EMPLOYEE";
     }
 
     toggleAvatarMenu(event: MouseEvent): void {

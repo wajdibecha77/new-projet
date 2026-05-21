@@ -1,93 +1,144 @@
-﻿<div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
+<ng-container *ngIf="!isEmployeeDashboard()">
+  <div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
 
-<aside class="sidebar-shell">
-  <nav class="sidebar-nav">
-    <div class="sidebar-brand">
-      <img src="assets/img/Logo.png" alt="TAV Airports" />
-    </div>
+  <aside class="sidebar-shell">
+    <nav class="sidebar-nav">
+      <div class="sidebar-brand">
+        <img src="assets/img/Logo.png" alt="TAV Airports" />
+      </div>
 
-    <div class="sidebar-scroll">
-      <div class="sidebar-list">
-        <ng-container *ngFor="let item of sidebarItems">
-          <a
-            *ngIf="item.title"
-            class="nav-link"
-            [routerLink]="item.path"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-            (click)="closeSidebar()"
-          >
-            <span class="icon-wrapper position-relative">
-              <i [attr.data-feather]="item.icon" class="icon"></i>
+      <div class="sidebar-scroll">
+        <div class="sidebar-list">
+          <ng-container *ngFor="let item of sidebarItems">
+            <a
+              *ngIf="item.title"
+              class="nav-link"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="closeSidebar()"
+            >
+              <span class="icon-wrapper position-relative">
+                <i [attr.data-feather]="item.icon" class="icon"></i>
 
-              <span
-                *ngIf="item.path === '/notifications' && notificationsCount > 0"
-                class="notification-badge"
-              >
-                {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+                <span
+                  *ngIf="item.path === '/notifications' && notificationsCount > 0"
+                  class="notification-badge"
+                >
+                  {{ notificationsCount > 99 ? '99+' : notificationsCount }}
+                </span>
               </span>
-            </span>
 
-            <span class="title ms-3">{{ item.title }}</span>
-          </a>
-        </ng-container>
-      </div>
-
-      <div class="chatbot-shortcut" *ngIf="isAdmin()">
-        <button type="button" class="chatbot-shortcut-btn" (click)="toggleChatbotPanel()">
-          <span class="chatbot-badge">✈️</span>
-          <span>Assistant Admin Intelligent</span>
-        </button>
-      </div>
-
-      <div class="ai-toggle-card" *ngIf="isAdmin()">
-        <div class="ai-toggle-row">
-          <div class="ai-toggle-title-wrap">
-            <span class="ai-icon" aria-hidden="true">✈️</span>
-            <span class="ai-title">Mode IA</span>
-          </div>
-
-          <label class="ai-switch" for="ai-toggle-switch" aria-label="Activer ou dÃ©sactiver le mode IA">
-            <input
-              id="ai-toggle-switch"
-              type="checkbox"
-              [ngModel]="aiEnabled"
-              (ngModelChange)="onAiToggleChange($event)"
-              [disabled]="aiToggleLoading"
-            />
-            <span class="ai-slider"></span>
-          </label>
+              <span class="title ms-3">{{ item.title }}</span>
+            </a>
+          </ng-container>
         </div>
 
-        <p class="ai-status" [class.enabled]="aiEnabled">
-          {{ aiEnabled ? "IA Activé" : "IA Désactivée" }}
-        </p>
+        <div class="chatbot-shortcut" *ngIf="isAdmin()">
+          <button type="button" class="chatbot-shortcut-btn" (click)="toggleChatbotPanel()">
+            <span class="chatbot-badge">✈️</span>
+            <span>Assistant Admin Intelligent</span>
+          </button>
+        </div>
+
+        <div class="ai-toggle-card" *ngIf="isAdmin()">
+          <div class="ai-toggle-row">
+            <div class="ai-toggle-title-wrap">
+              <span class="ai-icon" aria-hidden="true">✈️</span>
+              <span class="ai-title">Mode IA</span>
+            </div>
+
+            <label class="ai-switch" for="ai-toggle-switch" aria-label="Activer ou désactiver le mode IA">
+              <input
+                id="ai-toggle-switch"
+                type="checkbox"
+                [ngModel]="aiEnabled"
+                (ngModelChange)="onAiToggleChange($event)"
+                [disabled]="aiToggleLoading"
+              />
+              <span class="ai-slider"></span>
+            </label>
+          </div>
+
+          <p class="ai-status" [class.enabled]="aiEnabled">
+            {{ aiEnabled ? "IA Activé" : "IA Désactivée" }}
+          </p>
+        </div>
+
       </div>
 
-    </div>
+      <a class="nav-link logout-btn" (click)="logout()">
+        <i data-feather="log-out" class="icon"></i>
+        <span class="title ms-3">Logout</span>
+      </a>
+    </nav>
+  </aside>
 
-    <a class="nav-link logout-btn" (click)="logout()">
-      <i data-feather="log-out" class="icon"></i>
-      <span class="title ms-3">Logout</span>
-    </a>
-  </nav>
-</aside>
-
-<div class="chatbot-overlay" *ngIf="isAdmin()" [class.open]="chatbotOpen" (click)="chatbotOpen = false">
-  <div class="chatbot-modal" (click)="$event.stopPropagation()">
-    <div class="chatbot-drawer-header">
-      <span>Assistant Admin</span>
-      <button type="button" (click)="toggleChatbotPanel()">×</button>
-    </div>
-    <div class="chatbot-drawer-messages">
-      <div class="chatbot-msg" *ngFor="let msg of chatbotMessages" [class.user]="msg.from === 'user'">
-        {{ msg.text }}
+  <div class="chatbot-overlay" *ngIf="isAdmin()" [class.open]="chatbotOpen" (click)="chatbotOpen = false">
+    <div class="chatbot-modal" (click)="$event.stopPropagation()">
+      <div class="chatbot-drawer-header">
+        <span>Assistant Admin</span>
+        <button type="button" (click)="toggleChatbotPanel()">×</button>
       </div>
-      <div class="chatbot-msg" *ngIf="chatbotLoading">typing...</div>
-    </div>
-    <div class="chatbot-drawer-input">
-      <input [(ngModel)]="chatbotInput" placeholder="Tapez votre question..." (keydown.enter)="sendChatbotMessage()" />
-      <button type="button" (click)="sendChatbotMessage()" [disabled]="chatbotLoading">></button>
+      <div class="chatbot-drawer-messages">
+        <div class="chatbot-msg" *ngFor="let msg of chatbotMessages" [class.user]="msg.from === 'user'">
+          {{ msg.text }}
+        </div>
+        <div class="chatbot-msg" *ngIf="chatbotLoading">typing...</div>
+      </div>
+      <div class="chatbot-drawer-input">
+        <input [(ngModel)]="chatbotInput" placeholder="Tapez votre question..." (keydown.enter)="sendChatbotMessage()" />
+        <button type="button" (click)="sendChatbotMessage()" [disabled]="chatbotLoading">></button>
+      </div>
     </div>
   </div>
-</div>
+</ng-container>
+
+<ng-container *ngIf="isEmployeeDashboard()">
+  <div class="overlay" *ngIf="sidebar.isOpen && isMobileViewport()" (click)="closeSidebar()"></div>
+  <aside class="employee-sidebar-custom">
+    <div class="emp-profile-section">
+      <div class="emp-avatar-wrapper">
+        <ng-container *ngIf="account?.profileImageUrl; else defaultAvatar">
+          <img [src]="account.profileImageUrl" alt="Avatar" class="emp-avatar" />
+        </ng-container>
+        <ng-template #defaultAvatar>
+          <img src="assets/img/profile.jpg" alt="Avatar" class="emp-avatar" />
+        </ng-template>
+        <div class="emp-avatar-badge">
+          <i class="fa fa-briefcase" aria-hidden="true"></i>
+        </div>
+      </div>
+      <h6 class="emp-name-label">Nom et prenom :</h6>
+      <p class="emp-name-value">{{ account?.name || 'mohsen' }}</p>
+      
+      <h6 class="emp-email-label">Email :</h6>
+      <p class="emp-email-value">{{ account?.email || 'mohsen92513@gmail.com' }}</p>
+    </div>
+
+    <div class="emp-nav-section">
+      <a class="emp-nav-link" routerLink="/dashboard-visiteur" routerLinkActive="active">
+        <i class="fa fa-list-alt" aria-hidden="true"></i>
+        Mes interventions
+      </a>
+      <!-- Note: We can make this button open the form, or link it. In dashboard-visiteur, it's state based. We'll use routerLink or click -->
+      <a class="emp-nav-link" routerLink="/dashboard-visiteur" [queryParams]="{action: 'add'}">
+        <i class="fa fa-plus-circle" aria-hidden="true"></i>
+        Ajouter intervention
+      </a>
+      <a class="emp-nav-link" routerLink="/notifications" routerLinkActive="active">
+        <i class="fa fa-bell-o" aria-hidden="true"></i>
+        Notifications
+        <span class="emp-notif-badge" *ngIf="notificationsCount > 0">{{ notificationsCount }}</span>
+      </a>
+      <a class="emp-nav-link" routerLink="/profile" routerLinkActive="active">
+        <i class="fa fa-user-o" aria-hidden="true"></i>
+        Mon profil
+      </a>
+      <button class="emp-nav-link emp-logout-btn" (click)="logout()">
+        <i class="fa fa-sign-out" aria-hidden="true"></i>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+</ng-container>

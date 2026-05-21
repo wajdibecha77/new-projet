@@ -60,4 +60,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private isMobileViewport(): boolean {
     return typeof window !== "undefined" && window.innerWidth < 992;
   }
+
+  isEmployeeDashboard(): boolean {
+    const r = String(localStorage.getItem('role') || '').toUpperCase();
+    return r === 'EMPLOYEE';
+  }
 }

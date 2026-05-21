@@ -476,3 +476,148 @@ app-chatbot {
     padding-right: 0.9rem !important;
   }
 }
+
+/* Employee Sidebar Styles */
+.employee-sidebar-custom {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid #e2e8f0;
+}
+
+.emp-profile-section {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.emp-avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+}
+
+.emp-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #fff;
+}
+
+.emp-avatar-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 28px;
+  height: 28px;
+  background: #1e293b;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid #fff;
+}
+
+.emp-name-label, .emp-email-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.emp-name-value, .emp-email-value {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  word-break: break-all;
+}
+
+.emp-nav-section {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.emp-nav-link {
+  display: flex !important;
+  align-items: center;
+  padding: 12px 16px;
+  color: #475569 !important;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.emp-nav-link i {
+  width: 24px;
+  font-size: 1.1rem;
+  margin-right: 12px;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.emp-nav-link:hover {
+  background: #f8fafc;
+  color: #1e293b !important;
+}
+
+.emp-nav-link:hover i {
+  color: #3b82f6;
+}
+
+.emp-nav-link.active {
+  background: #3b82f6;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.emp-nav-link.active i {
+  color: #ffffff;
+}
+
+.emp-notif-badge {
+  margin-left: auto;
+  background: #3b82f6;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.emp-logout-btn {
+  margin-top: 1rem;
+}
+
+.emp-logout-btn:hover {
+  background: #fef2f2;
+  color: #ef4444 !important;
+}
+
+.emp-logout-btn:hover i {
+  color: #ef4444;
+}

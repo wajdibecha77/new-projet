@@ -34,6 +34,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public chatbotMessages: Array<{ from: "user" | "bot"; text: string }> = [
     { from: "bot", text: "Bonjour Je suis votre assistant intelligent de gestion des interventions.Posez-moi votre question, je vais analyser vos données et vous proposer la meilleure décision." },
   ];
+  public account: any;
   private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();
 
@@ -51,6 +52,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.account = JSON.parse(localStorage.getItem("user") || "{}");
     this.buildSidebarItems();
     this.syncSidebarForViewport();
     if (this.isAdmin()) {
@@ -225,6 +227,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   isAdmin(): boolean {
     return String(this.role || "").toUpperCase() === "ADMIN";
+  }
+
+  isEmployeeDashboard(): boolean {
+    return String(this.role || "").toUpperCase() === "EMPLOYEE";
   }
 
   private isTechnicianRole(role: string): boolean {
