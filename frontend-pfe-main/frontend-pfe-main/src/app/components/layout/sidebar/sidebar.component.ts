@@ -14,6 +14,7 @@ import { environment } from "src/environments/environment";
 import { NotificationService } from "src/app/services/notification.service";
 import { SidebarService } from "src/app/services/sidebar.service";
 import { ChatbotService } from "src/app/services/chatbot.service";
+import { UserService } from "src/app/services/user.service";
 
 declare var feather: any;
 
@@ -35,6 +36,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     { from: "bot", text: "Bonjour Je suis votre assistant intelligent de gestion des interventions.Posez-moi votre question, je vais analyser vos données et vous proposer la meilleure décision." },
   ];
   public account: any;
+  public profileImageUrl: string | null = null;
   private readonly aiToggleApiUrl = `${environment.apiUrl}/config/ai-toggle`;
   private destroy$ = new Subject<void>();
 
@@ -48,11 +50,22 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private notificationService: NotificationService,
     private router: Router,
     public sidebar: SidebarService,
-    private chatbotService: ChatbotService
+    private chatbotService: ChatbotService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.account = JSON.parse(localStorage.getItem("user") || "{}");
+    
+    this.profileImageUrl = this.userService.buildProfileImageUrl(
+        this.userService.getProfileImageSnapshot()
+    );
+    this.userService.profileImage$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((image) => {
+            this.profileImageUrl = this.userService.buildProfileImageUrl(image);
+        });
+
     this.buildSidebarItems();
     this.syncSidebarForViewport();
     if (this.isAdmin()) {

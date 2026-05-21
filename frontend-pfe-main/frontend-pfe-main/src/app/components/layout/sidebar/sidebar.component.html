@@ -99,8 +99,8 @@
   <aside class="employee-sidebar-custom">
     <div class="emp-profile-section">
       <div class="emp-avatar-wrapper">
-        <ng-container *ngIf="account?.profileImageUrl; else defaultAvatar">
-          <img [src]="account.profileImageUrl" alt="Avatar" class="emp-avatar" />
+        <ng-container *ngIf="profileImageUrl; else defaultAvatar">
+          <img [src]="profileImageUrl" alt="Avatar" class="emp-avatar" />
         </ng-container>
         <ng-template #defaultAvatar>
           <img src="assets/img/profile.jpg" alt="Avatar" class="emp-avatar" />
