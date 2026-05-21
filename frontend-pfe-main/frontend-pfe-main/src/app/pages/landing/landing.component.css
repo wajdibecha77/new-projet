@@ -151,16 +151,16 @@
 
 .landing .btn-primary {
   color: #fff;
-  background: var(--text-main);
-  border: 1px solid var(--text-main);
-  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1);
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: 0 4px 14px 0 rgba(0, 112, 243, 0.3);
 }
 
 .landing .btn-primary:hover {
-  background: #fff;
-  color: var(--text-main);
+  background: var(--primary-hover);
+  color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 112, 243, 0.4);
 }
 
 .landing .btn-outline {
@@ -400,20 +400,20 @@
 /* --- Footer --- */
 .landing .footer {
   width: 100%;
-  background: #000;
-  color: #888;
+  background: var(--bg-main);
+  color: var(--text-muted);
   padding: 80px;
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 40px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border-color);
 }
 
 .landing .footer-col h4 {
   margin: 0 0 20px;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-main);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -422,24 +422,24 @@
 .landing .footer-col a {
   display: block;
   margin: 0 0 12px;
-  color: #888;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 14px;
   transition: color 0.2s ease;
 }
 
 .landing .footer-col a:hover {
-  color: #fff;
+  color: var(--primary);
 }
 
 .landing .footer-brand .brand {
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 16px;
   font-size: 20px;
 }
 
 .landing .footer-brand .brand-icon {
-  color: #fff;
+  color: var(--primary);
 }
 
 .landing .socials {
@@ -454,14 +454,14 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #222;
-  color: #fff;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-main);
   transition: var(--transition-smooth);
 }
 
 .landing .socials a:hover {
-  background: #fff;
-  color: #000;
+  background: var(--primary);
+  color: #fff;
   transform: translateY(-3px);
 }
 
