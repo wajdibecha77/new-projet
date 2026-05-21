@@ -35,6 +35,15 @@ const TYPE_TO_ROLES = {
 
 const conversationMemory = new Map();
 
+const normalizeText = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const containsAny = (text, keywords) => keywords.some((k) => text.includes(k));
+
 const getModel = () => {
   if (!process.env.GEMINI_API_KEY) return null;
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -42,60 +51,102 @@ const getModel = () => {
 };
 
 function detectIntent(message) {
-  const text = String(message || "").toLowerCase();
+  const text = normalizeText(message);
 
   let intent = null;
   let type = null;
 
-  if (text.includes("plomb")) type = "PLOMBERIE";
-  else if (text.includes("elect")) type = "ELECTRIQUE";
-  else if (text.includes("mecan")) type = "MECANIQUE";
-  else if (
-    text.includes("info") ||
-    text.includes("informat") ||
-    text.includes("it") ||
-    text.includes("reseau") ||
-    text.includes("ordinateur") ||
-    text.includes("pc")
-  ) type = "INFORMATIQUE";
-  else if (text.includes("كهرب")) type = "ELECTRIQUE";
-  else if (text.includes("سبا") || text.includes("ماء")) type = "PLOMBERIE";
-  else if (text.includes("ميكا") || text.includes("محرك")) type = "MECANIQUE";
-  else if (text.includes("معلوم") || text.includes("كمبيوتر") || text.includes("حاسوب")) type = "INFORMATIQUE";
+  const typeRules = [
+    {
+      key: "PLOMBERIE",
+      words: [
+        "plomb", "plomberie", "plombier", "fuite", "robinet", "canalisation",
+        "tuyau", "evier", "lavabo", "wc", "toilette", "eau", "drain", "egout",
+        "chauffe eau", "ballon", "sanitaire", "siphon", "vanne", "pression eau",
+        "pompe eau", "chasse eau", "mitigeur", "joint", "jointure", "colmatage",
+        "debouchage", "bouchon", "infiltration", "humidite", "goutte", "goutte a goutte",
+        "reservoir", "cuve", "distribution eau", "alimentation eau", "conduite", "eaux usees",
+        "eaux pluviales", "raccord", "raccordement", "wc bouche", "evacuation", "debit eau",
+        "plafond humide", "fuite plafond", "odeur egout", "robinetterie", "salle de bain"
+      ],
+    },
+    {
+      key: "ELECTRIQUE",
+      words: [
+        "elect", "electrique", "electricite", "electricien", "cable", "courant",
+        "prise", "tableau electrique", "disjoncteur", "ampoule", "lumier", "court circuit",
+        "panne courant", "coupure", "surtension", "basse tension", "haute tension", "fusible",
+        "interrupteur", "contacteur", "transformateur", "onduleur", "generateur", "groupe electrogene",
+        "eclairage", "neon", "spot", "projecteur", "lampe", "phase", "neutre", "terre",
+        "mise a la terre", "arc electrique", "etincelle", "brulure cable", "cable fondu", "armoire electrique",
+        "borne", "rallonge", "triphase", "monophase", "compteur", "consommation", "panne electrique",
+        "circuit", "ligne electrique", "boite derivation", "protection electrique", "prise brulee"
+      ],
+    },
+    {
+      key: "MECANIQUE",
+      words: [
+        "mecan", "mecanique", "mecanicien", "moteur", "machine", "pompe",
+        "compresseur", "courroie", "roulement", "vibration", "frein", "piston",
+        "embrayage", "boite vitesse", "engrenage", "axe", "palier", "joint mecanique",
+        "frottement", "surchauffe", "temperature moteur", "huile", "graissage", "lubrification",
+        "bruit moteur", "claquement", "rotation", "turbine", "ventilateur", "helice",
+        "poulie", "chassis", "suspension", "alignement", "desalignement", "usure",
+        "maintenance mecanique", "maintenance preventive", "maintenance corrective", "demarrage difficile",
+        "arrete machine", "blocage", "grippage", "pression mecanique", "deformation", "piece casse",
+        "fuite huile", "niveau huile", "pompe hydraulique", "verin", "hydraulique", "pneumatique"
+      ],
+    },
+    {
+      key: "INFORMATIQUE",
+      words: [
+        "info", "informat", "informatique", "informaticien", "it", "reseau",
+        "ordinateur", "pc", "serveur", "switch", "routeur", "wifi", "internet",
+        "logiciel", "application", "systeme", "imprimante", "scanner", "camera",
+        "bug", "erreur", "ecran bleu", "lenteur", "plantage", "crash", "base de donnees",
+        "bdd", "sql", "mongodb", "api", "backend", "frontend", "authentification", "mot de passe",
+        "compte bloque", "compte", "session", "token", "dns", "ip", "lan", "wan", "vpn",
+        "pare feu", "firewall", "antivirus", "malware", "mise a jour", "update", "driver",
+        "pilote", "windows", "linux", "mac", "navigateur", "email", "messagerie", "outlook",
+        "gmail", "cloud", "stockage", "fichier corrompu", "partage reseau", "camera ip"
+      ],
+    },
+  ];
 
-  if (text.includes("meilleur") || text.includes("ahsen") || text.includes("plus performant")) {
-    intent = "best";
-  } else if (text.includes("أفضل") || text.includes("ahsan")) {
-    intent = "best";
-  } else if (text.includes("disponible") || text.includes("0") || text.includes("free")) {
-    intent = "available";
-  } else if (text.includes("متاح") || text.includes("فاضي")) {
-    intent = "available";
-  } else if (text.includes("liste") || text.includes("tous") || text.includes("list")) {
-    intent = "list";
-  } else if (text.includes("قائمة") || text.includes("الكل")) {
-    intent = "list";
-  } else if (text.includes("combien") || text.includes("9adeh") || text.includes("nombre")) {
-    intent = "count";
-  } else if (text.includes("قداش") || text.includes("كم")) {
-    intent = "count";
-  } else if (text.includes("compar") || text.includes("versus") || text.includes("مقارنة")) {
-    intent = "compare";
-  } else if (text.includes("recurrent") || text.includes("récurrent") || text.includes("يتكرر") || text.includes("متكرر")) {
-    intent = "recurring_problem";
-  } else if (text.includes("surcharge") || text.includes("chargé") || text.includes("charge") || text.includes("مضغوط")) {
-    intent = "overload";
-  } else if (text.includes("analyse") || text.includes("analyser") || text.includes("تحليل")) {
-    intent = "analysis";
-  } else if (text.includes("retard") || text.includes("overdue")) {
-    intent = "overdue";
-  } else if (text.includes("etat") || text.includes("status")) {
-    intent = "by_status";
-  } else if (text.includes("type")) {
-    intent = "by_type";
-  } else if (text.includes("resume") || text.includes("summary")) {
-    intent = "summary";
-  }
+  let bestType = null;
+  let bestTypeScore = 0;
+  typeRules.forEach((rule) => {
+    const score = rule.words.reduce((acc, word) => (text.includes(word) ? acc + 1 : acc), 0);
+    if (score > bestTypeScore) {
+      bestTypeScore = score;
+      bestType = rule.key;
+    }
+  });
+  type = bestTypeScore > 0 ? bestType : null;
+
+  const intentRules = [
+    { key: "best", words: ["meilleur", "plus performant", "best", "ahsen", "ahsan"] },
+    { key: "available", words: ["disponible", "free", "moins charge", "0 intervention"] },
+    { key: "list", words: ["liste", "list", "tous", "tout les techniciens"] },
+    { key: "count", words: ["combien", "9adeh", "nombre", "total"] },
+    { key: "compare", words: ["compar", "versus", "vs"] },
+    { key: "recurring_problem", words: ["recurrent", "repete", "frequent", "souvent"] },
+    { key: "overload", words: ["surcharge", "charge elevee", "trop de taches", "charge"] },
+    { key: "analysis", words: ["analyse", "analyser", "diagnostic"] },
+    { key: "overdue", words: ["retard", "overdue", "delai depasse"] },
+    { key: "by_status", words: ["etat", "status", "statut"] },
+    { key: "by_type", words: ["type"] },
+    { key: "summary", words: ["resume", "summary", "global"] },
+  ];
+
+  let bestScore = 0;
+  intentRules.forEach((rule) => {
+    const score = rule.words.reduce((acc, word) => (text.includes(word) ? acc + 1 : acc), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      intent = rule.key;
+    }
+  });
 
   return { intent, type };
 }
