@@ -1,8 +1,8 @@
-﻿import { Component, OnInit, OnDestroy, ViewEncapsulation } from "@angular/core";
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from "@angular/core";
 import { User } from "src/app/models/user";
 import { InterventionService } from "src/app/services/intervention.service";
 import { UserService } from "src/app/services/user.service";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 
 @Component({
     selector: "app-dashboard-visiteur",
@@ -61,7 +61,8 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
     constructor(
         private userService: UserService,
         private interService: InterventionService,
-        private router: Router
+        private router: Router,
+        private route: ActivatedRoute
     ) {
         this.isConnected = userService.isConnected;
     }
@@ -424,9 +425,18 @@ export class DashboardVisiteurComponent implements OnInit, OnDestroy {
 
     closeForm() {
         this.showForm = false;
+        this.router.navigate(['/dashboard-visiteur']);
     }
 
     ngOnInit(): void {
+        this.route.queryParams.subscribe(params => {
+            if (params['action'] === 'add') {
+                this.showForm = true;
+            } else {
+                this.showForm = false;
+            }
+        });
+
         if (this.token) {
             this.isConnected = true;
 
