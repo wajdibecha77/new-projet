@@ -76,16 +76,23 @@ export class ReclamationsAdminComponent implements OnInit {
   }
 
   /* ================= VISITOR NAME ================= */
-  getVisitorFullName(user: any): string {
-    if (!user) return "Visiteur inconnu";
+  getVisitorFullName(rec: any): string {
+    if (!rec) return "Visiteur inconnu";
 
-    const firstName = (user.firstName || user.prenom || "").trim();
-    const lastName = (user.lastName || user.nom || "").trim();
+    // Public reclamation: exact visitor identity is stored on the reclamation itself.
+    const firstName = (rec.prenom || rec.createdBy?.firstName || rec.createdBy?.prenom || "").trim();
+    const lastName = (rec.nom || rec.createdBy?.lastName || rec.createdBy?.nom || "").trim();
     const fullName = `${firstName} ${lastName}`.trim();
 
     if (fullName) return fullName;
 
-    return (user.name || user.username || user.email || "Visiteur inconnu").trim();
+    return (
+      rec.createdBy?.name ||
+      rec.createdBy?.username ||
+      rec.createdBy?.email ||
+      rec.email ||
+      "Visiteur inconnu"
+    ).trim();
   }
 
   /* ================= IMAGE FALLBACK ================= */
