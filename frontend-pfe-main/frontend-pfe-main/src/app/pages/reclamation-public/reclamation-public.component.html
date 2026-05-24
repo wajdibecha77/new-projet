@@ -134,7 +134,60 @@
 
       <div class="field">
         <label for="images">Images (optionnel)</label>
-        <input id="images" type="file" multiple (change)="onImagesSelected($event)" />
+
+        <div class="image-box">
+          <div class="image-actions">
+            <button type="button" class="img-action-btn" (click)="imagesInput.click()">
+              Choisir des images
+            </button>
+            <button
+              type="button"
+              class="img-action-btn"
+              (click)="openCamera()"
+              [disabled]="cameraLoading || cameraOpen"
+            >
+              Ouvrir camera
+            </button>
+            <button
+              type="button"
+              class="img-action-btn capture"
+              (click)="captureFromCamera()"
+              [disabled]="!cameraOpen"
+            >
+              Capturer photo
+            </button>
+            <button
+              type="button"
+              class="img-action-btn stop"
+              (click)="stopCamera()"
+              [disabled]="!cameraOpen"
+            >
+              Fermer camera
+            </button>
+          </div>
+
+          <input
+            #imagesInput
+            id="images"
+            type="file"
+            hidden
+            multiple
+            accept="image/*"
+            (change)="onImagesSelected($event)"
+          />
+
+          <div class="camera-preview" *ngIf="cameraOpen">
+            <video #cameraVideo autoplay playsinline muted></video>
+            <canvas #cameraCanvas hidden></canvas>
+          </div>
+
+          <div class="preview-grid" *ngIf="imagePreviews.length > 0">
+            <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
+              <img [src]="preview" alt="Apercu image" />
+              <button type="button" class="remove-img-btn" (click)="removeImage(i)">x</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <button class="submit-btn" type="submit" [disabled]="isSubmitting">
