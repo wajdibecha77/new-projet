@@ -75,6 +75,19 @@ export class ReclamationsAdminComponent implements OnInit {
       : `${this.apiUrl}/uploads/${path}`;
   }
 
+  /* ================= VISITOR NAME ================= */
+  getVisitorFullName(user: any): string {
+    if (!user) return "Visiteur inconnu";
+
+    const firstName = (user.firstName || user.prenom || "").trim();
+    const lastName = (user.lastName || user.nom || "").trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    if (fullName) return fullName;
+
+    return (user.name || user.username || user.email || "Visiteur inconnu").trim();
+  }
+
   /* ================= IMAGE FALLBACK ================= */
   onImageError(event: any): void {
     event.target.src = "assets/img/no-image.png";

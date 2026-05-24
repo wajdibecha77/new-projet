@@ -15,7 +15,7 @@
 
       <!-- USER -->
       <p class="user">
-        🔔 <strong>{{ rec.createdBy?.name }}</strong> a envoyé une réclamation.
+        <strong>{{ getVisitorFullName(rec.createdBy) }}</strong> a envoyé une réclamation.
       </p>
 
       <!-- INFOS -->
@@ -73,7 +73,7 @@
 
         <div class="info-row">
           <span class="label">Visiteur</span>
-          <span class="value">{{ selectedReclamation.createdBy?.name }}</span>
+          <span class="value">{{ getVisitorFullName(selectedReclamation.createdBy) }}</span>
         </div>
 
         <div class="info-row">
