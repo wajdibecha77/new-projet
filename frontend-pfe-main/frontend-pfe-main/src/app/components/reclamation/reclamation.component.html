@@ -24,6 +24,27 @@
     <div class="section-grid">
       <section class="section-block upload-block">
         <h3><i class="fa fa-image"></i> Illustrations (Optionnel)</h3>
+
+        <div class="camera-tools">
+          <button type="button" class="camera-btn" (click)="openCamera()" [disabled]="cameraLoading || cameraOpen">
+            <i class="fa fa-camera"></i>
+            Ouvrir camera
+          </button>
+          <button type="button" class="camera-btn capture" (click)="captureFromCamera()" [disabled]="!cameraOpen">
+            <i class="fa fa-circle"></i>
+            Capturer
+          </button>
+          <button type="button" class="camera-btn stop" (click)="stopCamera()" [disabled]="!cameraOpen">
+            <i class="fa fa-stop"></i>
+            Fermer camera
+          </button>
+        </div>
+
+        <div class="camera-preview" *ngIf="cameraOpen">
+          <video #cameraVideo autoplay playsinline muted></video>
+          <canvas #cameraCanvas hidden></canvas>
+        </div>
+
         <div class="upload-box" [class.has-files]="imagesPreview.length > 0" (click)="fileInput.click()">
           <input type="file" #fileInput hidden multiple accept="image/*" (change)="onFileSelected($event)" />
 
