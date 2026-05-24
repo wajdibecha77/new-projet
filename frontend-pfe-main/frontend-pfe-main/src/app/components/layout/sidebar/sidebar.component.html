@@ -30,6 +30,13 @@
               </span>
 
               <span class="title ms-3">{{ item.title }}</span>
+
+              <span
+                *ngIf="item.path === '/reclamations' && reclamationsPendingCount > 0"
+                class="menu-counter"
+              >
+                {{ reclamationsPendingCount > 99 ? '99+' : reclamationsPendingCount }}
+              </span>
             </a>
           </ng-container>
         </div>

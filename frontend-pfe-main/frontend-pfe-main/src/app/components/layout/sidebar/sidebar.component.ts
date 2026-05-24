@@ -15,6 +15,7 @@ import { NotificationService } from "src/app/services/notification.service";
 import { SidebarService } from "src/app/services/sidebar.service";
 import { ChatbotService } from "src/app/services/chatbot.service";
 import { UserService } from "src/app/services/user.service";
+import { ReclamationService } from "src/app/services/reclamation.service";
 
 declare var feather: any;
 
@@ -26,6 +27,7 @@ declare var feather: any;
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public role = localStorage.getItem("role") || "";
   public notificationsCount = 0;
+  public reclamationsPendingCount = 0;
   public aiEnabled = false;
   public aiToggleLoading = false;
   public sidebarItems: any[] = [];
@@ -48,6 +50,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private http: HttpClient,
     private notificationService: NotificationService,
+    private reclamationService: ReclamationService,
     private router: Router,
     public sidebar: SidebarService,
     private chatbotService: ChatbotService,
@@ -88,6 +91,24 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         next: (count) => (this.notificationsCount = count),
         error: () => (this.notificationsCount = 0),
       });
+
+    if (this.isAdmin()) {
+      interval(30000)
+        .pipe(startWith(0), takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.reclamationService.getReclamations().subscribe({
+            next: (data: any) => {
+              const reclamations = Array.isArray(data) ? data : [];
+              this.reclamationsPendingCount = reclamations.filter(
+                (rec: any) => String(rec?.status || "").toUpperCase() === "EN_ATTENTE"
+              ).length;
+            },
+            error: () => {
+              this.reclamationsPendingCount = 0;
+            },
+          });
+        });
+    }
 
     this.router.events
       .pipe(
