@@ -140,6 +140,9 @@
             <button type="button" class="img-action-btn" (click)="imagesInput.click()">
               Choisir des images
             </button>
+            <button type="button" class="img-action-btn mobile-cam" (click)="mobileCameraInput.click()">
+              Prendre photo (telephone)
+            </button>
             <button
               type="button"
               class="img-action-btn"
@@ -174,6 +177,14 @@
             multiple
             accept="image/*"
             (change)="onImagesSelected($event)"
+          />
+          <input
+            #mobileCameraInput
+            type="file"
+            hidden
+            accept="image/*"
+            capture="environment"
+            (change)="onMobileCameraSelected($event)"
           />
 
           <div class="camera-preview" *ngIf="cameraOpen">

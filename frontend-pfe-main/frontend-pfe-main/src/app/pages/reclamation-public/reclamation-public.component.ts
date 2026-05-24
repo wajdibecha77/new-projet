@@ -22,6 +22,7 @@ interface ReclamationPublicFormData {
 })
 export class ReclamationPublicComponent implements OnInit, OnDestroy {
   @ViewChild("imagesInput") imagesInput!: ElementRef<HTMLInputElement>;
+  @ViewChild("mobileCameraInput") mobileCameraInput!: ElementRef<HTMLInputElement>;
   @ViewChild("cameraVideo") cameraVideo!: ElementRef<HTMLVideoElement>;
   @ViewChild("cameraCanvas") cameraCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -93,14 +94,18 @@ export class ReclamationPublicComponent implements OnInit, OnDestroy {
   onImagesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = input.files ? Array.from(input.files) : [];
-
-    files.forEach((file) => {
-      this.formData.images.push(file);
-      this.imagePreviews.push(URL.createObjectURL(file));
-    });
-
+    this.addFiles(files);
     if (this.imagesInput?.nativeElement) {
       this.imagesInput.nativeElement.value = "";
+    }
+  }
+
+  onMobileCameraSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    this.addFiles(files);
+    if (this.mobileCameraInput?.nativeElement) {
+      this.mobileCameraInput.nativeElement.value = "";
     }
   }
 
@@ -292,5 +297,12 @@ export class ReclamationPublicComponent implements OnInit, OnDestroy {
   private clearPreviews(): void {
     this.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
     this.imagePreviews = [];
+  }
+
+  private addFiles(files: File[]): void {
+    files.forEach((file) => {
+      this.formData.images.push(file);
+      this.imagePreviews.push(URL.createObjectURL(file));
+    });
   }
 }
