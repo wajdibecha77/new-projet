@@ -143,30 +143,6 @@
             <button type="button" class="img-action-btn mobile-cam" (click)="mobileCameraInput.click()">
               Prendre photo (telephone)
             </button>
-            <button
-              type="button"
-              class="img-action-btn"
-              (click)="openCamera()"
-              [disabled]="cameraLoading || cameraOpen"
-            >
-              Ouvrir camera
-            </button>
-            <button
-              type="button"
-              class="img-action-btn capture"
-              (click)="captureFromCamera()"
-              [disabled]="!cameraOpen"
-            >
-              Capturer photo
-            </button>
-            <button
-              type="button"
-              class="img-action-btn stop"
-              (click)="stopCamera()"
-              [disabled]="!cameraOpen"
-            >
-              Fermer camera
-            </button>
           </div>
 
           <input
