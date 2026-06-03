@@ -64,3 +64,4 @@ router.put("/ai-toggle", (req, res) => {
 });
 
 module.exports = router;
+module.exports.readConfig = readConfig;

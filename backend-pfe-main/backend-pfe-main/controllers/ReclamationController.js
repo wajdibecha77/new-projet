@@ -4,6 +4,7 @@ const Intervention = require("../models/intervention");
 const User = require("../models/User");
 const { detectType, detectUrgence } = require("../services/geminiService");
 const { sendEmail: sendEmailViaApi } = require("../services/email.service");
+const { readConfig } = require("../routes/ConfigRouter");
 
 const TYPE_MAP = {
   ELECTRIQUE: "ELECTRIQUE",
@@ -382,9 +383,10 @@ exports.acceptReclamation = async (req, res) => {
     const mappedType = mapReclamationType(rec.type || rec.problemType || "");
     const degree = mapUrgenceToDegree(rec.urgence);
     const delayDays = mapUrgenceToDelayDays(rec.urgence);
+    const aiEnabled = readConfig().aiEnabled;
 
     const targetRole = ROLE_MAP[mappedType];
-    const technicien = targetRole
+    const technicien = aiEnabled && targetRole
       ? await findLeastBusyTechnician(targetRole)
       : null;
 
@@ -393,12 +395,16 @@ exports.acceptReclamation = async (req, res) => {
     const intervention = new Intervention({
       name: mappedType,
       type: mappedType,
-      description: `${rec.description}\n\n[AI] Analyse automatique: ${mappedType}`,
+      description: aiEnabled
+        ? `${rec.description}\n\n[AI] Analyse automatique: ${mappedType}`
+        : rec.description,
       lieu: rec.lieu,
       createdBy: rec.createdBy || req.user?.id,
       reclamationId: rec._id,
-      isAI: true,
-      aiDetails: "Intervention generee automatiquement par l'intelligence artificielle",
+      isAI: aiEnabled,
+      aiDetails: aiEnabled
+        ? "Intervention generee automatiquement par l'intelligence artificielle"
+        : "",
       etat: isAssigned ? "ASSIGNEE" : "NON_AFFECTEE",
       assignedTo: isAssigned ? technicien._id : undefined,
       affectedBy: isAssigned ? technicien._id : undefined,
